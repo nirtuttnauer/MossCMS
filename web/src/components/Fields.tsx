@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MarkdownInput } from './MarkdownInput'
 import { Button } from './ui/button'
 import type { Asset, Entry, Field } from '../lib/api'
 
@@ -14,7 +15,7 @@ export function FieldInput({ field, value, onChange, references, assets }: Props
     return <fieldset className="field-group"><legend>{label}</legend>{items.map((item, i) => <div className="list-item" key={i}><FieldInput field={{ ...field.item!, name: `${label} ${i + 1}` }} value={item} onChange={next => onChange(items.map((old, index) => index === i ? next : old))} references={references} assets={assets} /><button type="button" aria-label={`Remove ${label} item ${i + 1}`} onClick={() => onChange(items.filter((_, index) => i !== index))}>×</button></div>)}<Button type="button" variant="outline" onClick={() => onChange([...items, null])}>Add item</Button></fieldset>
   }
   if (field.type === 'boolean') return <label className="checkbox-label"><input type="checkbox" checked={value === true} onChange={e => onChange(e.target.checked)} />{label}{field.required ? ' *' : ''}</label>
-  if (field.type === 'richText') return <label>{label}{field.required ? ' *' : ''}<textarea rows={6} value={String(value ?? '')} required={field.required} onChange={e => onChange(e.target.value)} /></label>
+  if (field.type === 'richText') return <MarkdownInput label={label} value={String(value ?? '')} required={field.required} onChange={onChange} assets={assets} />
   if (['enum', 'reference', 'asset'].includes(field.type)) {
     const options = field.type === 'enum' ? field.options?.map(v => ({ id: v, name: v })) : field.type === 'asset' ? assets : references.filter(e => !field.target || e.typeKey === field.target).map(e => ({ id: e.id, name: `${e.title} (${e.typeKey})` }))
     return <label>{label}{field.required ? ' *' : ''}<select value={String(value ?? '')} required={field.required} onChange={e => onChange(e.target.value || null)}><option value="">Select…</option>{options?.map(option => <option key={option.id} value={option.id}>{option.name}</option>)}</select></label>
