@@ -309,7 +309,9 @@ class Query:
         )
 
     @strawberry.field
-    def publication_queue(self, info: strawberry.Info, failed: bool = False, first: int = 25, offset: int = 0) -> JSON:
+    def publication_queue(
+        self, info: strawberry.Info, failed: bool = False, first: int = 25, offset: int = 0, overdue: bool = False
+    ) -> JSON:
         c = info.context
         require(c)
         if c["delivery"]:
@@ -322,6 +324,8 @@ class Query:
             if failed
             else query.where(Entry.scheduled_at.is_not(None))
         )
+        if overdue:
+            query = query.where(Entry.scheduled_at <= content.now())
         total = c["session"].scalar(select(func.count()).select_from(query.subquery()))
         rows = (
             c["session"]

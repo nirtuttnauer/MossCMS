@@ -30,7 +30,7 @@ function dataForType(definition: ContentType) {
   return data
 }
 
-function EntryEditor({ entry: initialEntry, types, initialType, editable, onClose, onSaved }: { entry: Entry | null; types: ContentType[]; initialType: string; editable: boolean; onClose: () => void; onSaved: (text: string) => void }) {
+export function EntryEditor({ entry: initialEntry, types, initialType, editable, onClose, onSaved }: { entry: Entry | null; types: ContentType[]; initialType: string; editable: boolean; onClose: () => void; onSaved: (text: string) => void }) {
   const [key, setKey] = useState(initialEntry?.typeKey || initialType || types[0]?.key || '')
   const definition = types.find(t => t.key === key)!
   const [data, setData] = useState(initialEntry?.data || dataForType(definition))
