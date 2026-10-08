@@ -10,7 +10,7 @@ from sqlalchemy import select
 
 from . import content
 from .graphql import asset_node
-from .models import Asset, Membership, PreviewGrant, Revision, now
+from .models import Asset, Membership, PreviewGrant, Project, Revision, now
 from .security import CmsError, audit, digest, identify, require
 
 router = APIRouter()
@@ -33,7 +33,19 @@ def create_grant(session, identity, id, version):
     )
     session.add(grant)
     audit(session, record.project_id, identity["actor"], "preview.issue", entryId=id, revision=version)
-    return {"id": grant.id, "token": raw, "expiresAt": grant.expires_at.isoformat() + "Z", "revision": version}
+    origin = session.get(Project, record.project_id).preview_origin
+    url = (
+        f"{origin}/preview#grant={raw}"
+        if origin and grant.type_key in {"sitePage", "sitePost", "siteProject", "siteSlide", "siteProfile"}
+        else None
+    )
+    return {
+        "previewUrl": url,
+        "id": grant.id,
+        "token": raw,
+        "expiresAt": grant.expires_at.isoformat() + "Z",
+        "revision": version,
+    }
 
 
 def revoke_grant(session, identity, id):

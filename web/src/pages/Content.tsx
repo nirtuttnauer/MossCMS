@@ -42,6 +42,7 @@ function EntryEditor({ entry: initialEntry, types, initialType, editable, onClos
   const [busy, setBusy] = useState(false)
   const [references, setReferences] = useState<Entry[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
+  const [preview, setPreview] = useState<{id:string;previewUrl:string;revision:number;expiresAt:string} | null>(null)
   const [history, setHistory] = useState<Revision[] | null>(null)
   const requiredComplete = (fields: Field[], values: Record<string, unknown>): boolean => fields.every(f => !f.required || (values[f.name] !== null && values[f.name] !== undefined && values[f.name] !== ''))
   const autosave = useDraftAutosave(initialEntry, {typeKey:key, slug, data}, editable && !busy && initialEntry?.status !== 'deleted', Boolean(slug) && requiredComplete(definition.fields,data))
@@ -65,6 +66,17 @@ function EntryEditor({ entry: initialEntry, types, initialType, editable, onClos
       await gql(saveEntryMutation, { typeKey: key, slug, data, status, id: saved?.id, version: saved?.version, scheduledAt })
       onSaved(status === 'published' ? 'Entry published.' : status === 'scheduled' ? `Scheduled for ${timestamp(scheduledAt!)} (${timezone}).` : 'Draft saved. Existing live content and schedule are preserved.')
     } catch (reason) { setError(message(reason)) }
+    finally { setBusy(false) }
+  }
+  async function preparePreview() {
+    setBusy(true); setError(''); setPreview(null)
+    try {
+      const saved = await autosave.flush()
+      if (!saved) throw new Error('Complete and save this draft before previewing.')
+      const result = await gql<{createPreviewGrant:{id:string;previewUrl:string;revision:number;expiresAt:string}}>('mutation($id:ID!,$version:Int!){createPreviewGrant(id:$id,version:$version)}', {id:saved.id,version:saved.version})
+      if (!result.createPreviewGrant.previewUrl) throw new Error('Ask an administrator to set the website preview origin in Settings.')
+      setPreview(result.createPreviewGrant)
+    } catch(reason) { setError(message(reason)) }
     finally { setBusy(false) }
   }
   async function loadHistory() {
@@ -111,6 +123,7 @@ function EntryEditor({ entry: initialEntry, types, initialType, editable, onClos
         <label>Slug<input required maxLength={220} value={slug} onChange={event => { setSlugEdited(true); setSlug(slugify(event.target.value)) }} /></label>
         {fields.map(field => <FieldInput key={field.name} field={field} value={data[field.name]} onChange={value => { setData(old => ({ ...old, [field.name]: value })); if (field.name === 'title' && !slugEdited) { const title = typeof value === 'string' ? value : value && typeof value === 'object' ? Object.values(value)[0] : ''; setSlug(slugify(String(title || ''))) } }} references={references} assets={assets} />)}
       </fieldset>
+      {editable && initialEntry?.status !== 'deleted' && typeOrder.includes(key) && <section><Button type="button" variant="outline" disabled={busy} onClick={preparePreview}>Save draft & prepare website preview</Button>{preview && <p><a href={preview.previewUrl} target="_blank" rel="noopener noreferrer">Open saved revision {preview.revision}</a> · expires {timestamp(preview.expiresAt)} <Button type="button" variant="outline" onClick={async()=>{try{await gql('mutation($id:ID!){revokePreviewGrant(id:$id)}',{id:preview.id});setPreview(null)}catch(reason){setError(message(reason))}}}>Revoke preview</Button></p>}</section>}
       {history && <section className="revision-list"><h3>History</h3>{history.map(revision => <article key={revision.number}><div className="inline-form"><strong>Version {revision.number}</strong><small>{revision.author} · {new Date(revision.createdAt).toLocaleString()}</small>{editable && <Button type="button" variant="outline" disabled={busy} onClick={() => restore(revision.number)}>Restore draft</Button>}</div><details><summary>Preview this revision</summary><pre>{JSON.stringify(revision.snapshot, null, 2)}</pre></details></article>)}</section>}
       {error && <p className="form-error" role="alert">{error}</p>}
       <div className="modal-actions"><Button type="button" variant="outline" disabled={busy} onClick={close}>Close</Button>{editable && initialEntry?.status !== 'deleted' && <Button type="submit" disabled={busy}>{busy ? 'Saving…' : status === 'published' ? 'Publish now' : status === 'scheduled' ? 'Schedule publication' : 'Save draft'}</Button>}</div>

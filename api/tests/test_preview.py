@@ -55,3 +55,20 @@ def test_private_title_never_leaks_in_delivery_metadata_search_or_sort(client, a
     assert result["hidden"]["total"] == 0
     assert [n["title"] for n in result["entries"]["nodes"]] == ["a", "z"]
     assert all("title" not in n["data"] for n in result["entries"]["nodes"])
+
+
+def test_preview_origin_configuration_is_admin_only_and_origin_scoped(app, client, admin):
+    for origin in ["javascript:alert(1)", "https://example.com/path", "https://a@b.com", "https://example.com?q=x"]:
+        assert client.patch("/api/project/preview", headers=admin, json={"origin": origin}).status_code == 422
+    assert (
+        client.patch("/api/project/preview", headers=admin, json={"origin": "https://site.example/"}).status_code == 200
+    )
+    define(client, admin, "sitePost")
+    saved = entry(client, admin, key="sitePost")["data"]["saveEntry"]
+    grant = gql(client, admin, CREATE, {"id": saved["id"], "version": saved["version"]})["data"]["createPreviewGrant"]
+    assert grant["previewUrl"] == "https://site.example/preview#grant=" + grant["token"]
+    reader, headers, _ = invited(app, client, admin, "reader", "preview-reader@example.com")
+    assert (
+        reader.patch("/api/project/preview", headers=headers, json={"origin": "https://other.example"}).status_code
+        == 403
+    )

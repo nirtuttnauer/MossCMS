@@ -173,7 +173,9 @@ def me(request: Request):
         return {
             "user": {"id": c["user"].id, "email": c["user"].email, "name": c["user"].name},
             "csrf": c["token"].csrf,
-            "projects": [{"id": p.id, "name": p.name, "role": role} for p, role in projects],
+            "projects": [
+                {"id": p.id, "name": p.name, "role": role, "previewOrigin": p.preview_origin} for p, role in projects
+            ],
             "providers": identities,
             "authSkipped": request.app.state.settings.skip_auth,
         }
@@ -395,4 +397,35 @@ def revoke_token(token_id: str, request: Request):
             raise CmsError("Token not found.", "NOT_FOUND")
         session.delete(token)
         audit(session, c["project_id"], c["actor"], "token.revoke", tokenId=token_id)
+    return {"ok": True}
+
+
+class PreviewOriginInput(BaseModel):
+    origin: str = Field(max_length=2048)
+
+
+@router.patch("/api/project/preview")
+def configure_preview(body: PreviewOriginInput, request: Request):
+    from urllib.parse import urlsplit
+
+    origin = body.origin.strip().rstrip("/")
+    if origin:
+        parsed = urlsplit(origin)
+        if (
+            parsed.scheme not in {"https", "http"}
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.path
+            or parsed.query
+            or parsed.fragment
+            or (request.app.state.settings.environment == "production" and parsed.scheme != "https")
+        ):
+            raise CmsError("Enter a website origin such as https://example.com (no path).", "VALIDATION")
+    with request.app.state.db.begin() as session:
+        c = context(request, session)
+        require(c, "admin", write=True)
+        project = session.get(Project, c["project_id"])
+        project.preview_origin = origin or None
+        audit(session, project.id, c["actor"], "project.preview", origin=origin)
     return {"ok": True}
