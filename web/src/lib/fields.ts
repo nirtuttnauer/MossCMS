@@ -49,6 +49,7 @@ export function clean(field: Field, named: boolean): Field {
   if (field.required) out.required = true
   if (field.localized) out.localized = true
   if (field.private) out.private = true
+  if (field.imageOnly) out.imageOnly = true
   if (field.type === 'enum') out.options = field.options || []
   if (field.type === 'reference' && field.target) out.target = field.target
   if (field.type === 'object') out.fields = (field.fields || []).map(f => clean(f, true))
@@ -75,36 +76,30 @@ export function shapeSignature(fields: Field[]): string {
   return JSON.stringify(fields.map(f => strip(f, true)))
 }
 
-// Render the delivery GraphQL shape for a content type, mirroring the backend's generated schema:
-// a `Cms<Key>` type with id/slug plus non-private fields; enums as <Name>Enum, nested objects as
-// <Name>Object; localized fields take a `locale` argument; references/assets resolve to nodes.
-export function deliveryShape(definitionName: string, key: string, fields: Field[]): string {
-  const scalar: Record<string, string> = { text: 'String', richText: 'String', number: 'Float', boolean: 'Boolean', date: 'Date' }
-  const type = key ? `Cms${key[0].toUpperCase()}${key.slice(1)}` : 'CmsType'
-  const sub: string[] = []
-  const cap = (n: string) => n ? n[0].toUpperCase() + n.slice(1) : ''
-  function ref(f: Field, base: string): string {
-    const kind = f.type
-    const b = `${base}${cap(f.name || 'Item')}`
-    const loc = f.localized ? '($locale: String = "en")' : ''
-    if (kind in scalar) return `${f.name}: ${scalar[kind]}${loc}`
-    if (kind === 'enum') {
-      const options = f.options || []
-      sub.push(`enum ${b}Enum {\n${options.map(o => `  ${o}\n`).join('')}}`)
-      return `${f.name}: ${b}Enum${loc}`
-    }
-    if (kind === 'object') {
-      const inner = (f.fields || []).filter(c => !c.private).map(c => `  ${ref(c, b)}`).join('\n')
-      sub.push(`type ${b}Object {\n${inner || '  empty: Boolean\n'}}`)
-      return `${f.name}: ${b}Object${loc}`
-    }
-    if (kind === 'list') return `${f.name}: [${ref(f.item || { name: '', type: 'text' }, b)}]${loc}`
-    if (kind === 'reference') return `${f.name}: CmsReference`
-    if (kind === 'asset') return `${f.name}: CmsAsset`
-    return `${f.name}: String${loc}`
+// Mirrors generated_schema: every field accepts locale, all content fields are nullable.
+export function deliveryShape(_definitionName: string, key: string, fields: Field[]): string {
+  const scalar:Record<string,string>={text:'String',richText:'String',number:'Float',boolean:'Boolean',date:'Date',reference:'ReferenceNode',asset:'AssetNode'}
+  const cap=(value:string)=>value?value[0].toUpperCase()+value.slice(1):''
+  const root='Cms'+cap(key || 'type'),sub:string[]=[]
+  function valueType(field:Field,name:string):string {
+    if(scalar[field.type])return scalar[field.type]
+    if(field.type==='list')return `[${valueType(field.item || {name:'',type:'text'},name+'Item')}]`
+    if(field.type==='enum'){sub.push(`enum ${name}Enum {\n${(field.options || []).map(o=>'  '+o).join('\n')}\n}`);return name+'Enum'}
+    const object=name+'Object';sub.push(objectType(field.fields || [],object));return object
   }
-  const body = ['  id: ID', '  slug: String', ...fields.filter(f => !f.private).map(f => `  ${ref(f, type)}`)].join('\n')
-  return `type ${type} {\n${body}\n}\n\n${sub.join('\n\n')}`.trim()
+  function objectType(values:Field[],name:string,isRoot=false):string {
+    const visible=values.filter(f=>!f.private)
+    const lines=visible.map(f=>`  ${f.name}(locale: String! = "en"): ${valueType(f,name+cap(f.name))}`)
+    if(!visible.length)lines.push('  empty: Boolean!')
+    if(isRoot)lines.push('  id: ID!','  slug: String!')
+    return `type ${name} {\n${lines.join('\n')}\n}`
+  }
+  const main=objectType(fields,root,true)
+  return `${main}\n\n${sub.join('\n\n')}\n\nextend type ProjectQuery {\n  all${root}(first: Int! = 20, after: String = null, locale: String! = "en"): [${root}!]!\n}\n\n# ReferenceNode and AssetNode are shared API types.`
+}
+
+export function hiddenFieldCount(fields:Field[]):number {
+  return fields.reduce((sum,f)=>sum+(f.private?1:0)+hiddenFieldCount(f.fields || [])+(f.item?hiddenFieldCount([f.item]):0),0)
 }
 
 type CheckCtx = { errors: string[] }

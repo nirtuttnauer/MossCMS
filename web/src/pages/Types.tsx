@@ -6,7 +6,7 @@ import { Dialog } from '../components/ui/dialog'
 import { FieldBuilder } from '../components/FieldBuilder'
 import { FieldInput } from '../components/Fields'
 import { initialData } from './Content'
-import { shapeSignature, toSchema, validateSchema, deliveryShape } from '../lib/fields'
+import { shapeSignature, toSchema, validateSchema, deliveryShape, hiddenFieldCount } from '../lib/fields'
 import { gql, message, typeFields, type Asset, type ContentType, type Entry, type Field } from '../lib/api'
 
 const defaultFields: Field[] = [
@@ -80,6 +80,7 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
           <button className="tab-btn" style={{fontWeight: tab === 'schema' ? 'bold' : 'normal', borderBottom: tab === 'schema' ? '2px solid var(--accent)' : 'none'}} onClick={() => setTab('schema')}>Delivery GraphQL</button>
         </div>
       </div>
+      <p>{hiddenFieldCount(fields)} private fields are hidden from delivery, including nested fields. Preview values are never saved as content.</p>
       <div className="preview-body">
         {tab === 'form' ? (
           <div className="preview-form">
@@ -89,7 +90,7 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
                 key={`${field.name || 'field'}-${i}`} 
                 field={field} 
                 value={previewData[field.name ?? '']} 
-                onChange={() => {}} 
+                onChange={value => setPreviewData(previous => ({...previous,[field.name]:value}))} 
                 references={references} 
                 assets={assets} 
               />

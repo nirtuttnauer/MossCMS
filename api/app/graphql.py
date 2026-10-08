@@ -541,7 +541,9 @@ def generated_schema(definitions, delivery=False, scopes=None):
             return list[field_type(f["item"], name + "Item") | None]  # type: ignore[misc]
         return object_type(f["fields"], name + "Object")
 
-    def value(f, raw, info, typ):
+    def value(f, raw, info, typ, locale="en"):
+        if f.get("localized") and isinstance(raw, dict):
+            raw = raw.get(locale)
         if raw is None:
             return None
         kind = f["type"]
@@ -556,7 +558,7 @@ def generated_schema(definitions, delivery=False, scopes=None):
             inner = typ.__args__[0]
             if hasattr(inner, "__args__"):
                 inner = inner.__args__[0]
-            return [value(f["item"], item, info, inner) for item in raw]
+            return [value(f["item"], item, info, inner, locale) for item in raw]
         if kind == "reference":
             try:
                 entry = content.get_entry(c["session"], c, raw)
@@ -573,9 +575,7 @@ def generated_schema(definitions, delivery=False, scopes=None):
     def make_field(f, typ):
         def resolver(self, info: strawberry.Info, locale: str = "en"):
             raw = self._data.get(f["name"])
-            if f.get("localized") and isinstance(raw, dict):
-                raw = raw.get(locale)
-            return value(f, raw, info, typ)
+            return value(f, raw, info, typ, locale)
 
         resolver.__annotations__["return"] = typ | None
         return strawberry.field(resolver=resolver, name=f["name"])

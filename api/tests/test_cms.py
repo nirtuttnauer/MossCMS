@@ -455,3 +455,38 @@ def test_empty_type_deletion_and_malformed_schema_validation(client, admin):
         'mutation{saveContentType(key:"article",name:"Article",fields:[{name:"title",type:"text"}],version:1,migration:{rename:[]}){key}}',
     )
     assert result["errors"][0]["extensions"]["code"] == "VALIDATION"
+
+
+def test_generated_delivery_signatures_and_localized_list_items(client, admin):
+    fields = [
+        {"name": "title", "type": "text", "localized": True},
+        {"name": "tags", "type": "list", "item": {"type": "enum", "options": ["One", "Two"], "localized": True}},
+        {
+            "name": "group",
+            "type": "object",
+            "fields": [{"name": "private", "type": "text", "private": True}, {"name": "image", "type": "asset"}],
+        },
+        {"name": "author", "type": "reference"},
+        {"name": "when", "type": "date"},
+    ]
+    define(client, admin, fields=fields)
+    entry(
+        client,
+        admin,
+        data={"title": {"en": "Title", "fr": "Titre"}, "tags": [{"en": "One", "fr": "Two"}]},
+        status="published",
+    )
+    token = delivery(client, admin)
+    result = gql(client, token, '{allCmsArticle{title(locale:"fr") tags(locale:"fr")}}', delivery=True)
+    assert result["data"]["allCmsArticle"] == [{"title": "Titre", "tags": ["Two"]}]
+    from app.graphql import generated_schema
+    from types import SimpleNamespace
+
+    schema = generated_schema([SimpleNamespace(key="sample", fields=fields)], delivery=True).as_str()
+    for signature in [
+        'tags(locale: String! = "en"): [CmsSampleTagsItemEnum]',
+        'image(locale: String! = "en"): AssetNode',
+        'author(locale: String! = "en"): ReferenceNode',
+    ]:
+        assert signature in schema
+    assert "private(locale:" not in schema
