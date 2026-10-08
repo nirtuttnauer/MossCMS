@@ -43,7 +43,7 @@ def validate_fields(fields, depth=0, named=True):
             ):
                 raise CmsError(f"Invalid, reserved, or duplicate field name: {name}")
             names.add(name)
-        for flag in ("required", "localized", "private"):
+        for flag in ("required", "localized", "private", "imageOnly"):
             if flag in f and not isinstance(f[flag], bool):
                 raise CmsError(f"{flag} must be a boolean.")
         if f["type"] == "object":
@@ -101,6 +101,8 @@ def validate_value(f, value, session, project_id, path):
         model = Entry if kind == "reference" else Asset
         record = session.get(model, value) if isinstance(value, str) else None
         good = record is not None and record.project_id == project_id
+        if good and record is not None and kind == "asset" and f.get("imageOnly"):
+            good = record.mime in {"image/png", "image/jpeg", "image/webp"}
         if good and record is not None and kind == "reference":
             good = record.status != "deleted"
             if f.get("target"):

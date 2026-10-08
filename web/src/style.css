@@ -316,3 +316,4 @@ summary { cursor: pointer; margin-bottom: 8px; }
 .deleted { background: #f4efee; color: #9d8580; }
 .deleted span { background: #bfa7a2; }
 @media (max-width: 640px) { .publishing-options { gap: 5px; } .publishing-options button { padding: 10px 6px; } .content-groups { gap: 6px; } .content-groups button { padding: 7px 9px; } }
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}.asset-grid button{display:flex;flex-direction:column;gap:6px;padding:8px;overflow-wrap:anywhere}.asset-picker{display:grid;gap:8px}

@@ -8,7 +8,7 @@ from enum import Enum
 from typing import Any, cast
 
 import strawberry
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, or_, select
 from strawberry.scalars import JSON
 
 from . import content
@@ -262,6 +262,51 @@ class Query:
             .all()
         )
         return [asset_node(a, c["settings"]) for a in rows]
+
+    @strawberry.field
+    def asset_page(
+        self,
+        info: strawberry.Info,
+        first: int = 24,
+        after: str | None = None,
+        search: str = "",
+        images_only: bool = False,
+        id: strawberry.ID | None = None,
+    ) -> JSON:
+        c = info.context
+        require(c)
+        if c["delivery"]:
+            raise CmsError("Use an asset field on published content.", "FORBIDDEN")
+        if not 1 <= first <= 100 or len(search) > 254:
+            raise CmsError("Use 1–100 assets per page and a search of at most 254 characters.")
+        query = content.scoped(c["session"], Asset, c)
+        if search:
+            query = query.where(
+                Asset.name.ilike("%" + search.replace("%", "\\%").replace("_", "\\_") + "%", escape="\\")
+            )
+        if images_only:
+            query = query.where(Asset.mime.in_(["image/png", "image/jpeg", "image/webp"]))
+        if id:
+            query = query.where(Asset.id == str(id))
+        if after:
+            boundary = c["session"].get(Asset, after)
+            if not boundary or boundary.project_id != c["project_id"]:
+                raise CmsError("Invalid asset cursor.")
+            query = query.where(
+                or_(
+                    Asset.created_at < boundary.created_at,
+                    and_(Asset.created_at == boundary.created_at, Asset.id < boundary.id),
+                )
+            )
+        rows = c["session"].scalars(query.order_by(Asset.created_at.desc(), Asset.id.desc()).limit(first + 1)).all()
+        return cast(
+            JSON,
+            {
+                "nodes": [asset_node(a, c["settings"]).__dict__ for a in rows[:first]],
+                "endCursor": rows[first - 1].id if len(rows) > first else None,
+                "hasNextPage": len(rows) > first,
+            },
+        )
 
     @strawberry.field
     def overview(self, info: strawberry.Info) -> JSON:

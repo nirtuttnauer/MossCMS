@@ -46,3 +46,26 @@ def test_s3_upload_and_presign_use_same_variant_contract(app, client, admin):
         response = client.get(url.path + "?" + url.query, follow_redirects=False)
         assert response.status_code == 307
         assert store.generate_presigned_url.call_args.kwargs["ExpiresIn"] <= 900
+
+
+def test_asset_pagination_search_and_image_only_validation(client, admin):
+    from conftest import gql, define, entry
+
+    ids = []
+    for name in ["Alpha.png", "Beta.png", "Gamma.png"]:
+        ids.append(
+            client.post("/api/assets", headers=admin, files={"file": (name, png(1, 1), "image/png")}).json()["id"]
+        )
+    document = client.post("/api/assets", headers=admin, files={"file": ("file.txt", b"text", "text/plain")}).json()[
+        "id"
+    ]
+    query = "query($after:String){assetPage(first:2,imagesOnly:true,after:$after)}"
+    first = gql(client, admin, query)["data"]["assetPage"]
+    second = gql(client, admin, query, {"after": first["endCursor"]})["data"]["assetPage"]
+    assert {a["id"] for a in first["nodes"] + second["nodes"]} == set(ids)
+    assert gql(client, admin, '{assetPage(search:"Beta"){}}').get("errors")  # JSON scalar must not have selection
+    assert len(gql(client, admin, '{assetPage(search:"Beta")}')["data"]["assetPage"]["nodes"]) == 1
+    define(
+        client, admin, fields=[{"name": "title", "type": "text"}, {"name": "cover", "type": "asset", "imageOnly": True}]
+    )
+    assert "errors" in entry(client, admin, data={"title": "Test", "cover": document})
