@@ -3,6 +3,7 @@
 import base64
 import json
 import re
+from copy import deepcopy
 from datetime import date, datetime
 
 from sqlalchemy import and_, func, or_, select
@@ -150,7 +151,7 @@ def get_entry(session, identity, id):
     if (
         not record
         or record.project_id != identity["project_id"]
-        or (identity.get("delivery") and record.status != "published")
+        or (identity.get("delivery") and (record.published_slug is None or record.status == "deleted"))
     ):
         raise CmsError("Entry not found.", "NOT_FOUND")
     get_type(session, identity, session.get(ContentType, record.type_id).key)
@@ -159,19 +160,33 @@ def get_entry(session, identity, id):
 
 def entry_dict(session, identity, record):
     definition = session.get(ContentType, record.type_id)
+    delivery = identity.get("delivery")
     data = record.published_data or {} if identity.get("delivery") else record.data
     if identity.get("delivery"):
         data = public_data(definition.fields, data)
     return {
         "id": record.id,
         "typeKey": definition.key,
-        "slug": record.slug,
-        "title": record.title if not identity.get("delivery") else record.slug,
+        "slug": record.published_slug if delivery else record.slug,
+        "title": record.published_title if delivery else record.title,
         "data": data,
-        "status": record.status,
-        "version": record.version,
-        "updatedAt": record.updated_at.isoformat() + "Z",
-        "scheduledAt": record.scheduled_at.isoformat() + "Z" if record.scheduled_at else None,
+        "status": "published" if delivery else record.status,
+        "version": record.published_revision if delivery else record.version,
+        "updatedAt": (record.published_at if delivery else record.updated_at).isoformat() + "Z",
+        "scheduledAt": None if delivery else record.scheduled_at.isoformat() + "Z" if record.scheduled_at else None,
+        "isLive": record.published_slug is not None,
+        "hasUnpublishedChanges": False
+        if delivery
+        else (
+            record.published_slug is None
+            or record.slug != record.published_slug
+            or record.title != record.published_title
+            or record.data != record.published_data
+        ),
+        "publishedAt": record.published_at.isoformat() + "Z" if record.published_at else None,
+        "publishedRevision": record.published_revision,
+        "scheduledRevision": None if delivery else record.scheduled_revision,
+        "scheduleError": None if delivery else record.schedule_error,
     }
 
 
@@ -183,7 +198,7 @@ def entry_page(
         raise CmsError("Use a page size of 1–100 and a supported sort order.")
     query = scoped(session, Entry, identity)
     if identity.get("delivery"):
-        query = query.where(Entry.status == "published")
+        query = query.where(Entry.published_slug.is_not(None), Entry.status != "deleted")
         if identity["scopes"]:
             query = query.where(
                 Entry.type_id.in_(
@@ -204,8 +219,8 @@ def entry_page(
         safe = search[:100].replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         query = query.where(
             or_(
-                (Entry.slug if identity.get("delivery") else Entry.title).ilike(f"%{safe}%", escape="\\"),
-                Entry.slug.ilike(f"%{safe}%", escape="\\"),
+                (Entry.published_title if identity.get("delivery") else Entry.title).ilike(f"%{safe}%", escape="\\"),
+                (Entry.published_slug if identity.get("delivery") else Entry.slug).ilike(f"%{safe}%", escape="\\"),
             )
         )
     if filters:
@@ -234,7 +249,13 @@ def entry_page(
             )
             query = query.where(expr == value)
     total = session.scalar(select(func.count()).select_from(query.subquery()))
-    attr = (Entry.slug if identity.get("delivery") else Entry.title) if sort.startswith("title") else Entry.updated_at
+    attr = (
+        (Entry.published_title if identity.get("delivery") else Entry.title)
+        if sort.startswith("title")
+        else Entry.published_at
+        if identity.get("delivery")
+        else Entry.updated_at
+    )
     descending = sort.endswith("desc")
     if after:
         try:
@@ -243,7 +264,7 @@ def entry_page(
             value, id, cursor_sort = json.loads(base64.urlsafe_b64decode(after.encode()))
             if cursor_sort != sort:
                 raise ValueError()
-            if attr is Entry.updated_at:
+            if not sort.startswith("title"):
                 value = datetime.fromisoformat(value)
         except Exception as exc:
             raise CmsError("Invalid page cursor.") from exc
@@ -263,9 +284,9 @@ def entry_page(
     if items:
         last = items[-1]
         value = (
-            (last.slug if identity.get("delivery") else last.title)
+            (last.published_title if identity.get("delivery") else last.title)
             if sort.startswith("title")
-            else last.updated_at.isoformat()
+            else (last.published_at if identity.get("delivery") else last.updated_at).isoformat()
         )
         cursor = base64.urlsafe_b64encode(json.dumps([value, last.id, sort]).encode()).decode()
     return {
@@ -305,6 +326,8 @@ def revision(session, identity, record):
         "data": record.data,
         "status": record.status,
         "scheduledAt": record.scheduled_at.isoformat() if record.scheduled_at else None,
+        "publishedRevision": record.published_revision,
+        "scheduledRevision": record.scheduled_revision,
     }
     session.add(
         Revision(
@@ -317,7 +340,28 @@ def revision(session, identity, record):
     )
 
 
-def save_entry(session, identity, type_key, slug, data, status="draft", id=None, version=None, scheduled_at=None):
+def summarize_status(record):
+    if record.status != "deleted":
+        record.status = "scheduled" if record.scheduled_at else "published" if record.published_slug else "draft"
+
+
+def clear_schedule(record):
+    record.scheduled_at = record.scheduled_data = record.scheduled_slug = record.scheduled_title = None
+    record.scheduled_revision = record.scheduled_schema_version = record.schedule_error = None
+
+
+def publish_snapshot(record, definition, data, slug, title, number):
+    record.published_data = deepcopy(data)
+    record.published_slug, record.published_title = slug, title
+    record.published_at, record.published_revision = now(), number
+    record.published_schema_version = definition.version
+    clear_schedule(record)
+    summarize_status(record)
+
+
+def save_entry(
+    session, identity, type_key, slug, data, status="draft", id=None, version=None, scheduled_at=None, restoring=False
+):
     require(identity, "editor", write=True)
     definition = get_type(session, identity, type_key)
     validate_data(definition.fields, data, session, identity["project_id"])
@@ -339,6 +383,8 @@ def save_entry(session, identity, type_key, slug, data, status="draft", id=None,
     record = get_entry(session, identity, id) if id else Entry(project_id=identity["project_id"], type_id=definition.id)
     if id and (record.type_id != definition.id or version != record.version):
         raise CmsError("This entry changed. Reload before saving.", "CONFLICT")
+    if record.status == "deleted" and not restoring:
+        raise CmsError("Restore a revision to recover a trashed entry.")
     if not id:
         session.add(record)
     record.slug = slug
@@ -346,12 +392,22 @@ def save_entry(session, identity, type_key, slug, data, status="draft", id=None,
     if isinstance(title, dict):
         title = title.get("en") or next(iter(title.values()), slug)
     record.title = str(title)[:200]
-    record.data = data
-    record.status = status
-    record.scheduled_at = schedule
-    record.published_data = data if status == "published" else None
+    record.data = deepcopy(data)
+    record.status = "draft" if restoring else status
+    if status == "scheduled":
+        record.scheduled_at = schedule
+        record.scheduled_data = deepcopy(data)
+        record.scheduled_slug, record.scheduled_title = slug, record.title
+        record.scheduled_schema_version = definition.version
+        record.schedule_error = None
+    summarize_status(record)
     record.updated_at = now()
     record.author_id = identity["user"].id
+    next_version = record.version + 1 if id else 1
+    if status == "published":
+        publish_snapshot(record, definition, data, slug, record.title, next_version)
+    elif status == "scheduled":
+        record.scheduled_revision = next_version
     revision(session, identity, record)
     audit(
         session,
@@ -378,6 +434,12 @@ def move_entry(session, identity, id, type_key, version):
     validate_data(target.fields, record.data, session, identity["project_id"])
     if record.published_data is not None:
         validate_data(target.fields, record.published_data, session, identity["project_id"])
+    if record.scheduled_data is not None:
+        validate_data(target.fields, record.scheduled_data, session, identity["project_id"])
+    if record.published_slug:
+        record.published_schema_version = target.version
+    if record.scheduled_data is not None:
+        record.scheduled_schema_version = target.version
     record.type_id = target.id
     record.updated_at = now()
     revision(session, identity, record)
@@ -398,7 +460,10 @@ def archive_entry(session, identity, id, version):
     record = get_entry(session, identity, id)
     if record.version != version:
         raise CmsError("This entry changed. Reload before deleting.", "CONFLICT")
-    record.status, record.published_data, record.scheduled_at = "deleted", None, None
+    record.status, record.published_data = "deleted", None
+    record.published_slug = record.published_title = record.published_at = None
+    record.published_revision = record.published_schema_version = None
+    clear_schedule(record)
     record.updated_at = now()
     revision(session, identity, record)
     audit(session, record.project_id, identity["actor"], "entry.delete", entryId=id)
@@ -412,7 +477,15 @@ def restore_entry(session, identity, id, number, version):
         raise CmsError("Revision not found.", "NOT_FOUND")
     definition = session.get(ContentType, record.type_id)
     return save_entry(
-        session, identity, definition.key, old.snapshot["slug"], old.snapshot["data"], "draft", id, version
+        session,
+        identity,
+        definition.key,
+        old.snapshot["slug"],
+        old.snapshot["data"],
+        "draft",
+        id,
+        version,
+        restoring=True,
     )
 
 
@@ -457,6 +530,10 @@ def save_type(session, identity, key, name, fields, version=None, migration=None
             entry.data = transform(entry.data)
             if entry.published_data is not None:
                 entry.published_data = transform(entry.published_data)
+                entry.published_schema_version = record.version + 1
+            if entry.scheduled_data is not None:
+                entry.scheduled_data = transform(entry.scheduled_data)
+                entry.scheduled_schema_version = record.version + 1
             entry.updated_at = now()
             revision(session, identity, entry)
         record.version += 1
@@ -488,7 +565,7 @@ def publish_due(factory):
                     session, record.project_id, "scheduler", "entry.schedule_failed", entryId=record.id, reason=str(exc)
                 )
                 continue
-            record.status, record.published_data, record.scheduled_at = "published", record.data, None
+            publish_snapshot(record, definition, record.data, record.slug, record.title, record.version)
             record.updated_at = now()
             revision(session, {"actor": "scheduler"}, record)
             audit(session, record.project_id, "scheduler", "entry.publish", entryId=record.id)

@@ -28,6 +28,13 @@ class EntryNode:
     updated_at: str
     scheduled_at: str | None
 
+    is_live: bool
+    has_unpublished_changes: bool
+    published_at: str | None
+    published_revision: int | None
+    scheduled_revision: int | None
+    schedule_error: JSON | None
+
     @classmethod
     def from_dict(cls, d):
         return cls(
@@ -40,6 +47,12 @@ class EntryNode:
             version=d["version"],
             updated_at=d["updatedAt"],
             scheduled_at=d["scheduledAt"],
+            is_live=d["isLive"],
+            has_unpublished_changes=d["hasUnpublishedChanges"],
+            published_at=d["publishedAt"],
+            published_revision=d["publishedRevision"],
+            scheduled_revision=d["scheduledRevision"],
+            schedule_error=d["scheduleError"],
         )
 
 
