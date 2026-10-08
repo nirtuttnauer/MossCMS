@@ -51,7 +51,8 @@ Changes, revisions and audit events commit in the same transaction.
 | Restore from trash | Restore as working draft | Remain unpublished | Remain absent |
 | Schedule due, valid | Preserve any newer working edits | Replace with captured snapshot | Clear pending/failure |
 | Schedule due, invalid/conflicting | Preserve | Preserve | Stop automatic retry; retain captured revision and actionable failure |
-| Retry after repair | Explicitly schedule a newly validated working revision | Preserve | Replace failed capture explicitly |
+| Retry captured revision after repair | Preserve | Preserve | Revalidate/requeue retained captured data and revision |
+| Replace failed schedule | Save selected working data | Preserve | Explicitly replace capture with newer working revision |
 
 Draft saves no longer cancel a schedule or unpublish. Existing callers can keep
 using `saveEntry(status: draft|published|scheduled)`, but must use new

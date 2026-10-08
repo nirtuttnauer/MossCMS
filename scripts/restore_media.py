@@ -25,7 +25,19 @@ print('Local media restored.')
 """
 with args.backup.open("rb") as source:
     subprocess.run(
-        ["docker", "compose", "exec", "-T", "app", "python", "-c", program],
+        [
+            "docker",
+            "compose",
+            "run",
+            "--rm",
+            "--no-deps",
+            "-T",
+            "--entrypoint",
+            "python",
+            "app",
+            "-c",
+            program,
+        ],
         cwd=root,
         stdin=source,
         check=True,

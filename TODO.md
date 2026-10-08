@@ -40,15 +40,18 @@ The original starter backlog is implemented. The items below record the delivere
 - [x] Team management: administrator/editor/reader roles, invitation acceptance and revocation, membership removal, last-administrator protection, and workspace switching.
 - [x] OAuth sign-in: GitHub and generic OIDC, invitation-gated onboarding, verified emails, and explicit authenticated account linking.
 
-## Verification
+## Approved MC-01–MC-34 release
 
-- Python lint, formatting, and mypy checks pass.
-- All 21 backend tests pass; the suite covers authentication, tenant isolation, authorization, publishing, history, migration, recovery, OAuth business rules, and local/S3 asset behavior.
-- The Docker build passes frontend type checks, seven UI tests, and the production Vite build.
-- npm audit reports zero vulnerabilities for the locked dependency graph.
-- Local media restoration into an empty volume passed.
-- The pre-upgrade PostgreSQL backup was restored into a separate empty database and migrated successfully; the original Article and initial schema history were preserved.
-- A separate PostgreSQL integration check passed sign-in, schema creation/deletion, publishing, JSON field filtering, and scoped delivery.
-- Live app and database containers are healthy; the setup page, readiness endpoint, and unknown-path 404 behavior were checked.
+All 34 Aftur tasks, including optional P3 schema tools, were approved in this chat and implemented sequentially on feature branches from local `main`. The [execution ledger](docs/planning/IMPLEMENTATION.md) maps each task to its retained branch. MCP attempts and commit artifacts record the work; the WIP Aftur workflow may still display the original proposed statuses.
 
-External provider exchanges and a real S3 bucket require owner-supplied credentials. Recovery/invitation links are shared manually. Rich-text fields currently store text rather than a portable block document format.
+Delivered scope includes independent live/draft/scheduled snapshots, explicit publication actions, autosave/conflict recovery, Markdown, saved website previews, responsive covers/galleries, public paths/metadata/feeds, failure queues, outbox/signed webhooks/SSE with polling, uncertain-save reconciliation, schema previews/migration suggestions and larger-schema tools. [Editor guide](docs/editor-workflows.md) and [operator guide](docs/deployment-recovery.md) describe the shipped behavior.
+
+## Verification — 8 October 2026
+
+- Ruff lint/format and mypy passed; PostgreSQL: 47 tests passed; SQLite: 46 passed and one PostgreSQL concurrency test skipped.
+- Admin: 33 tests passed. Website: seven server tests passed. Both frontends passed TypeScript and production builds, and both locked npm graphs had zero reported audit vulnerabilities.
+- Both production Docker images built and passed runtime import checks. A separate isolated Compose recovery started the API successfully after matched-image database/media restore, including original/variant objects and populated-volume refusal.
+- A schema `0001` fixture was dumped/restored into separate databases and upgraded to `0008`, preserving 1,004 entries, IDs, working values/slugs/status/version and history. Two real HTTP walkthroughs covered publication, captured schedules, preview isolation/revocation, images, routes, metadata, feeds and webhook freshness.
+- Measured local HTTP p95 save: 64 ms; website freshness: 1.08 s; ten-entry schedule batch: 2.98 s after due time. Polling recovery took about 10.06 s. These are small local samples, not production/full-Compose load or browser paint measurements.
+
+See [release acceptance evidence](docs/release-acceptance-2026-10-08.md) and its raw observations for conditions, failures fixed and limitations. External OAuth exchanges, a real S3 bucket, public TLS/DNS/deployment, browser visual/assistive-technology review and full Compose load testing remain unverified. Rich-text fields store compatible Markdown strings; a block-document editor is deferred. Unselected schema ideas are listed in [TYPE_IMPROVEMENTS.md](TYPE_IMPROVEMENTS.md).

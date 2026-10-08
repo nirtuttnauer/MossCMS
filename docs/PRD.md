@@ -1,6 +1,12 @@
 # MossCMS and example.com — Product requirements
 
-Version: 1.0 · Date: 7 October 2026 · Status: Draft for owner review
+Version: 1.0 baseline · Date: 7 October 2026 · Execution update: 8 October 2026
+
+## Execution update
+
+The owner approved all 34 derived tasks in this chat, including optional P3 work, and requested sequential implementation on feature branches from `main`. MC-01–MC-34 are implemented and integrated into local `main`; retained branches and Aftur MCP attempts/artifacts are listed in [the execution ledger](planning/IMPLEMENTATION.md). Aftur is work in progress: its original proposed/dependency statuses have not been presented as approval or completion evidence.
+
+The baseline/gaps and proposed wording below preserve the 7 October planning record. They are historical, not descriptions of today's defects or unapproved work. [Release evidence](release-acceptance-2026-10-08.md) records actual checks and unverified production/browser/provider conditions. [Editor workflows](editor-workflows.md) and [deployment/recovery](deployment-recovery.md) describe shipped behavior. No public deployment or hosting change was performed.
 
 ## 1. Product definition
 
@@ -10,7 +16,7 @@ The owner controls the application, database, media, and delivery credentials. T
 
 ## 2. Sources and authority
 
-This PRD was drafted at the owner's request from this conversation and the repository as inspected on 7 October 2026. It is not an owner-approved specification.
+This PRD was drafted at the owner's request from this conversation and the repository as inspected on 7 October 2026. It was initially a draft; implementation authorization subsequently came from the owner's explicit chat approval described above.
 
 - **Owner requirements:** Docker with a multistage build; Python managed by uv; Vite/React with shadcn-style admin components; GraphQL content delivery; team management; OAuth; a temporary development auth bypass; scheduled posts; content groups such as projects and blog posts; and the CMS-managed example.com website described below.
 - **Observed baseline:** capabilities found in the current source. Existing features are retained rather than recreated as new tasks.
@@ -47,7 +53,7 @@ Sources: root `README.md`, `TODO.md`, `TYPE_IMPROVEMENTS.md`, `personal-site/REA
 - Automatic DNS changes or public deployment of example.com.
 - Additional OAuth providers, custom per-field team roles, or email delivery beyond the current manually shared invitations and recovery links.
 
-## 5. Current baseline
+## 5. Historical baseline — 7 October 2026
 
 These are observed capabilities, not a certification of production readiness.
 
@@ -203,11 +209,13 @@ These are release targets, not measured current performance.
 
 The detailed proposed tasks and dependency graph are in Aftur and mirrored in `docs/planning/TASKS.md`. No release date or elapsed-time estimate is committed.
 
-## 11. Decisions to confirm during task review
+## 11. Initial decisions and recorded implementation
 
-1. Markdown is the proposed compatible first rich-text format; a block editor would be separate scope.
-2. Proposed preview grant lifetime is 15 minutes, bound to a saved revision, and revocable. Confirm whether sharing previews beyond workspace members is desired; initial scope is editors only.
-3. Proposed scheduling semantics freeze the selected revision. Further edits require explicit rescheduling to replace it.
-4. Image variants initially cover image formats supported by the chosen processing library; define upload/decoded-pixel limits before implementation.
-5. Choose the first public hosting/reverse-proxy arrangement and redirect retention policy during release planning.
-6. P3 schema usability tasks are optional and can be deferred independently of publishing and authoring work.
+| Initial decision | Implemented outcome / remaining choice |
+| --- | --- |
+| First rich-text format | Markdown strings with shared safe rendering; block documents remain separate scope |
+| Preview lifetime and audience | 15-minute saved-revision grants, editor/admin issuance, revocable; initial URL is a secret bearer capability and should not be shared |
+| Scheduling | Immutable selected revision; replace explicitly to include later edits |
+| Raster processing | JPEG/PNG/WebP, 20 million pixels, 10,000 per dimension, 20 MiB upload bound; animated inputs rejected; bounded WebP variants |
+| Hosting and redirects | Hosting/TLS/DNS remains owner setup. Legacy hashes translate and unique current aliases redirect; changing a published slug has no historical redirect retention |
+| Optional P3 | MC-31/MC-32 were included in the owner's approval and implemented; other backlog ideas remain separate |

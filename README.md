@@ -82,13 +82,13 @@ Create a type with key `article` and a field definition such as:
 ]
 ```
 
-Supported types: text, richText (a text value), number, boolean, date (`YYYY-MM-DD`), enum, object, list, reference, asset. Localized fields contain locale maps, for example `{"en":"Hello","he":"שלום"}`. References and assets store IDs belonging to the same workspace. Private fields are removed from delivery schemas and values, including nested objects/lists. Slugs are normalized and unique within a content type.
+Supported types: text, richText (Markdown stored as a string), number, boolean, date (`YYYY-MM-DD`), enum, object, list, reference, asset. Localized fields contain locale maps, for example `{"en":"Hello","he":"שלום"}`. References and assets store IDs belonging to the same workspace. Private fields are removed from delivery schemas and values, including nested objects/lists. Slugs are normalized and unique within a content type.
 
 Schema updates validate every stored entry and published snapshot in one transaction. For incompatible changes, provide an explicit migration, for example `{"rename":{"oldName":"newName"},"defaults":{"requiredField":"value"},"drop":["obsolete"]}`. Schema and entry changes retain revisions. Entry updates require the current `version` to prevent overwriting concurrent edits. Restoring a revision creates a new draft and validates it against the current schema.
 
 Content is grouped by its schema type in the Content library. Each group shows its entry count and opens a filtered list; **New entry** uses the selected type. Create additional types in **Content types** to organize other collections. The personal website includes separate Projects, Blog posts, Website page, Homepage slide, and Website profile groups.
 
-In the editor, use **Draft**, **Publish now**, or **Schedule**. Scheduling shows a date/time picker and the browser's timezone; values are sent and stored in UTC. Scheduled entries remain private until publication, show their due date in the library, and can be rescheduled or cancelled by saving as a draft. The library refreshes every 10 seconds while visible and pauses refresh while an editor is open. Scheduling runs approximately every 5 seconds, including an immediate check on startup to handle overdue entries. The app must be running for scheduled publication. If references become invalid before publication, the entry returns to draft and records an audit event.
+Entries have independent working, live and scheduled versions. **Save draft** and autosave preserve existing live content and captured schedules. **Publish now** replaces the complete live snapshot. **Schedule / Replace schedule** freezes the selected revision and UTC due time; later draft edits do not alter it. Use explicit **Cancel schedule** or **Unpublish** actions. The scheduler checks about every five seconds and on startup. Failed captures preserve live content and appear in **Publications**, where editors can retry the captured revision, replace it or discard it. Dates display the browser timezone. See [editor workflows](docs/editor-workflows.md) for autosave recovery, Markdown, media, saved website previews and schema tools, and [the publication contract](docs/publication-contract.md) for API transition semantics.
 
 Administrators can use the editorial `moveEntry(id, typeKey, version)` mutation to move compatible entries between schema types. It validates both editable and published data against the target schema and retains the entry ID, schedule, status, revision history and audit trail. Slug conflicts or incompatible data reject the move. The website setup script uses this to upgrade older projects and posts stored as Website pages.
 
@@ -145,15 +145,17 @@ Terminate TLS at a reverse proxy and proxy to the default `127.0.0.1:8000` bindi
 
 For an existing database, changing `.env` alone does not rotate its password: change the PostgreSQL role password through an operator connection and update `.env` together. Preserve secret values for upgrades. Changing `MOSS_SECRET_KEY` invalidates pending OAuth state and signed media links. Protect database backups because they include account/session data.
 
-Health: `/health` is process health, `/ready` checks the database, Docker checks `/ready`. `/metrics` requires an administrator session/project. Logs include request IDs and request timing; query strings containing invitation or OAuth tokens are omitted. Shutdown stops the scheduler and closes database connections. Unknown static paths return 404 and `/` supports HEAD.
+Health: `/health` is process health, `/ready` checks the database, Docker checks `/ready`. `/metrics` requires an administrator session/project. Logs include request IDs and request timing; query strings containing invitation or OAuth tokens are omitted. Shutdown waits for scheduler/webhook work and closes database connections. Configure signed publication callbacks and website cache invalidation using [deployment guidance](docs/deployment-recovery.md) and [the webhook protocol](docs/webhooks.md). Unknown static paths return 404 and `/` supports HEAD.
 
 ## Backup, restore, and upgrades
 
 ```sh
+docker compose stop app
 python3 scripts/backup.py
+docker compose up -d --no-build app
 ```
 
-Creates timestamped PostgreSQL custom-format dumps and local media archives under `backups/`, with restrictive permissions. For a consistent database/media pair, pause editorial writes and scheduled publication while taking the backup. For S3, separately enable object versioning and back up the bucket; the local archive does not contain S3 objects.
+Creates timestamped PostgreSQL custom-format dumps and local media archives under `backups/`, with restrictive permissions. Stopping the app pauses editorial writes, scheduling and webhook workers. Media backup uses a temporary container without application startup; stop the website too if it is in use. For S3, separately enable object versioning and back up the bucket; the local archive does not contain S3 objects.
 
 Restore into an **existing empty database** on the Compose database service:
 
@@ -162,9 +164,9 @@ docker compose exec db sh -c 'createdb -U "$POSTGRES_USER" mosscms_recovery'
 python3 scripts/restore.py backups/TIMESTAMP.dump --target mosscms_recovery --confirm-target mosscms_recovery
 ```
 
-The restore tool refuses non-empty databases and restores transactionally. Restore local assets into an empty `/data` volume using `python3 scripts/restore_media.py backups/TIMESTAMP.media.tar.gz --confirm-empty-volume`. It validates archive paths and rejects links and existing files. Update `POSTGRES_DB` to the recovered database and recreate the app. Keep the original database/volume until recovery is confirmed. For a complete host restore, use the same `.env` and storage settings.
+The restore tool refuses non-empty databases and restores transactionally. Restore local assets into a **new empty** `/data` volume using `python3 scripts/restore_media.py backups/TIMESTAMP.media.tar.gz --confirm-empty-volume` before application startup. It validates archive paths and rejects links and existing files. Select the matching retained image and recovered database/media through [the recovery guide](docs/deployment-recovery.md#restore-a-matched-backupimage-pair). Keep the original database/volume until recovery is confirmed; preserve matching private configuration and storage settings.
 
-Upgrade procedure: save a working source/image version, back up database and media, update dependencies/source, build the image, and run `docker compose up -d --build`. Alembic migrations run before serving; PostgreSQL advisory locks serialize concurrent migration attempts. Confirm `/ready`, sign-in, content counts, and delivery access. Rollback should restore the previous database backup together with the previous application image; schema downgrades may remove data. Never delete the data volume during an upgrade. The initial migration is covered against legacy Article data.
+Upgrade procedure: save a working source/image version, stop writers and back up database/media, update dependencies/source, build the image, and run `docker compose up -d --build`. Alembic migrations run before serving; PostgreSQL advisory locks serialize concurrent migration attempts. Confirm `/ready`, sign-in, content counts, and delivery access. Rollback restores the previous database/media backup together with the matching application image/configuration; do not downgrade the schema alone. Never delete the data volume during an upgrade. Legacy data and the independent-snapshot migration are covered by tests and a restored-database rehearsal.
 
 Node/Python image digests and Python/npm lockfiles pin builds. To update, deliberately change image digests and dependency ranges, regenerate both locks, run the checks below, review advisories, and rehearse the upgrade on a restored database. PostgreSQL remains pinned to major 17; update its image within that major deliberately. A major PostgreSQL upgrade requires `pg_upgrade` or dump/restore into a new volume.
 
@@ -216,4 +218,4 @@ CI runs the same checks. Tests cover authorization and workspace boundaries, tok
 
 ## Product plan
 
-The [PRD](docs/PRD.md) records the current product and proposed next release. The [task breakdown](docs/planning/TASKS.md) includes acceptance criteria and dependencies. Proposed work is tracked in the local Aftur project at `ProjectMemory/MossCMS`; open that folder in Aftur to review the PRD and plan. Task status in Aftur is authoritative; the Markdown/JSON files are the initial planning snapshot.
+The [PRD](docs/PRD.md) retains the 7 October baseline and records the approved release scope. The [task breakdown](docs/planning/TASKS.md) includes acceptance criteria and dependencies. The original task plan is tracked in the local Aftur project at `ProjectMemory/MossCMS`; open that folder in Aftur to review the PRD and plan. The owner approved all 34 tasks in this chat on 8 October 2026; they are now implemented sequentially on feature branches integrated into local `main`. [Execution ledger](docs/planning/IMPLEMENTATION.md) and [release evidence](docs/release-acceptance-2026-10-08.md) record the result. Aftur MCP attempts/artifacts record execution; its unfinished workflow statuses may still show proposed/dependency blocks. The original Markdown/JSON plan retains that historical status and is not current implementation evidence.

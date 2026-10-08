@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture PostgreSQL and local media backups without stopping the service."""
+"""Capture PostgreSQL/local media; stop editorial writers for a consistent pair."""
 
 import argparse
 import subprocess
@@ -32,8 +32,25 @@ for service, command, suffix in [
     temporary = target.with_suffix(target.suffix + ".partial")
     try:
         with temporary.open("wb") as output:
+            temporary.chmod(0o600)
+            compose_command = (
+                ["docker", "compose", "exec", "-T", service, *command]
+                if service == "db"
+                else [
+                    "docker",
+                    "compose",
+                    "run",
+                    "--rm",
+                    "--no-deps",
+                    "-T",
+                    "--entrypoint",
+                    command[0],
+                    service,
+                    *command[1:],
+                ]
+            )
             subprocess.run(
-                ["docker", "compose", "exec", "-T", service, *command],
+                compose_command,
                 cwd=root,
                 stdout=output,
                 check=True,

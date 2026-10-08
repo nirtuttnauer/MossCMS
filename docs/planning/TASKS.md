@@ -1,8 +1,8 @@
-# MossCMS — Proposed implementation tasks
+# MossCMS — Initial task plan and execution reference
 
-Prepared 7 October 2026. These are proposed improvements for owner review, not approved execution.
+Prepared 7 October 2026 as proposed improvements. Execution update, 8 October: the owner approved all 34 tasks in chat and they are implemented on retained feature branches integrated into local `main`. See [execution ledger](IMPLEMENTATION.md), [release evidence](../release-acceptance-2026-10-08.md) and [operator guidance](../deployment-recovery.md). The original descriptions/status language below preserve the planning snapshot.
 
-PRD: [Product requirements](../PRD.md). Aftur is the task status source of truth; this is a snapshot of the initial plan.
+PRD: [Product requirements](../PRD.md). Aftur MCP attempts/artifacts record execution; its WIP approval/dependency workflow may still show proposed statuses. This document retains the initial plan and is not current tracker-state evidence.
 
 Aftur workspace: `/Users/nirtuttnauer/Documents/Code/MossCMS/ProjectMemory/MossCMS`. Imported PRD: `PRD-e46f6b17`.
 
