@@ -12,6 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import StaleDataError
 
 from .models import Asset, ContentType, DraftReceipt, Entry, Revision, SchemaRevision, now
+from .outbox import emit
 from .security import CmsError, audit, require
 
 KINDS = {"text", "richText", "number", "boolean", "date", "enum", "object", "list", "reference", "asset"}
@@ -454,11 +455,14 @@ def save_entry(
     record.updated_at = now()
     record.author_id = identity["user"].id
     next_version = record.version + 1 if id else 1
+    previous_slug = record.published_slug
     if status == "published":
         publish_snapshot(record, definition, data, slug, record.title, next_version)
     elif status == "scheduled":
         record.scheduled_revision = next_version
     revision(session, identity, record)
+    if status == "published":
+        emit(session, record, "published", record.published_revision, record.published_slug, previous_slug)
     audit(
         session,
         record.project_id,
@@ -581,6 +585,8 @@ def publication_action(session, identity, id, version, unpublish=False):
         raise CmsError("This entry changed. Reload before changing publication.", "CONFLICT")
     if record.status == "deleted":
         raise CmsError("Restore a revision to recover a trashed entry.")
+    if unpublish and record.published_slug:
+        emit(session, record, "unpublished", record.published_revision, record.published_slug)
     clear_schedule(record)
     if unpublish:
         record.published_data = record.published_slug = record.published_title = record.published_at = None
@@ -603,6 +609,7 @@ def archive_entry(session, identity, id, version):
     record = get_entry(session, identity, id)
     if record.version != version:
         raise CmsError("This entry changed. Reload before deleting.", "CONFLICT")
+    emit(session, record, "trashed", record.published_revision, record.published_slug)
     record.status, record.published_data = "deleted", None
     record.published_slug = record.published_title = record.published_at = None
     record.published_revision = record.published_schema_version = None
@@ -704,6 +711,7 @@ def publish_due(factory):
                     if record.scheduled_data is None or not record.scheduled_slug or captured is None:
                         raise CmsError("Scheduled snapshot is missing; save a new schedule.")
                     validate_data(definition.fields, record.scheduled_data, session, record.project_id)
+                    previous_slug = record.published_slug
                     publish_snapshot(
                         record,
                         definition,
@@ -714,6 +722,7 @@ def publish_due(factory):
                     )
                     record.updated_at = now()
                     revision(session, {"actor": "scheduler"}, record)
+                    emit(session, record, "published", captured, record.published_slug, previous_slug)
                     audit(
                         session,
                         record.project_id,
