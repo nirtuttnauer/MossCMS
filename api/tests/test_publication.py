@@ -242,7 +242,7 @@ def test_failed_queue_and_retry_keep_captured_revision(app, client, admin):
     failed = gql(client, admin, "{publicationQueue(failed:true)}")["data"]["publicationQueue"]
     assert failed["total"] == 1
     retry = "mutation($id:ID!,$version:Int!){retryPublication(id:$id,version:$version){version scheduledRevision scheduleError}}"
-    args = {"id": saved["id"], "version": saved["version"]}
+    args = {"id": saved["id"], "version": failed["nodes"][0]["version"]}
     reader, headers, _ = invited(app, client, admin, "reader", "queue-reader@example.com")
     assert "errors" in gql(reader, headers, retry, args)
     assert "errors" in gql(client, admin, retry, {**args, "version": 0})
