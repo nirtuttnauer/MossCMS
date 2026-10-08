@@ -13,3 +13,11 @@ test('delivery signatures match nullable generated backend names and locale argu
  expect(hiddenFieldCount(fields)).toBe(1)
  expect(shapeSignature(fields)).toBe(shapeSignature(fields.map(f=>({...f,label:'Changed',required:true,private:true}))))
 })
+
+test('migration diff never infers renames and only suggests explicit destructive changes',async()=>{
+ const {fieldDiff,migrationSuggestion}=await import('./fields')
+ const before:Field[]=[{name:'old',type:'text'},{name:'same',type:'text'}],after:Field[]=[{name:'new',type:'text',required:true},{name:'same',type:'number'}]
+ expect(fieldDiff(before,after).map(d=>d.kind)).toEqual(['removed','changed','added'])
+ expect(migrationSuggestion(before,after)).toEqual({rename:{},drop:['old'],defaults:{new:null}})
+ expect(migrationSuggestion(before,after,{old:'new'})).toEqual({rename:{old:'new'},drop:[],defaults:{}})
+})

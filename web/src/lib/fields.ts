@@ -151,3 +151,24 @@ export function nameError(field: Field, peers: string[]): string {
   if (peers.includes(field.name)) return 'Already used at this level.'
   return ''
 }
+
+export type FieldDiff = {path:string;before?:Field;after?:Field;kind:'added'|'removed'|'changed'}
+export function fieldDiff(before:Field[],after:Field[],prefix=''):FieldDiff[] {
+  const diffs:FieldDiff[]=[]
+  for(const name of new Set([...before,...after].map(f=>f.name))){
+    const old=before.find(f=>f.name===name),next=after.find(f=>f.name===name),path=prefix+name
+    if(!old || !next){diffs.push({path,before:old,after:next,kind:old?'removed':'added'});continue}
+    const shallow=(f:Field)=>({...clean(f,true),fields:undefined,item:undefined})
+    if(JSON.stringify(shallow(old))!==JSON.stringify(shallow(next)))diffs.push({path,before:old,after:next,kind:'changed'})
+    if(old.type==='object' && next.type==='object')diffs.push(...fieldDiff(old.fields || [],next.fields || [],path+'.'))
+    if(old.type==='list' && next.type==='list' && old.item && next.item)diffs.push(...fieldDiff([{...old.item,name:'item'}],[{...next.item,name:'item'}],path+'[].'))
+  }
+  return diffs
+}
+export function migrationSuggestion(before:Field[],after:Field[],rename:Record<string,string>={}) {
+  const removed=before.filter(f=>!after.some(n=>n.name===f.name)),added=after.filter(f=>!before.some(n=>n.name===f.name))
+  const chosen=Object.fromEntries(Object.entries(rename).filter(([old,next])=>removed.some(f=>f.name===old) && added.some(f=>f.name===next)))
+  const defaults:Record<string,unknown>={}
+  for(const field of added.filter(f=>f.required && !Object.values(chosen).includes(f.name)))defaults[field.name]=field.type==='boolean'?false:field.type==='number'?0:field.type==='list'?[]:null
+  return {rename:chosen,defaults,drop:removed.filter(f=>!chosen[f.name]).map(f=>f.name)}
+}

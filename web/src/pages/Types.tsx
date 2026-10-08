@@ -6,7 +6,7 @@ import { Dialog } from '../components/ui/dialog'
 import { FieldBuilder } from '../components/FieldBuilder'
 import { FieldInput } from '../components/Fields'
 import { initialData } from './Content'
-import { shapeSignature, toSchema, validateSchema, deliveryShape, hiddenFieldCount } from '../lib/fields'
+import { shapeSignature, toSchema, validateSchema, deliveryShape, hiddenFieldCount, fieldDiff, migrationSuggestion } from '../lib/fields'
 import { gql, message, typeFields, type Asset, type ContentType, type Entry, type Field } from '../lib/api'
 
 const defaultFields: Field[] = [
@@ -18,6 +18,7 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
   const [name, setName] = useState(definition?.name || '')
   const [key, setKey] = useState(definition?.key || '')
   const [fields, setFields] = useState<Field[]>(definition?.fields || defaultFields)
+  const [rename,setRename]=useState<Record<string,string>>({})
   const [migration, setMigration] = useState('{}')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -34,6 +35,8 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
   const signature = shapeSignature(fields)
   const lastSignature = useRef(signature)
   const issues = validateSchema(fields)
+  const diffs=definition?fieldDiff(definition.fields,fields):[]
+  const suggestion=definition?migrationSuggestion(definition.fields,fields,rename):{}
   const invalid = !definition && key !== '' && !/^[a-z][a-zA-Z0-9_]*$/.test(key)
   useEffect(() => {
     gql<{ entries: { nodes: Entry[] }; assets: Asset[] }>(`{entries(first:100){nodes{id typeKey slug title data status version updatedAt}} assets(first:100){id name mime size url}}`).then(result => { setReferences(result.entries.nodes); setAssets(result.assets) }).catch(() => {})
@@ -69,7 +72,7 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
         {showJson && <pre className="schema-json" aria-label="Schema JSON" style={{backgroundColor: 'var(--card)', padding: '1rem', borderRadius: '8px', overflowX: 'auto', fontSize: '0.8rem'}}>{JSON.stringify(toSchema(fields), null, 2)}</pre>}
         {issues.length > 0 && <div className="schema-issues" role="alert" style={{marginTop: '1rem', color: 'var(--error)'}}><ul style={{listStyle: 'none', padding: 0}}>{issues.map((issue, i) => <li key={i} style={{marginBottom: '4px'}}>• {issue}</li>)}</ul></div>}
       </div>
-      {definition && <><label>Migration for existing entries<textarea className="code-input" aria-label="Schema migration" rows={4} value={migration} onChange={e => setMigration(e.target.value)} /></label><small>Rename, supply defaults, or explicitly drop values. Example: {'{"rename":{"old":"new"},"defaults":{"featured":false},"drop":["obsolete"]}'}. Every entry must validate before the schema is saved.</small><Button type="button" variant="outline" onClick={loadHistory}>Schema history · version {definition.version}</Button>{history !== null && <pre className="schema-json" style={{backgroundColor: 'var(--card)', padding: '1rem', borderRadius: '8px', overflowX: 'auto', fontSize: '0.8rem'}}>{JSON.stringify(history, null, 2)}</pre>}</>}
+      {definition && <><section><h3>Schema changes</h3>{diffs.length?<ul>{diffs.map(diff=><li key={diff.path}><strong>{diff.path}: {diff.kind}</strong><details><summary>Before / after</summary><pre>{JSON.stringify({before:diff.before || null,after:diff.after || null},null,2)}</pre></details></li>)}</ul>:<p>No field changes.</p>}{definition.fields.filter(old=>!fields.some(f=>f.name===old.name)).map(old=><label key={old.name}>Rename {old.name} to<select value={rename[old.name] || ''} onChange={e=>setRename(r=>({...r,[old.name]:e.target.value}))}><option value="">No rename selected</option>{fields.filter(f=>!definition.fields.some(previous=>previous.name===f.name)).map(f=><option key={f.name} value={f.name}>{f.name}</option>)}</select></label>)}<p>Suggested drops remove stored values. Defaults are placeholders for missing keys; replace nulls with valid values. Changed/nested fields need a manually reviewed migration. No suggestion is applied automatically.</p><pre>{JSON.stringify(suggestion,null,2)}</pre><Button type="button" variant="outline" onClick={()=>{if(migration.trim()==='{}' || window.confirm('Replace your edited migration with this suggestion?'))setMigration(JSON.stringify(suggestion,null,2))}}>Use suggested migration</Button></section><label>Migration for existing entries<textarea className="code-input" aria-label="Schema migration" rows={4} value={migration} onChange={e => setMigration(e.target.value)} /></label><small>Rename, supply defaults, or explicitly drop values. Example: {'{"rename":{"old":"new"},"defaults":{"featured":false},"drop":["obsolete"]}'}. Every entry must validate before the schema is saved.</small><Button type="button" variant="outline" onClick={loadHistory}>Schema history · version {definition.version}</Button>{history !== null && <pre className="schema-json" style={{backgroundColor: 'var(--card)', padding: '1rem', borderRadius: '8px', overflowX: 'auto', fontSize: '0.8rem'}}>{JSON.stringify(history, null, 2)}</pre>}</>}
       {error && <p className="form-error" role="alert" style={{color: 'var(--error)', marginTop: '1rem'}}>{error}</p>}
       <div className="modal-actions" style={{display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1rem'}}><Button type="button" variant="outline" onClick={close}>Cancel</Button><Button disabled={busy || issues.length > 0 || invalid} type="submit">{busy ? 'Validating…' : 'Save content type'}</Button></div>
     </form>
