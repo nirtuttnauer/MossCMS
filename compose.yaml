@@ -42,7 +42,8 @@ services:
   personal-site:
     profiles: [website]
     build:
-      context: ./personal-site
+      context: .
+      dockerfile: personal-site/Dockerfile
     env_file:
       - ./personal-site/.env
     environment:

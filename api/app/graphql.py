@@ -35,6 +35,16 @@ class EntryNode:
     scheduled_revision: int | None
     schedule_error: JSON | None
 
+    @strawberry.field
+    def resolved_assets(self, info: strawberry.Info) -> list["AssetNode"]:
+        c = info.context
+        record = content.get_entry(c["session"], c, str(self.id))
+        definition = c["session"].get(ContentType, record.type_id)
+        data = record.published_data if c.get("delivery") else record.data
+        ids = content.image_asset_ids(definition.fields, data or {})
+        rows = c["session"].scalars(content.scoped(c["session"], Asset, c).where(Asset.id.in_(ids))).all()
+        return [asset_node(a, c["settings"]) for a in rows if a.mime.startswith("image/")]
+
     @classmethod
     def from_dict(cls, d):
         return cls(

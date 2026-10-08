@@ -138,6 +138,31 @@ def public_data(fields, data):
     return {f["name"]: public_value(f, data.get(f["name"])) for f in fields if not f.get("private")}
 
 
+def image_asset_ids(fields, data):
+    ids = set()
+
+    def walk(field, value):
+        if field.get("private") or value is None:
+            return
+        if field.get("localized") and isinstance(value, dict):
+            for translated in value.values():
+                walk({**field, "localized": False}, translated)
+        elif field["type"] == "richText" and isinstance(value, str):
+            ids.update(re.findall(r"asset:([A-Za-z0-9_-]{1,100})", value))
+        elif field["type"] == "asset" and isinstance(value, str):
+            ids.add(value)
+        elif field["type"] == "object" and isinstance(value, dict):
+            for child in field.get("fields", []):
+                walk(child, value.get(child["name"]))
+        elif field["type"] == "list" and isinstance(value, list):
+            for item in value:
+                walk(field["item"], item)
+
+    for field in fields:
+        walk(field, data.get(field["name"]))
+    return sorted(ids)[:50]
+
+
 def scoped(session, model, identity):
     return select(model).where(model.project_id == identity["project_id"])
 

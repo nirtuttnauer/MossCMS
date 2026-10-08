@@ -15,3 +15,9 @@ test('preserves legacy text line breaks without changing the source',()=>{
   expect(view.container.querySelector('br')).toBeTruthy()
   expect(view.container.querySelectorAll('p')).toHaveLength(2)
 })
+test('CMS preview and website render the same supported Markdown',async()=>{
+  const {Markdown:WebsiteMarkdown}=await import('../../../personal-site/src/components/Markdown')
+  const {renderToStaticMarkup}=await import('react-dom/server')
+  const text='# Same heading\n\n**bold** and [link](https://example.com)\n\n```\ncode\n```\n\n<script>bad()</script>'
+  expect(renderToStaticMarkup(<Markdown text={text} />)).toBe(renderToStaticMarkup(<WebsiteMarkdown text={text} />))
+})

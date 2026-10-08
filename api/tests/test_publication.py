@@ -185,3 +185,36 @@ def test_cancel_unpublish_permissions_versions_and_trash(app, client, admin):
         {"id": live["id"], "version": trashed["version"]},
     )
     assert restored["data"]["restoreEntry"] == {"isLive": False, "status": "draft"}
+
+
+def test_markdown_assets_resolve_only_visible_scoped_published_content(app, client, admin):
+    from app.models import Asset
+
+    define(client, admin)
+    with app.state.db.begin() as s:
+        for id in ["visible", "private"]:
+            s.add(
+                Asset(
+                    id=id,
+                    project_id=admin["x-moss-project"],
+                    name=id,
+                    key=id,
+                    storage="local",
+                    mime="image/png",
+                    size=1,
+                )
+            )
+    live = entry(
+        client,
+        admin,
+        data={"title": "Post", "body": "![Cover](asset:visible)", "secret": "![Hidden](asset:private)"},
+        status="published",
+    )["data"]["saveEntry"]
+    token = delivery(client, admin)
+    query = "{entries{nodes{resolvedAssets{id mime url}}}}"
+    assets = public(client, token, query)["entries"]["nodes"][0]["resolvedAssets"]
+    assert len(assets) == 1 and assets[0]["id"] == "visible" and "signature=" in assets[0]["url"]
+    entry(
+        client, admin, data={"title": "Post", "body": "![New](asset:private)"}, id=live["id"], version=live["version"]
+    )
+    assert public(client, token, query)["entries"]["nodes"][0]["resolvedAssets"][0]["id"] == "visible"
