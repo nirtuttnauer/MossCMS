@@ -174,3 +174,15 @@ export function migrationSuggestion(before:Field[],after:Field[],rename:Record<s
   for(const field of added.filter(f=>f.required && !Object.values(chosen).includes(f.name)))defaults[field.name]=field.type==='boolean'?false:field.type==='number'?0:field.type==='list'?[]:null
   return {rename:chosen,defaults,drop:removed.filter(f=>!chosen[f.name]).map(f=>f.name)}
 }
+
+export const TYPE_TEMPLATES:Record<string,Field[]>={
+ Article:[{name:'title',type:'text',required:true},{name:'description',type:'text'},{name:'body',type:'richText'}],
+ Product:[{name:'title',type:'text',required:true},{name:'description',type:'richText'},{name:'price',type:'number'},{name:'images',type:'list',item:{name:'',type:'asset',imageOnly:true}}],
+ Person:[{name:'title',label:'Name',type:'text',required:true},{name:'bio',type:'richText'},{name:'portrait',type:'asset',imageOnly:true}],
+ Event:[{name:'title',type:'text',required:true},{name:'date',type:'date',required:true},{name:'location',type:'text'},{name:'description',type:'richText'}],
+}
+export function duplicateField(field:Field,peers:Field[]):Field {
+ let number=1,name=''
+ do{const suffix=number===1?'Copy':`Copy${number}`;name=field.name.slice(0,60-suffix.length)+suffix;number++}while(peers.some(f=>f.name===name))
+ return {...structuredClone(field),name}
+}

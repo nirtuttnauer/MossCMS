@@ -6,7 +6,7 @@ import { Dialog } from '../components/ui/dialog'
 import { FieldBuilder } from '../components/FieldBuilder'
 import { FieldInput } from '../components/Fields'
 import { initialData } from './Content'
-import { shapeSignature, toSchema, validateSchema, deliveryShape, hiddenFieldCount, fieldDiff, migrationSuggestion } from '../lib/fields'
+import { shapeSignature, toSchema, validateSchema, deliveryShape, hiddenFieldCount, fieldDiff, migrationSuggestion, TYPE_TEMPLATES } from '../lib/fields'
 import { gql, message, typeFields, type Asset, type ContentType, type Entry, type Field } from '../lib/api'
 
 const defaultFields: Field[] = [
@@ -14,11 +14,12 @@ const defaultFields: Field[] = [
   { name: 'body', type: 'richText' },
 ]
 
-function TypeEditor({ definition, types, onClose, onSaved }: { definition: ContentType | null; types: ContentType[]; onClose: () => void; onSaved: () => void }) {
-  const [name, setName] = useState(definition?.name || '')
+function TypeEditor({ definition, seed, types, onClose, onSaved }: { definition: ContentType | null; seed?:ContentType|null; types: ContentType[]; onClose: () => void; onSaved: () => void }) {
+  const [name, setName] = useState(definition?.name || (seed?seed.name+' copy':''))
   const [key, setKey] = useState(definition?.key || '')
-  const [fields, setFields] = useState<Field[]>(definition?.fields || defaultFields)
+  const [fields, setFields] = useState<Field[]>(structuredClone(definition?.fields || seed?.fields || defaultFields))
   const [rename,setRename]=useState<Record<string,string>>({})
+  const [template,setTemplate]=useState('Article')
   const [migration, setMigration] = useState('{}')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -26,7 +27,7 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
   const [compareVersion,setCompareVersion]=useState(0)
   const [showJson, setShowJson] = useState(false)
   const [tab, setTab] = useState<'form' | 'schema'>('form')
-  const [previewData, setPreviewData] = useState<Record<string, unknown>>(() => initialData(definition?.fields || defaultFields))
+  const [previewData, setPreviewData] = useState<Record<string, unknown>>(() => initialData(definition?.fields || seed?.fields || defaultFields))
   const [references, setReferences] = useState<Entry[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
   const fingerprint = JSON.stringify({name, key, fields, migration})
@@ -38,7 +39,8 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
   const issues = validateSchema(fields,[...types.map(t=>t.key),key])
   const diffs=definition?fieldDiff(definition.fields,fields):[]
   const suggestion=definition?migrationSuggestion(definition.fields,fields,rename):{}
-  const invalid = !definition && key !== '' && !/^[a-z][a-zA-Z0-9_]*$/.test(key)
+  const duplicateKey=!definition && types.some(t=>t.key===key)
+  const invalid = duplicateKey || (!definition && key !== '' && !/^[a-z][a-zA-Z0-9_]*$/.test(key))
   useEffect(() => {
     gql<{ entries: { nodes: Entry[] }; assets: Asset[] }>(`{entries(first:100){nodes{id typeKey slug title data status version updatedAt}} assets(first:100){id name mime size url}}`).then(result => { setReferences(result.entries.nodes); setAssets(result.assets) }).catch(() => {})
   }, [])
@@ -60,6 +62,9 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
   const previewKey = key ? `allCms${key[0].toUpperCase()}${key.slice(1)}` : ''
   return <Dialog wide title={definition ? `Edit ${definition.name}` : 'New content type'} open onClose={close}><div className="editor-layout">
     <form className="editor-form" onSubmit={submit}>
+      {seed && <p>Duplicating {seed.name}'s schema only. Choose a new unique key. References retain their existing targets; entries are not copied.</p>}
+      {!definition && <div className="inline-form"><label>Starter template<select value={template} onChange={e=>setTemplate(e.target.value)}>{Object.keys(TYPE_TEMPLATES).map(name=><option key={name}>{name}</option>)}</select></label><Button type="button" variant="outline" onClick={()=>{if(fingerprint===initialFingerprint.current || window.confirm('Replace fields with this starter template?')){setFields(structuredClone(TYPE_TEMPLATES[template]));if(!name)setName(template)}}}>Apply template</Button></div>}
+      {duplicateKey && <p role="alert">This type key already exists. Choose a unique key.</p>}
       <div className="type-identity">
         <label>Name<input required maxLength={100} value={name} onChange={e => setName(e.target.value)} placeholder="Article" /></label>
         <label>Key<input required pattern="[a-z][a-zA-Z0-9_]*" readOnly={Boolean(definition)} value={key} onChange={e => setKey(e.target.value)} placeholder="article" className={invalid ? 'is-error' : undefined} />{invalid && <small className="field-issue" role="alert">Start with a letter; letters, digits, or _ only.</small>}</label>
@@ -110,11 +115,12 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
 
 export function Types({ types, role, onChanged }: { types: ContentType[]; role: string; onChanged: () => void }) {
   const [editor, setEditor] = useState<ContentType | null | undefined>()
+  const [seed,setSeed]=useState<ContentType|null>(null)
   const [remove, setRemove] = useState<ContentType | null>(null)
   const [error, setError] = useState('')
   async function deleteType() {
     try { await gql('mutation($key:String!){deleteContentType(key:$key)}', { key: remove!.key }); setRemove(null); setError(''); onChanged() }
     catch (reason) { setError(message(reason)) }
   }
-  return <><div className="page-heading"><div><div className="eyebrow">YOUR DATA MODEL</div><h1>Content types</h1><p className="subtitle">Define fields once. Query them from every frontend.</p></div>{role === 'admin' && <Button onClick={() => setEditor(null)}><Plus size={16} />New type</Button>}</div>{error && <p className="form-error" role="alert">{error}</p>}<div className="type-grid">{types.map(t => <article className="plain-card" key={t.key}><Blocks size={20} /><h2>{t.name}</h2><code>{t.key}</code><p>{t.fields.length} fields · version {t.version}</p><div className="field-chips">{t.fields.map(f => <span key={f.name}>{f.name} · {f.type}{f.private ? ' · private' : ''}</span>)}</div><p><code>allCms{t.key[0].toUpperCase()}${t.key.slice(1)}</code></p>{role === 'admin' ? <div className="inline-form"><Button variant="outline" onClick={() => setEditor(t)}>Edit schema</Button><button className="text-button muted" onClick={() => setRemove(t)}>Delete empty type</button></div> : <details><summary>View schema</summary><pre>{JSON.stringify(t.fields, null, 2)}</pre></details>}</article>)}</div>{!types.length && <p className="empty-state">Create your first content type to start writing content.</p>}{editor !== undefined && <TypeEditor definition={editor} types={types} onClose={() => setEditor(undefined)} onSaved={() => { setEditor(undefined); onChanged() }} />} {remove && <Dialog title="Delete empty content type?" open onClose={() => setRemove(null)}><p>{remove.name} can be deleted only if it has no entries or entry history.</p>{error && <p className="form-error">{error}</p>}<div className="modal-actions"><Button variant="outline" onClick={() => setRemove(null)}>Cancel</Button><Button onClick={deleteType}>Delete</Button></div></Dialog>}</>
+  return <><div className="page-heading"><div><div className="eyebrow">YOUR DATA MODEL</div><h1>Content types</h1><p className="subtitle">Define fields once. Query them from every frontend.</p></div>{role === 'admin' && <Button onClick={() => {setSeed(null);setEditor(null)}}><Plus size={16} />New type</Button>}</div>{error && <p className="form-error" role="alert">{error}</p>}<div className="type-grid">{types.map(t => <article className="plain-card" key={t.key}><Blocks size={20} /><h2>{t.name}</h2><code>{t.key}</code><p>{t.fields.length} fields · version {t.version}</p><div className="field-chips">{t.fields.map(f => <span key={f.name}>{f.name} · {f.type}{f.private ? ' · private' : ''}</span>)}</div><p><code>allCms{t.key[0].toUpperCase()}${t.key.slice(1)}</code></p>{role === 'admin' ? <div className="inline-form"><Button variant="outline" onClick={() => {setSeed(null);setEditor(t)}}>Edit schema</Button><Button variant="outline" onClick={()=>{setSeed(t);setEditor(null)}}>Duplicate type</Button><button className="text-button muted" onClick={() => setRemove(t)}>Delete empty type</button></div> : <details><summary>View schema</summary><pre>{JSON.stringify(t.fields, null, 2)}</pre></details>}</article>)}</div>{!types.length && <p className="empty-state">Create your first content type to start writing content.</p>}{editor !== undefined && <TypeEditor seed={seed} definition={editor} types={types} onClose={() => setEditor(undefined)} onSaved={() => { setEditor(undefined); onChanged() }} />} {remove && <Dialog title="Delete empty content type?" open onClose={() => setRemove(null)}><p>{remove.name} can be deleted only if it has no entries or entry history.</p>{error && <p className="form-error">{error}</p>}<div className="modal-actions"><Button variant="outline" onClick={() => setRemove(null)}>Cancel</Button><Button onClick={deleteType}>Delete</Button></div></Dialog>}</>
 }

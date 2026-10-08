@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react'
 import { Button } from './ui/button'
 import { cn } from '../lib/utils'
 import type { ContentType, Field } from '../lib/api'
-import { ENUM_RE, FIELD_TYPES, emptyField, metaFor, nameError, switchTemplate } from '../lib/fields'
+import { duplicateField, ENUM_RE, FIELD_TYPES, emptyField, metaFor, nameError, switchTemplate } from '../lib/fields'
 
 type EditorProps = {
   id: string
@@ -15,11 +15,12 @@ type EditorProps = {
   types: ContentType[]
   selfKey?: string
   onPatch: (patch: Partial<Field>) => void
+  onDuplicate?: () => void
   onRemove: () => void
   onMove: (dir: -1 | 1) => void
 }
 
-function FieldEditor({ id, path, rootId, field, name, peers, types, selfKey, onPatch, onRemove, onMove }: EditorProps) {
+function FieldEditor({ id, path, rootId, field, name, peers, types, selfKey, onPatch, onDuplicate, onRemove, onMove }: EditorProps) {
   const [optionInput, setOptionInput] = useState('')
   const meta = metaFor(field.type)
   const label = name || 'Unnamed field'
@@ -41,6 +42,7 @@ function FieldEditor({ id, path, rootId, field, name, peers, types, selfKey, onP
       <select aria-label={`Type of ${label}`} className="field-type-select" value={field.type} onChange={e => changeType(e.target.value)}>{FIELD_TYPES.map(m => <option key={m.type} value={m.type}>{m.label}</option>)}</select>
       <Button type="button" variant="ghost" aria-label={`Move ${label} up`} onClick={() => onMove(-1)}>↑</Button>
       <Button type="button" variant="ghost" aria-label={`Move ${label} down`} onClick={() => onMove(1)}>↓</Button>
+      {onDuplicate && <Button type="button" variant="ghost" aria-label={`Duplicate ${label}`} onClick={onDuplicate}>Duplicate</Button>}
       <Button type="button" variant="ghost" aria-label={`Remove ${label}`} onClick={onRemove}>×</Button>
     </div>
     <p className="field-type-hint">{meta.hint}</p>
@@ -87,7 +89,7 @@ export function FieldBuilder({ value, onChange, types, selfKey, rootId:providedR
   return <div className="field-builder">
     {!parentPath && <details className="schema-outline"><summary>Schema outline</summary>{outline(value)}</details>}
     <span role="status" className="sr-only">{announcement}</span>
-    {value.map((field, i) => <FieldEditor key={identities.current[i]} id={`${rootId}-${path(i)}`} rootId={rootId} path={path(i)} field={field} name={field.name || `Field ${i + 1}`} peers={value.filter((_, j) => j !== i).map(f => f.name)} types={types} selfKey={selfKey} onPatch={next => patch(i, next)} onRemove={() => remove(i)} onMove={dir => move(i, dir)} />)}
+    {value.map((field, i) => <FieldEditor key={identities.current[i]} id={`${rootId}-${path(i)}`} rootId={rootId} path={path(i)} field={field} name={field.name || `Field ${i + 1}`} peers={value.filter((_, j) => j !== i).map(f => f.name)} types={types} selfKey={selfKey} onPatch={next => patch(i, next)} onDuplicate={value.length<40?()=>onChange([...value,duplicateField(field,value)]):undefined} onRemove={() => remove(i)} onMove={dir => move(i, dir)} />)}
     {!value.length && <p className="empty-state">No fields yet. Add your first field below.</p>}
     <Button type="button" variant="outline" disabled={value.length >= 40} onClick={() => onChange([...value, emptyField('text')])}><Plus size={14} />Add field</Button>
   </div>

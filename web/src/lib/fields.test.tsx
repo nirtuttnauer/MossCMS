@@ -21,3 +21,12 @@ test('migration diff never infers renames and only suggests explicit destructive
  expect(migrationSuggestion(before,after)).toEqual({rename:{},drop:['old'],defaults:{new:null}})
  expect(migrationSuggestion(before,after,{old:'new'})).toEqual({rename:{old:'new'},drop:[],defaults:{}})
 })
+
+test('templates validate and field duplication creates an isolated unique schema field',async()=>{
+ const {TYPE_TEMPLATES,validateSchema,duplicateField}=await import('./fields')
+ for(const template of Object.values(TYPE_TEMPLATES))expect(validateSchema(template)).toEqual([])
+ const original:Field={name:'group',type:'object',private:true,fields:[{name:'title',type:'text'}]}
+ const copy=duplicateField(original,[original,{...original,name:'groupCopy'}])
+ expect(copy.name).toBe('groupCopy2');expect(copy.private).toBe(true)
+ copy.fields![0].name='changed';expect(original.fields![0].name).toBe('title')
+})
