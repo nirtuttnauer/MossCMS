@@ -293,6 +293,18 @@ class Query:
 @strawberry.type
 class Mutation:
     @strawberry.mutation
+    def unpublish_entry(self, info: strawberry.Info, id: strawberry.ID, version: int) -> EntryNode:
+        c = info.context
+        record = content.publication_action(c["session"], c, str(id), version, unpublish=True)
+        return EntryNode.from_dict(content.entry_dict(c["session"], c, record))
+
+    @strawberry.mutation
+    def cancel_schedule(self, info: strawberry.Info, id: strawberry.ID, version: int) -> EntryNode:
+        c = info.context
+        record = content.publication_action(c["session"], c, str(id), version)
+        return EntryNode.from_dict(content.entry_dict(c["session"], c, record))
+
+    @strawberry.mutation
     def move_entry(self, info: strawberry.Info, id: strawberry.ID, type_key: str, version: int) -> EntryNode:
         c = info.context
         record = content.move_entry(c["session"], c, str(id), type_key, version)

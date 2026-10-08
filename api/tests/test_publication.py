@@ -136,3 +136,52 @@ def test_schedule_slug_failure_preserves_live_and_does_not_retry(app, client, ad
     assert failed["scheduledAt"] is None
     publish_due(app.state.db)
     assert gql(client, admin, query, {"id": live["id"]})["data"]["entry"] == failed
+
+
+def test_cancel_unpublish_permissions_versions_and_trash(app, client, admin):
+    from datetime import timedelta
+    from app.models import now
+    from test_cms import invited
+
+    define(client, admin)
+    live = entry(client, admin, status="published")["data"]["saveEntry"]
+    scheduled = entry(
+        client,
+        admin,
+        status="scheduled",
+        id=live["id"],
+        version=live["version"],
+        scheduledAt=(now() + timedelta(hours=1)).isoformat(),
+    )["data"]["saveEntry"]
+    token = delivery(client, admin)
+    before = public(client, token)
+    cancel = "mutation($id:ID!,$version:Int!){cancelSchedule(id:$id,version:$version){id version scheduledAt isLive}}"
+    unpublish = "mutation($id:ID!,$version:Int!){unpublishEntry(id:$id,version:$version){id version isLive data}}"
+    reader, headers, _ = invited(app, client, admin, "reader", "reader@example.com")
+    args = {"id": live["id"], "version": scheduled["version"]}
+    assert gql(reader, headers, cancel, args)["errors"][0]["extensions"]["code"] == "FORBIDDEN"
+    assert "errors" in gql(client, token, unpublish, args, delivery=True)
+    assert gql(client, admin, cancel, {**args, "version": 1})["errors"][0]["extensions"]["code"] == "CONFLICT"
+    cancelled = gql(client, admin, cancel, args)["data"]["cancelSchedule"]
+    assert cancelled["isLive"] and cancelled["scheduledAt"] is None
+    assert public(client, token) == before
+    unpublished = gql(client, admin, unpublish, {"id": live["id"], "version": cancelled["version"]})["data"][
+        "unpublishEntry"
+    ]
+    assert not unpublished["isLive"] and unpublished["data"]["title"] == "hello"
+    assert public(client, token)["entries"]["nodes"] == []
+    gql(
+        client,
+        admin,
+        "mutation($id:ID!,$version:Int!){deleteEntry(id:$id,version:$version)}",
+        {"id": live["id"], "version": unpublished["version"]},
+    )
+    trashed = gql(client, admin, "query($id:ID!){entry(id:$id){version}}", {"id": live["id"]})["data"]["entry"]
+    assert "errors" in entry(client, admin, id=live["id"], version=trashed["version"])
+    restored = gql(
+        client,
+        admin,
+        "mutation($id:ID!,$version:Int!){restoreEntry(id:$id,version:$version,number:1){isLive status}}",
+        {"id": live["id"], "version": trashed["version"]},
+    )
+    assert restored["data"]["restoreEntry"] == {"isLive": False, "status": "draft"}

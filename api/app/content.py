@@ -457,6 +457,30 @@ def move_entry(session, identity, id, type_key, version):
     return record
 
 
+def publication_action(session, identity, id, version, unpublish=False):
+    require(identity, "editor", write=True)
+    record = get_entry(session, identity, id)
+    if record.version != version:
+        raise CmsError("This entry changed. Reload before changing publication.", "CONFLICT")
+    if record.status == "deleted":
+        raise CmsError("Restore a revision to recover a trashed entry.")
+    clear_schedule(record)
+    if unpublish:
+        record.published_data = record.published_slug = record.published_title = record.published_at = None
+        record.published_revision = record.published_schema_version = None
+    summarize_status(record)
+    record.updated_at = now()
+    revision(session, identity, record)
+    audit(
+        session,
+        record.project_id,
+        identity["actor"],
+        "entry.unpublish" if unpublish else "entry.schedule_cancel",
+        entryId=id,
+    )
+    return record
+
+
 def archive_entry(session, identity, id, version):
     require(identity, "editor", write=True)
     record = get_entry(session, identity, id)
