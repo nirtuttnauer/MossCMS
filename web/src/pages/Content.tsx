@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { CalendarClock, Check, FileText, Folder, Image, NotebookPen, Plus, Search, Settings2 } from 'lucide-react'
+import { useDraftAutosave } from '../lib/autosave'
 import { useUnsavedChanges } from '../lib/unsaved'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -29,22 +30,23 @@ function dataForType(definition: ContentType) {
   return data
 }
 
-function EntryEditor({ entry, types, initialType, editable, onClose, onSaved }: { entry: Entry | null; types: ContentType[]; initialType: string; editable: boolean; onClose: () => void; onSaved: (text: string) => void }) {
-  const [key, setKey] = useState(entry?.typeKey || initialType || types[0]?.key || '')
+function EntryEditor({ entry: initialEntry, types, initialType, editable, onClose, onSaved }: { entry: Entry | null; types: ContentType[]; initialType: string; editable: boolean; onClose: () => void; onSaved: (text: string) => void }) {
+  const [key, setKey] = useState(initialEntry?.typeKey || initialType || types[0]?.key || '')
   const definition = types.find(t => t.key === key)!
-  const [data, setData] = useState(entry?.data || dataForType(definition))
-  const [slug, setSlug] = useState(entry?.slug || '')
-  const [slugEdited, setSlugEdited] = useState(Boolean(entry))
+  const [data, setData] = useState(initialEntry?.data || dataForType(definition))
+  const [slug, setSlug] = useState(initialEntry?.slug || '')
+  const [slugEdited, setSlugEdited] = useState(Boolean(initialEntry))
   const [status, setStatus] = useState('draft')
-  const [schedule, setSchedule] = useState(entry?.scheduledAt ? localDateTime(new Date(entry.scheduledAt)) : localDateTime(new Date(Date.now() + 3600000)))
+  const [schedule, setSchedule] = useState(initialEntry?.scheduledAt ? localDateTime(new Date(initialEntry.scheduledAt)) : localDateTime(new Date(Date.now() + 3600000)))
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [references, setReferences] = useState<Entry[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
   const [history, setHistory] = useState<Revision[] | null>(null)
-  const fingerprint = JSON.stringify({key, data, slug, status, schedule})
-  const initialFingerprint = useRef(fingerprint)
-  const confirmClose = useUnsavedChanges(editable && (busy || fingerprint !== initialFingerprint.current))
+  const requiredComplete = (fields: Field[], values: Record<string, unknown>): boolean => fields.every(f => !f.required || (values[f.name] !== null && values[f.name] !== undefined && values[f.name] !== ''))
+  const autosave = useDraftAutosave(initialEntry, {typeKey:key, slug, data}, editable && !busy && initialEntry?.status !== 'deleted', Boolean(slug) && requiredComplete(definition.fields,data))
+  const entry = autosave.entry
+  const confirmClose = useUnsavedChanges(editable && (busy || autosave.dirty || status !== 'draft'))
   const close = () => { if (!busy && confirmClose()) onClose() }
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const fields = definition.fields.filter(field => !(['siteProject', 'sitePost'].includes(key) && ['kind', 'parentSlug'].includes(field.name)))
@@ -58,7 +60,9 @@ function EntryEditor({ entry, types, initialType, editable, onClose, onSaved }: 
         if (!Number.isFinite(date.getTime()) || date.getTime() <= Date.now()) throw new Error('Choose a future date and time to schedule this entry.')
         scheduledAt = date.toISOString()
       }
-      await gql(saveEntryMutation, { typeKey: key, slug, data, status, id: entry?.id, version: entry?.version, scheduledAt })
+      const saved = await autosave.flush()
+      if (status === 'draft') { onSaved('Draft saved. Existing live content and schedule are preserved.'); return }
+      await gql(saveEntryMutation, { typeKey: key, slug, data, status, id: saved?.id, version: saved?.version, scheduledAt })
       onSaved(status === 'published' ? 'Entry published.' : status === 'scheduled' ? `Scheduled for ${timestamp(scheduledAt!)} (${timezone}).` : 'Draft saved. Existing live content and schedule are preserved.')
     } catch (reason) { setError(message(reason)) }
     finally { setBusy(false) }
@@ -69,7 +73,7 @@ function EntryEditor({ entry, types, initialType, editable, onClose, onSaved }: 
   }
   async function restore(number: number) {
     setBusy(true)
-    try { await gql('mutation($id:ID!,$number:Int!,$version:Int!){restoreEntry(id:$id,number:$number,version:$version){id}}', { id: entry!.id, number, version: entry!.version }); onSaved('Revision restored as a draft.') }
+    try { const saved = initialEntry?.status === 'deleted' ? initialEntry : await autosave.flush(); await gql('mutation($id:ID!,$number:Int!,$version:Int!){restoreEntry(id:$id,number:$number,version:$version){id}}', { id: saved!.id, number, version: saved!.version }); onSaved('Revision restored as a draft.') }
     catch (reason) { setError(message(reason)) }
     finally { setBusy(false) }
   }
@@ -77,7 +81,8 @@ function EntryEditor({ entry, types, initialType, editable, onClose, onSaved }: 
     if (!entry) return
     setBusy(true); setError('')
     try {
-      await gql(`mutation($id:ID!,$version:Int!){${action}(id:$id,version:$version){id}}`, { id: entry.id, version: entry.version })
+      const saved = await autosave.flush()
+      await gql(`mutation($id:ID!,$version:Int!){${action}(id:$id,version:$version){id}}`, { id: saved!.id, version: saved!.version })
       onSaved(action === 'unpublishEntry' ? 'Entry unpublished. Draft and history retained.' : 'Schedule cancelled. Live content preserved.')
     } catch (reason) { setError(message(reason)) }
     finally { setBusy(false) }
@@ -85,7 +90,10 @@ function EntryEditor({ entry, types, initialType, editable, onClose, onSaved }: 
   return <Dialog title={entry ? entry.title : creationLabels[key] || 'New entry'} open onClose={close}>
     <form className="editor-form" onSubmit={save}>
       <div className="editor-meta"><span className={`content-type-label ${key}`}><FileText size={13} />{definition.name}</span>{entry && <><Badge>{entry.status === 'deleted' ? 'Trash' : entry.isLive ? 'Live' : 'Unpublished'}</Badge>{entry.hasUnpublishedChanges && entry.status !== 'deleted' && <Badge>Unpublished changes</Badge>}<small>Version {entry.version}</small><Button type="button" variant="outline" disabled={busy} onClick={loadHistory}>History & restore</Button></>}</div>
-      <fieldset disabled={!editable || busy}>
+      {editable && <div role="status">Draft: {autosave.state}{autosave.state === 'Incomplete' && ' — complete the slug and required fields to autosave.'}</div>}
+      {autosave.error && <div className="form-error" role="alert">{autosave.error}<Button type="button" variant="outline" onClick={autosave.state === 'Conflict' ? autosave.compare : autosave.retry}>{autosave.state === 'Conflict' ? 'Compare server version' : 'Check and retry'}</Button></div>}
+      {autosave.server && <section><h3>Server version {autosave.server.version}</h3><pre>{JSON.stringify(autosave.server.data,null,2)}</pre><p>Your edits remain in the form above. Copy any changes you want to keep before reloading.</p><Button type="button" onClick={() => { if (confirmClose()) {const next=autosave.reload();if(next){setData(next.data);setSlug(next.slug);setKey(next.typeKey);setStatus('draft')}} }}>Discard local edits and reload server</Button></section>}
+      <fieldset disabled={!editable || busy || initialEntry?.status === 'deleted'}>
         {!entry && <label>Content type<select value={key} onChange={event => { setKey(event.target.value); setData(dataForType(types.find(t => t.key === event.target.value)!)) }}>{types.map(t => <option key={t.key} value={t.key}>{t.name}</option>)}</select></label>}
         <section className="publishing-panel" aria-label="Publishing options">
           <div className="publishing-title"><CalendarClock size={16} /><strong>Publishing</strong></div>
@@ -105,7 +113,7 @@ function EntryEditor({ entry, types, initialType, editable, onClose, onSaved }: 
       </fieldset>
       {history && <section className="revision-list"><h3>History</h3>{history.map(revision => <article key={revision.number}><div className="inline-form"><strong>Version {revision.number}</strong><small>{revision.author} · {new Date(revision.createdAt).toLocaleString()}</small>{editable && <Button type="button" variant="outline" disabled={busy} onClick={() => restore(revision.number)}>Restore draft</Button>}</div><details><summary>Preview this revision</summary><pre>{JSON.stringify(revision.snapshot, null, 2)}</pre></details></article>)}</section>}
       {error && <p className="form-error" role="alert">{error}</p>}
-      <div className="modal-actions"><Button type="button" variant="outline" disabled={busy} onClick={close}>Close</Button>{editable && <Button type="submit" disabled={busy}>{busy ? 'Saving…' : status === 'published' ? 'Publish now' : status === 'scheduled' ? 'Schedule publication' : 'Save draft'}</Button>}</div>
+      <div className="modal-actions"><Button type="button" variant="outline" disabled={busy} onClick={close}>Close</Button>{editable && initialEntry?.status !== 'deleted' && <Button type="submit" disabled={busy}>{busy ? 'Saving…' : status === 'published' ? 'Publish now' : status === 'scheduled' ? 'Schedule publication' : 'Save draft'}</Button>}</div>
     </form>
   </Dialog>
 }

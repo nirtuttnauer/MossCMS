@@ -7,21 +7,26 @@ export type Me = { user: { id: string; email: string; name: string }; csrf: stri
 export type Provider = { id: string; name: string }
 let current = { project: '', csrf: '' }
 export function setContext(project: string, csrf: string) { current = { project, csrf } }
-export async function rest<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
+export function getContext() { return {...current} }
+export class ApiError extends Error {
+  constructor(message: string, public code = 'REQUEST_FAILED', public requestId?: string, public uncertain = false) { super(message) }
+}
+export async function rest<T>(path: string, method = 'GET', body?: unknown, context = getContext()): Promise<T> {
   const multipart = body instanceof FormData
   try {
-    const response = await fetch(path, { method, credentials: 'include', signal: AbortSignal.timeout(multipart ? 120000 : 30000), headers: { 'X-Moss-Project': current.project, 'X-Moss-CSRF': current.csrf, ...(multipart ? {} : { 'Content-Type': 'application/json' }) }, body: body === undefined ? undefined : multipart ? body : JSON.stringify(body) })
+    const response = await fetch(path, { method, credentials: 'include', signal: AbortSignal.timeout(multipart ? 120000 : 30000), headers: { 'X-Moss-Project': context.project, 'X-Moss-CSRF': context.csrf, ...(multipart ? {} : { 'Content-Type': 'application/json' }) }, body: body === undefined ? undefined : multipart ? body : JSON.stringify(body) })
     const result = await response.json()
-    if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : 'Request failed. Check the form values.')
+    if (!response.ok) throw new ApiError(typeof result.detail === 'string' ? result.detail : 'Request failed. Check the form values.', result.code, response.headers?.get('X-Request-ID') || undefined)
     return result
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'TimeoutError') throw new Error('The request timed out. It may have completed; refresh the content before trying again.')
+    if (error instanceof DOMException && error.name === 'TimeoutError') throw new ApiError('The request timed out. Its outcome is being checked.', 'TIMEOUT', undefined, method !== 'GET')
+    if (error instanceof TypeError) throw new ApiError('Connection lost. Your edits are retained.', 'NETWORK', undefined, method !== 'GET')
     throw error
   }
 }
-export async function gql<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
-  const result = await rest<{ data: T; errors?: { message: string }[] }>(import.meta.env.VITE_GRAPHQL_URL || '/graphql', 'POST', { query, variables })
-  if (result.errors?.length) throw new Error(result.errors.map(error => error.message).join('\n'))
+export async function gql<T>(query: string, variables?: Record<string, unknown>, context = getContext()): Promise<T> {
+  const result = await rest<{ data: T; errors?: { message: string; extensions?: {code?: string; requestId?: string} }[] }>(import.meta.env.VITE_GRAPHQL_URL || '/graphql', 'POST', { query, variables }, context)
+  if (result.errors?.length) throw new ApiError(result.errors.map(error => error.message).join('\n'), result.errors[0].extensions?.code, result.errors[0].extensions?.requestId)
   return result.data
 }
 export const entryFields = 'id typeKey slug title data status version updatedAt scheduledAt isLive hasUnpublishedChanges publishedAt publishedRevision scheduledRevision scheduleError'
