@@ -74,6 +74,8 @@ def bounded_query(query):
 
 
 def create_app(settings=None):
+    from .webhooks import deliver, router as webhooks_router
+
     settings = (settings or Settings()).validate()
     engine, factory = database(settings.database_url)
 
@@ -91,14 +93,27 @@ def create_app(settings=None):
                     logger.exception("Publishing scheduler failed")
                 await asyncio.sleep(5)
 
+        async def webhook_worker():
+            while True:
+                try:
+                    await asyncio.to_thread(deliver, factory, settings)
+                except Exception:
+                    logger.exception("Webhook worker failed")
+                await asyncio.sleep(5)
+
+        hooks_job = asyncio.create_task(webhook_worker())
         job = asyncio.create_task(scheduler())
         yield
+        hooks_job.cancel()
+        with suppress(asyncio.CancelledError):
+            await hooks_job
         job.cancel()
         with suppress(asyncio.CancelledError):
             await job
         engine.dispose()
 
     app = FastAPI(title="MossCMS", version="0.2.0", lifespan=lifespan)
+    app.include_router(webhooks_router)
     app.state.settings, app.state.engine, app.state.db = settings, engine, factory
     app.state.started = time.monotonic()
     app.state.login_attempts = {}

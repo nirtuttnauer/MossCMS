@@ -37,6 +37,9 @@ class Settings:
     public_url: str = field(default_factory=lambda: os.getenv("MOSS_PUBLIC_URL", "http://localhost:8000"))
     s3_bucket: str = field(default_factory=lambda: os.getenv("MOSS_S3_BUCKET", ""))
     s3_endpoint: str | None = field(default_factory=lambda: os.getenv("MOSS_S3_ENDPOINT") or None)
+    webhook_origins: list[str] = field(
+        default_factory=lambda: [x.rstrip("/") for x in os.getenv("MOSS_WEBHOOK_ORIGINS", "").split(",") if x]
+    )
     max_upload: int = 20 * 1024 * 1024
 
     def validate(self):
