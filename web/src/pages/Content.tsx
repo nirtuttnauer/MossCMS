@@ -1,5 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { CalendarClock, Check, FileText, Folder, Image, NotebookPen, Plus, Search, Settings2 } from 'lucide-react'
+import { useUnsavedChanges } from '../lib/unsaved'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Dialog } from '../components/ui/dialog'
@@ -41,6 +42,10 @@ function EntryEditor({ entry, types, initialType, editable, onClose, onSaved }: 
   const [references, setReferences] = useState<Entry[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
   const [history, setHistory] = useState<Revision[] | null>(null)
+  const fingerprint = JSON.stringify({key, data, slug, status, schedule})
+  const initialFingerprint = useRef(fingerprint)
+  const confirmClose = useUnsavedChanges(editable && (busy || fingerprint !== initialFingerprint.current))
+  const close = () => { if (!busy && confirmClose()) onClose() }
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const fields = definition.fields.filter(field => !(['siteProject', 'sitePost'].includes(key) && ['kind', 'parentSlug'].includes(field.name)))
   useEffect(() => { gql<{ entries: Page; assets: Asset[] }>(`{entries(first:100){nodes{${entryFields}} total endCursor hasNextPage} assets(first:100){id name mime size url}}`).then(result => { setReferences(result.entries.nodes); setAssets(result.assets) }).catch(reason => setError(message(reason))) }, [])
@@ -77,7 +82,7 @@ function EntryEditor({ entry, types, initialType, editable, onClose, onSaved }: 
     } catch (reason) { setError(message(reason)) }
     finally { setBusy(false) }
   }
-  return <Dialog title={entry ? entry.title : creationLabels[key] || 'New entry'} open onClose={onClose}>
+  return <Dialog title={entry ? entry.title : creationLabels[key] || 'New entry'} open onClose={close}>
     <form className="editor-form" onSubmit={save}>
       <div className="editor-meta"><span className={`content-type-label ${key}`}><FileText size={13} />{definition.name}</span>{entry && <><Badge>{entry.status === 'deleted' ? 'Trash' : entry.isLive ? 'Live' : 'Unpublished'}</Badge>{entry.hasUnpublishedChanges && entry.status !== 'deleted' && <Badge>Unpublished changes</Badge>}<small>Version {entry.version}</small><Button type="button" variant="outline" disabled={busy} onClick={loadHistory}>History & restore</Button></>}</div>
       <fieldset disabled={!editable || busy}>
@@ -100,7 +105,7 @@ function EntryEditor({ entry, types, initialType, editable, onClose, onSaved }: 
       </fieldset>
       {history && <section className="revision-list"><h3>History</h3>{history.map(revision => <article key={revision.number}><div className="inline-form"><strong>Version {revision.number}</strong><small>{revision.author} · {new Date(revision.createdAt).toLocaleString()}</small>{editable && <Button type="button" variant="outline" disabled={busy} onClick={() => restore(revision.number)}>Restore draft</Button>}</div><details><summary>Preview this revision</summary><pre>{JSON.stringify(revision.snapshot, null, 2)}</pre></details></article>)}</section>}
       {error && <p className="form-error" role="alert">{error}</p>}
-      <div className="modal-actions"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Close</Button>{editable && <Button type="submit" disabled={busy}>{busy ? 'Saving…' : status === 'published' ? 'Publish now' : status === 'scheduled' ? 'Schedule publication' : 'Save draft'}</Button>}</div>
+      <div className="modal-actions"><Button type="button" variant="outline" disabled={busy} onClick={close}>Close</Button>{editable && <Button type="submit" disabled={busy}>{busy ? 'Saving…' : status === 'published' ? 'Publish now' : status === 'scheduled' ? 'Schedule publication' : 'Save draft'}</Button>}</div>
     </form>
   </Dialog>
 }

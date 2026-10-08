@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useUnsavedChanges } from '../lib/unsaved'
 import { Blocks, Plus } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Dialog } from '../components/ui/dialog'
@@ -26,6 +27,10 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
   const [previewData, setPreviewData] = useState<Record<string, unknown>>(() => initialData(definition?.fields || defaultFields))
   const [references, setReferences] = useState<Entry[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
+  const fingerprint = JSON.stringify({name, key, fields, migration})
+  const initialFingerprint = useRef(fingerprint)
+  const confirmClose = useUnsavedChanges(busy || fingerprint !== initialFingerprint.current)
+  const close = () => { if (!busy && confirmClose()) onClose() }
   const signature = shapeSignature(fields)
   const lastSignature = useRef(signature)
   const issues = validateSchema(fields)
@@ -49,7 +54,7 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
     catch (reason) { setError(message(reason)) }
   }
   const previewKey = key ? `allCms${key[0].toUpperCase()}${key.slice(1)}` : ''
-  return <Dialog wide title={definition ? `Edit ${definition.name}` : 'New content type'} open onClose={onClose}><div className="editor-layout">
+  return <Dialog wide title={definition ? `Edit ${definition.name}` : 'New content type'} open onClose={close}><div className="editor-layout">
     <form className="editor-form" onSubmit={submit}>
       <div className="type-identity">
         <label>Name<input required maxLength={100} value={name} onChange={e => setName(e.target.value)} placeholder="Article" /></label>
@@ -66,7 +71,7 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
       </div>
       {definition && <><label>Migration for existing entries<textarea className="code-input" aria-label="Schema migration" rows={4} value={migration} onChange={e => setMigration(e.target.value)} /></label><small>Rename, supply defaults, or explicitly drop values. Example: {'{"rename":{"old":"new"},"defaults":{"featured":false},"drop":["obsolete"]}'}. Every entry must validate before the schema is saved.</small><Button type="button" variant="outline" onClick={loadHistory}>Schema history · version {definition.version}</Button>{history !== null && <pre className="schema-json" style={{backgroundColor: 'var(--card)', padding: '1rem', borderRadius: '8px', overflowX: 'auto', fontSize: '0.8rem'}}>{JSON.stringify(history, null, 2)}</pre>}</>}
       {error && <p className="form-error" role="alert" style={{color: 'var(--error)', marginTop: '1rem'}}>{error}</p>}
-      <div className="modal-actions" style={{display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1rem'}}><Button type="button" variant="outline" onClick={onClose}>Cancel</Button><Button disabled={busy || issues.length > 0 || invalid} type="submit">{busy ? 'Validating…' : 'Save content type'}</Button></div>
+      <div className="modal-actions" style={{display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1rem'}}><Button type="button" variant="outline" onClick={close}>Cancel</Button><Button disabled={busy || issues.length > 0 || invalid} type="submit">{busy ? 'Validating…' : 'Save content type'}</Button></div>
     </form>
     <aside className="schema-preview" aria-label="Content type previews" style={{borderLeft: '1px solid var(--border)', paddingLeft: '2rem', minWidth: '400px'}}>
       <div className="preview-head" style={{marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem'}}>
