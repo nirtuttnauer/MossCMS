@@ -309,6 +309,20 @@ class Query:
 @strawberry.type
 class Mutation:
     @strawberry.mutation
+    def create_preview_grant(self, info: strawberry.Info, id: strawberry.ID, version: int) -> JSON:
+        from .preview import create_grant
+
+        c = info.context
+        return cast(JSON, create_grant(c["session"], c, str(id), version))
+
+    @strawberry.mutation
+    def revoke_preview_grant(self, info: strawberry.Info, id: strawberry.ID) -> bool:
+        from .preview import revoke_grant
+
+        c = info.context
+        return revoke_grant(c["session"], c, str(id))
+
+    @strawberry.mutation
     def save_draft(
         self,
         info: strawberry.Info,

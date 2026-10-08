@@ -172,3 +172,15 @@ class DraftReceipt(Base):
     fingerprint: Mapped[str] = mapped_column(String(64))
     response: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class PreviewGrant(Base):
+    __tablename__ = "preview_grants"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
+    entry_id: Mapped[str] = mapped_column(ForeignKey("entries.id"))
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    revision: Mapped[int] = mapped_column(Integer)
+    type_key: Mapped[str] = mapped_column(String(60))
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

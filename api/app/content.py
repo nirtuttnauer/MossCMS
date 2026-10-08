@@ -7,7 +7,7 @@ import re
 from copy import deepcopy
 from datetime import date, datetime
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import case, and_, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import StaleDataError
 
@@ -196,7 +196,13 @@ def entry_dict(session, identity, record):
         "id": record.id,
         "typeKey": definition.key,
         "slug": record.published_slug if delivery else record.slug,
-        "title": record.published_title if delivery else record.title,
+        "title": (
+            record.published_slug
+            if any(f["name"] == "title" and f.get("private") for f in definition.fields)
+            else record.published_title
+        )
+        if delivery
+        else record.title,
         "data": data,
         "status": "published" if delivery else record.status,
         "version": record.published_revision if delivery else record.version,
@@ -218,12 +224,22 @@ def entry_dict(session, identity, record):
     }
 
 
+def delivery_title(session, identity):
+    private_types = [
+        t.id
+        for t in session.scalars(scoped(session, ContentType, identity)).all()
+        if any(f["name"] == "title" and f.get("private") for f in t.fields)
+    ]
+    return case((Entry.type_id.in_(private_types), Entry.published_slug), else_=Entry.published_title)
+
+
 def entry_page(
     session, identity, type_key=None, status=None, search="", sort="updated_desc", first=20, after=None, filters=None
 ):
     require(identity)
     if not 1 <= first <= 100 or sort not in {"updated_desc", "updated_asc", "title_asc", "title_desc"}:
         raise CmsError("Use a page size of 1–100 and a supported sort order.")
+    title_attr = delivery_title(session, identity) if identity.get("delivery") else Entry.title
     query = scoped(session, Entry, identity)
     if identity.get("delivery"):
         query = query.where(Entry.published_slug.is_not(None), Entry.status != "deleted")
@@ -247,7 +263,7 @@ def entry_page(
         safe = search[:100].replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         query = query.where(
             or_(
-                (Entry.published_title if identity.get("delivery") else Entry.title).ilike(f"%{safe}%", escape="\\"),
+                title_attr.ilike(f"%{safe}%", escape="\\"),
                 (Entry.published_slug if identity.get("delivery") else Entry.slug).ilike(f"%{safe}%", escape="\\"),
             )
         )
@@ -278,11 +294,7 @@ def entry_page(
             query = query.where(expr == value)
     total = session.scalar(select(func.count()).select_from(query.subquery()))
     attr = (
-        (Entry.published_title if identity.get("delivery") else Entry.title)
-        if sort.startswith("title")
-        else Entry.published_at
-        if identity.get("delivery")
-        else Entry.updated_at
+        title_attr if sort.startswith("title") else Entry.published_at if identity.get("delivery") else Entry.updated_at
     )
     descending = sort.endswith("desc")
     if after:
@@ -312,7 +324,7 @@ def entry_page(
     if items:
         last = items[-1]
         value = (
-            (last.published_title if identity.get("delivery") else last.title)
+            (entry_dict(session, identity, last)["title"] if identity.get("delivery") else last.title)
             if sort.startswith("title")
             else (last.published_at if identity.get("delivery") else last.updated_at).isoformat()
         )

@@ -30,6 +30,7 @@ from .graphql import generated_schema
 from .migrate import migrate
 from .models import ContentType, database
 from .oauth import configure_oauth, router as oauth_router
+from .preview import router as preview_router
 from .security import CmsError, identify, require
 from .storage import router as storage_router
 
@@ -180,6 +181,7 @@ def create_app(settings=None):
     app.include_router(account_router)
     app.include_router(oauth_router)
     app.include_router(storage_router)
+    app.include_router(preview_router)
 
     @app.get("/health")
     def health():
