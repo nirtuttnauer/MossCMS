@@ -17,3 +17,12 @@ non-image or out-of-workspace assets render no image; text remains usable.
 Variants are bounded widths 320, 640, 1280 and 1920, without upscaling, encoded WebP.
 They share the original asset's access rules and deletion lifecycle. Gallery order
 is the stored list order. Asset resolution is limited to 50 visible image IDs per entry.
+
+Assets expose optional `width`, `height` and a `variants` array of
+`{width,height,size,url}`. Existing assets keep null dimensions and no variants.
+Variants are generated once during the bounded upload, never on website requests.
+URLs expire after 15 minutes; signing binds the asset ID, width and expiry.
+Storage keys are private metadata. Local missing files return 404. S3 redirects
+use bounded presign expiry and S3 reports missing objects. Back up/restore all
+original and `.WIDTH.webp` objects alongside the database; do not delete variants
+independently. Partial storage failures remove the objects written by that upload.

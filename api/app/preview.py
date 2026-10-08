@@ -97,11 +97,7 @@ def redeem(body: Redemption, request: Request):
                 "typeKey": grant.type_key,
                 "slug": saved.snapshot["slug"],
                 "data": data,
-                "resolvedAssets": [
-                    {"id": a.id, "mime": a.mime, "url": asset_node(a, settings).url}
-                    for a in assets
-                    if a.mime.startswith("image/")
-                ],
+                "resolvedAssets": [asset_node(a, settings).__dict__ for a in assets if a.mime.startswith("image/")],
             },
             "revision": grant.revision,
             "expiresAt": grant.expires_at.isoformat() + "Z",

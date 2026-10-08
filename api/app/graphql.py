@@ -131,9 +131,14 @@ class AssetNode:
     mime: str
     size: int
     url: str
+    width: int | None = None
+    height: int | None = None
+    variants: JSON | None = None
 
 
 def asset_node(record, settings):
+    from .images import variant_metadata
+
     expiry = int(time.time()) + 900
     signature = hmac.new(settings.secret.encode(), f"{record.id}:{expiry}".encode(), hashlib.sha256).hexdigest()
     return AssetNode(
@@ -141,6 +146,9 @@ def asset_node(record, settings):
         name=record.name,
         mime=record.mime,
         size=record.size,
+        width=record.width,
+        height=record.height,
+        variants=variant_metadata(record, settings),
         url=f"{settings.public_url}/media/{record.id}?expires={expiry}&signature={signature}",
     )
 
