@@ -1,0 +1,76 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        VITE_GRAPHQL_URL: /graphql
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: ${POSTGRES_DB:?Run python3 scripts/configure.py}
+      POSTGRES_USER: ${POSTGRES_USER:?Run python3 scripts/configure.py}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run python3 scripts/configure.py}
+      MOSS_ENV: ${MOSS_ENV:-development}
+      MOSS_SKIP_AUTH: ${MOSS_SKIP_AUTH:-false}
+      MOSS_SECRET_KEY: ${MOSS_SECRET_KEY:?Run python3 scripts/configure.py}
+      MOSS_SETUP_TOKEN: ${MOSS_SETUP_TOKEN:?Run python3 scripts/configure.py}
+      MOSS_PUBLIC_URL: ${MOSS_PUBLIC_URL:-http://localhost:8000}
+      MOSS_ORIGINS: ${MOSS_ORIGINS:-http://localhost:8000,http://localhost:5173}
+      MOSS_OIDC_NAME: ${MOSS_OIDC_NAME:-Single sign-on}
+      MOSS_OIDC_DISCOVERY_URL: ${MOSS_OIDC_DISCOVERY_URL:-}
+      MOSS_OIDC_CLIENT_ID: ${MOSS_OIDC_CLIENT_ID:-}
+      MOSS_OIDC_CLIENT_SECRET: ${MOSS_OIDC_CLIENT_SECRET:-}
+      MOSS_GITHUB_CLIENT_ID: ${MOSS_GITHUB_CLIENT_ID:-}
+      MOSS_GITHUB_CLIENT_SECRET: ${MOSS_GITHUB_CLIENT_SECRET:-}
+      MOSS_S3_BUCKET: ${MOSS_S3_BUCKET:-}
+      MOSS_S3_ENDPOINT: ${MOSS_S3_ENDPOINT:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+    ports:
+      - "${MOSS_BIND_HOST:-127.0.0.1}:${MOSS_PORT:-8000}:8000"
+    volumes:
+      - moss_assets:/data
+    tmpfs:
+      - /tmp:size=64m
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+  personal-site:
+    profiles: [website]
+    build:
+      context: ./personal-site
+    env_file:
+      - ./personal-site/.env
+    environment:
+      MOSS_API_URL: http://app:8000
+      PORT: 5174
+    ports:
+      - "127.0.0.1:5174:5174"
+    depends_on:
+      app:
+        condition: service_healthy
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Run python3 scripts/configure.py}
+      POSTGRES_USER: ${POSTGRES_USER:?Run python3 scripts/configure.py}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run python3 scripts/configure.py}
+    volumes:
+      - moss_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+volumes:
+  moss_data:
+  moss_assets:

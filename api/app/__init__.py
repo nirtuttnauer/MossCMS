@@ -1,0 +1,1 @@
+"""MossCMS API application."""

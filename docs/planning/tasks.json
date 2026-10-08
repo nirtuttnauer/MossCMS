@@ -1,0 +1,963 @@
+{
+  "project": "MossCMS",
+  "prd": "../PRD.md",
+  "date": "2026-10-07",
+  "status": "proposed",
+  "tasks": [
+    {
+      "code": "MC-01",
+      "milestone": "M1",
+      "priority": "P0",
+      "requirements": [
+        "FR01",
+        "FR02"
+      ],
+      "title": "Define the publication and scheduling state contract",
+      "scope": "Specify editable, published and scheduled snapshots; metadata, slug uniqueness, transition rules, GraphQL compatibility, and revision/schema migration behavior. Include a state-transition table and failure semantics before code changes.",
+      "files": [
+        "api/app/models.py",
+        "api/app/content.py",
+        "api/app/graphql.py",
+        "docs/PRD.md"
+      ],
+      "depends_on": [],
+      "acceptance_criteria": [
+        "Contract covers new entry, draft of live entry, publish, schedule, reschedule, cancel, restore, unpublish and trash.",
+        "Publication includes data and route metadata; scheduled revision is immutable.",
+        "Existing API callers have an explicit compatibility path and schema-change handling is documented."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-1",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-02",
+      "milestone": "M1",
+      "priority": "P0",
+      "requirements": [
+        "FR01",
+        "FR02"
+      ],
+      "title": "Migrate complete live and scheduled snapshots",
+      "scope": "Add forward Alembic migration and model fields from MC-01, backfilling current published entries and existing pending schedules. Preserve entry IDs, revisions, and current live URLs.",
+      "files": [
+        "api/app/models.py",
+        "api/migrations/versions"
+      ],
+      "depends_on": [
+        "MC-01"
+      ],
+      "acceptance_criteria": [
+        "Backfill preserves currently published values and routes without converting private drafts into publications.",
+        "Existing schedules receive a captured snapshot/revision and UTC due time.",
+        "Migration supports a separate restored database and documents recovery using the prior backup/image."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-2",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-03",
+      "milestone": "M1",
+      "priority": "P0",
+      "requirements": [
+        "FR01"
+      ],
+      "title": "Separate draft saves from live GraphQL delivery",
+      "scope": "Refactor save, restore, generic delivery, generated resolvers, references, title/search/sort and slug lookup to respect complete live snapshots. Keep version conflicts and workspace checks.",
+      "files": [
+        "api/app/content.py",
+        "api/app/graphql.py"
+      ],
+      "depends_on": [
+        "MC-02"
+      ],
+      "acceptance_criteria": [
+        "Draft edits and restores leave the previous public body, title, slug and references unchanged.",
+        "Immediate publish atomically replaces the live snapshot; public and draft slug conflicts are rejected.",
+        "Delivery scopes and recursive private-field projection remain enforced."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-3",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-04",
+      "milestone": "M1",
+      "priority": "P0",
+      "requirements": [
+        "FR02"
+      ],
+      "title": "Publish the captured scheduled revision safely",
+      "scope": "Use the stored scheduled snapshot, revalidate it when due, and handle worker locks/restarts. Later draft saves must not modify it. Preserve the last live snapshot on validation failure.",
+      "files": [
+        "api/app/content.py",
+        "api/app/main.py"
+      ],
+      "depends_on": [
+        "MC-02",
+        "MC-03"
+      ],
+      "acceptance_criteria": [
+        "Later edits cannot change the scheduled payload unless the editor explicitly replaces the schedule.",
+        "Due/overdue work is applied once with concurrent-worker protection.",
+        "Failure preserves live content and records entry, scheduled revision and actionable reason."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-4",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-05",
+      "milestone": "M1",
+      "priority": "P0",
+      "requirements": [
+        "FR01",
+        "FR02"
+      ],
+      "title": "Add explicit unpublish and schedule-cancel actions",
+      "scope": "Expose editorial operations for unpublish and cancellation using optimistic versions. Define trash and restore interactions through the state contract, with audit events.",
+      "files": [
+        "api/app/content.py",
+        "api/app/graphql.py"
+      ],
+      "depends_on": [
+        "MC-03",
+        "MC-04"
+      ],
+      "acceptance_criteria": [
+        "Cancel keeps an existing live snapshot and removes only the pending schedule.",
+        "Unpublish removes public availability and cancels a pending schedule without losing the draft/history.",
+        "Readers, delivery tokens and stale versions cannot perform either action."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-5",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-06",
+      "milestone": "M1",
+      "priority": "P0",
+      "requirements": [
+        "FR01",
+        "FR02",
+        "FR09"
+      ],
+      "title": "Show live, draft and scheduled state in the admin",
+      "scope": "Update entry API types, overview counts, list badges and publishing controls to represent independent states. Show scheduled revision and warn when newer draft edits are not scheduled.",
+      "files": [
+        "web/src/pages/Content.tsx",
+        "web/src/lib/api.ts",
+        "web/src/pages/App.tsx",
+        "api/app/graphql.py"
+      ],
+      "depends_on": [
+        "MC-03",
+        "MC-04",
+        "MC-05"
+      ],
+      "acceptance_criteria": [
+        "Editors distinguish live content, unpublished changes and pending publication without contradictory badges.",
+        "Unpublish, cancel and replace-schedule are explicit actions with accurate success feedback.",
+        "Timezone and current group/filter behavior remain usable; readers see no editing controls."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-6",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-07",
+      "milestone": "M2",
+      "priority": "P1",
+      "requirements": [
+        "FR03"
+      ],
+      "title": "Protect unsaved entry and schema edits",
+      "scope": "Add dirty tracking and guarded close, Escape, backdrop and navigation. Preserve form state after errors and use browser unload protection where supported.",
+      "files": [
+        "web/src/pages/Content.tsx",
+        "web/src/pages/Types.tsx",
+        "web/src/components/ui/dialog.tsx",
+        "web/src/pages/App.tsx"
+      ],
+      "depends_on": [],
+      "acceptance_criteria": [
+        "Each modal exit and workspace navigation either saves, explicitly discards, or keeps dirty edits.",
+        "No prompt appears for a clean form or successfully saved data.",
+        "Confirmation remains keyboard accessible and focus returns to the editor on cancellation."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-7",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-08",
+      "milestone": "M2",
+      "priority": "P1",
+      "requirements": [
+        "FR03",
+        "FR09"
+      ],
+      "title": "Provide a conflict-safe draft autosave contract",
+      "scope": "Extend/reuse draft save to return authoritative entry/version and support a stable creation identifier or idempotency key. Keep publication/schedule writes separate.",
+      "files": [
+        "api/app/content.py",
+        "api/app/graphql.py",
+        "web/src/lib/api.ts"
+      ],
+      "depends_on": [
+        "MC-03",
+        "MC-04"
+      ],
+      "acceptance_criteria": [
+        "Repeated autosave/reconciliation cannot create duplicate new entries.",
+        "Version conflicts preserve newer server changes and return a structured code.",
+        "Autosave leaves live and captured scheduled snapshots unchanged."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-8",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-09",
+      "milestone": "M2",
+      "priority": "P1",
+      "requirements": [
+        "FR03"
+      ],
+      "title": "Add debounced entry autosave and recovery feedback",
+      "scope": "Serialize debounced saves, keep acknowledged versions, and display saving/saved/offline/conflict states. Handle unfinished required fields, unmount, workspace switches and in-flight manual publish.",
+      "files": [
+        "web/src/pages/Content.tsx",
+        "web/src/lib/api.ts"
+      ],
+      "depends_on": [
+        "MC-06",
+        "MC-07",
+        "MC-08"
+      ],
+      "acceptance_criteria": [
+        "One entry gets serialized writes with no delayed cross-workspace mutations.",
+        "Invalid/incomplete drafts remain locally visible with an explanation rather than being lost.",
+        "Conflict/offline/error states keep editor values and provide an explicit recovery action."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-9",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-10",
+      "milestone": "M2",
+      "priority": "P1",
+      "requirements": [
+        "FR04"
+      ],
+      "title": "Add Markdown authoring controls and preview",
+      "scope": "Upgrade string-based richText inputs with accessible formatting controls, code fences, safe links and a Markdown preview. Define asset-ID image syntax and keep localized richText working.",
+      "files": [
+        "web/src/components/Fields.tsx",
+        "web/src/lib/fields.ts",
+        "web/package.json"
+      ],
+      "depends_on": [],
+      "acceptance_criteria": [
+        "Headings, emphasis, lists, links, fenced code and images can be authored and previewed.",
+        "Legacy plain strings round-trip without automatic destructive conversion.",
+        "Raw HTML and unsafe links cannot execute; image references do not persist signed URLs."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-10",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-11",
+      "milestone": "M2",
+      "priority": "P1",
+      "requirements": [
+        "FR04"
+      ],
+      "title": "Render Markdown consistently on example.com",
+      "scope": "Replace paragraph-only body rendering with a safe renderer matching MC-10, including code, typography and graceful asset-reference handling.",
+      "files": [
+        "personal-site/src/App.tsx",
+        "personal-site/src/style.css",
+        "personal-site/server/moss.mjs",
+        "personal-site/package.json"
+      ],
+      "depends_on": [
+        "MC-10"
+      ],
+      "acceptance_criteria": [
+        "Supported formatting matches the CMS preview and preserves plain-text posts.",
+        "Unsafe HTML/URL input remains inert in website output.",
+        "Long code, links and content remain readable on mobile; missing images have a fallback."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-11",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-12",
+      "milestone": "M2",
+      "priority": "P1",
+      "requirements": [
+        "FR05"
+      ],
+      "title": "Issue scoped expiring preview grants",
+      "scope": "Add authenticated editor operations to create/revoke a 15-minute grant for a saved revision. Implement server redemption with precise workspace/entry/revision scope and public-field projection.",
+      "files": [
+        "api/app/models.py",
+        "api/app/graphql.py",
+        "api/app/security.py",
+        "api/app/main.py",
+        "api/migrations/versions"
+      ],
+      "depends_on": [
+        "MC-03"
+      ],
+      "acceptance_criteria": [
+        "Readers and delivery tokens cannot issue grants; expired/revoked/wrong-scope grants fail.",
+        "Preview access is bound to a saved revision and does not widen delivery-token scope.",
+        "Responses are non-cacheable, secrets are excluded from logs, and private fields remain excluded."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-12",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-13",
+      "milestone": "M2",
+      "priority": "P1",
+      "requirements": [
+        "FR05"
+      ],
+      "title": "Add secure website preview sessions",
+      "scope": "Redeem grants server-side into a short-lived preview session, remove credentials from URLs, and render scoped draft data with an exit control. Reuse the ordinary website components.",
+      "files": [
+        "personal-site/server/index.mjs",
+        "personal-site/server/moss.mjs",
+        "personal-site/src/App.tsx"
+      ],
+      "depends_on": [
+        "MC-12"
+      ],
+      "acceptance_criteria": [
+        "Preview shows the intended saved revision and a persistent Preview banner.",
+        "Session expiry/revocation exits safely; published requests are unaffected.",
+        "Preview has no-store and noindex responses, avoids credential logging and grants no general CMS access."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-13",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-14",
+      "milestone": "M2",
+      "priority": "P1",
+      "requirements": [
+        "FR05"
+      ],
+      "title": "Open saved website previews from the editor",
+      "scope": "Configure an allowed website preview origin and add Preview for supported website types. Save explicitly when needed and show which revision is being previewed.",
+      "files": [
+        "web/src/pages/Content.tsx",
+        "web/src/pages/Settings.tsx",
+        "web/src/lib/api.ts"
+      ],
+      "depends_on": [
+        "MC-09",
+        "MC-13"
+      ],
+      "acceptance_criteria": [
+        "Preview opens the real project/post/slide using the chosen saved revision.",
+        "Missing preview configuration has a useful message; unsupported types do not offer a broken action.",
+        "Preview never implicitly publishes and opening it preserves current authoring state."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-14",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-15",
+      "milestone": "M3",
+      "priority": "P2",
+      "requirements": [
+        "FR06"
+      ],
+      "title": "Define covers and project gallery fields",
+      "scope": "Extend the repeatable website setup schema with optional cover/gallery asset IDs, alt text and focal/crop metadata. Define image-format and decoded-pixel limits.",
+      "files": [
+        "personal-site/scripts/setup_moss.py",
+        "personal-site/server/moss.mjs"
+      ],
+      "depends_on": [],
+      "acceptance_criteria": [
+        "Existing entries remain valid and rerunning setup preserves edits and custom fields.",
+        "Blog/project covers and ordered gallery items have a documented contract.",
+        "Limits and behavior for missing/non-image assets are defined before processing."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-15",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-16",
+      "milestone": "M3",
+      "priority": "P2",
+      "requirements": [
+        "FR06"
+      ],
+      "title": "Generate bounded image variants for local and S3 assets",
+      "scope": "Implement image dimensions and bounded variants, with signed delivery, persistent IDs and storage-backend support. Avoid running unlimited processing during frontend requests.",
+      "files": [
+        "api/app/storage.py",
+        "api/app/main.py",
+        "api/app/graphql.py",
+        "api/app/models.py",
+        "api/pyproject.toml"
+      ],
+      "depends_on": [
+        "MC-15"
+      ],
+      "acceptance_criteria": [
+        "Oversized/unsupported input is rejected without excessive decode or memory use.",
+        "Local and S3 variants retain workspace checks and expiring URL semantics.",
+        "Dimensions, variant metadata, storage/recovery behavior and missing-file handling are documented."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-16",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-17",
+      "milestone": "M3",
+      "priority": "P2",
+      "requirements": [
+        "FR06"
+      ],
+      "title": "Improve image picking and gallery authoring",
+      "scope": "Add paginated searchable image selection with thumbnails, alt text and crop/focal controls using existing Assets and field components.",
+      "files": [
+        "web/src/components/Fields.tsx",
+        "web/src/pages/Assets.tsx",
+        "web/src/lib/api.ts",
+        "api/app/graphql.py"
+      ],
+      "depends_on": [
+        "MC-15",
+        "MC-16"
+      ],
+      "acceptance_criteria": [
+        "Editor can find assets beyond the first 100 without loading the full library.",
+        "Image slots reject incompatible file types and save IDs rather than expiring URLs.",
+        "Gallery order, alt text and crop values survive save/reopen and are keyboard accessible."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-17",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-18",
+      "milestone": "M3",
+      "priority": "P2",
+      "requirements": [
+        "FR06"
+      ],
+      "title": "Display blog covers and project galleries",
+      "scope": "Resolve asset fields in the website adapter and render responsive cover/gallery images with dimensions, alt text and selected crops.",
+      "files": [
+        "personal-site/server/moss.mjs",
+        "personal-site/src/App.tsx",
+        "personal-site/src/style.css"
+      ],
+      "depends_on": [
+        "MC-16",
+        "MC-17"
+      ],
+      "acceptance_criteria": [
+        "Blog and project pages show configured media without changing existing text-only entries.",
+        "Signed URL expiry is handled through fresh reads; broken assets do not break pages.",
+        "Responsive images reserve space and obey crop settings and alt text."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-18",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-19",
+      "milestone": "M3",
+      "priority": "P2",
+      "requirements": [
+        "FR07"
+      ],
+      "title": "Replace hash routes with stable website paths",
+      "scope": "Implement /blog and /projects detail routes with browser navigation, server deep-link handling and real 404 status. Translate existing hash URLs and define slug redirect retention.",
+      "files": [
+        "personal-site/src/App.tsx",
+        "personal-site/src/components/Showcase.tsx",
+        "personal-site/server/index.mjs"
+      ],
+      "depends_on": [
+        "MC-03"
+      ],
+      "acceptance_criteria": [
+        "Direct visit, refresh and browser back/forward work for published pages.",
+        "Existing unique simple hashes and namespaced hashes resolve to their matching page.",
+        "Unknown routes return 404; draft-only/new slugs do not leak into public routing."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-19",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-20",
+      "milestone": "M3",
+      "priority": "P2",
+      "requirements": [
+        "FR07"
+      ],
+      "title": "Serve per-page metadata in initial HTML",
+      "scope": "Generate page title, description, canonical and social image metadata from the public snapshot before responding, safely escaping CMS values. Include the preview noindex path.",
+      "files": [
+        "personal-site/server/index.mjs",
+        "personal-site/server/moss.mjs",
+        "personal-site/src/App.tsx",
+        "personal-site/index.html"
+      ],
+      "depends_on": [
+        "MC-18",
+        "MC-19"
+      ],
+      "acceptance_criteria": [
+        "Initial HTTP HTML for each published page includes its own canonical/title/description.",
+        "Canonical URLs use configured example.com origin and never request Host or preview credentials.",
+        "HTML escaping prevents metadata injection; expired asset URLs are not permanent social-image references."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-20",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-21",
+      "milestone": "M3",
+      "priority": "P2",
+      "requirements": [
+        "FR07"
+      ],
+      "title": "Add published-only sitemap and blog RSS",
+      "scope": "Serve sitemap.xml and blog RSS with canonical routes, publication dates and safe XML escaping; exclude drafts, previews, trashed and unpublished entries.",
+      "files": [
+        "personal-site/server/index.mjs",
+        "personal-site/server/moss.mjs"
+      ],
+      "depends_on": [
+        "MC-19",
+        "MC-20"
+      ],
+      "acceptance_criteria": [
+        "Feeds include only current public snapshots and absolute canonical URLs.",
+        "Publication dates reflect publication rather than an unrelated draft save.",
+        "Unknown/private content and unsafe XML cannot enter feed output."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-21",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-22",
+      "milestone": "M4",
+      "priority": "P1",
+      "requirements": [
+        "FR02"
+      ],
+      "title": "Persist structured publication failures",
+      "scope": "Expose schedule failure state and reason through editorial queries with failure timestamp and captured revision. Add permission-checked retry/resolve semantics.",
+      "files": [
+        "api/app/content.py",
+        "api/app/graphql.py",
+        "api/app/models.py",
+        "api/migrations/versions"
+      ],
+      "depends_on": [
+        "MC-04",
+        "MC-05"
+      ],
+      "acceptance_criteria": [
+        "Validation failures remain visible independently of the limited audit list.",
+        "A failed schedule never removes the last public snapshot.",
+        "Retry is explicit, version-checked and revalidates content; delivery reveals no failure internals."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-22",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-23",
+      "milestone": "M4",
+      "priority": "P1",
+      "requirements": [
+        "FR02",
+        "FR09"
+      ],
+      "title": "Build the upcoming and failed publication queue",
+      "scope": "Add a dedicated list/calendar-style queue using server pagination and scheduled/overdue/failed filters. Include timezone, revision, error detail and edit/reschedule actions.",
+      "files": [
+        "web/src/pages/Content.tsx",
+        "web/src/lib/api.ts",
+        "api/app/graphql.py"
+      ],
+      "depends_on": [
+        "MC-06",
+        "MC-22"
+      ],
+      "acceptance_criteria": [
+        "Editors can locate upcoming, overdue and failed publications without searching audit JSON.",
+        "Failure explanation links to a concrete recovery action; timezone is always stated.",
+        "Queue refresh does not overwrite an open editor and readers cannot mutate schedules."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-23",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-24",
+      "milestone": "M4",
+      "priority": "P2",
+      "requirements": [
+        "FR08"
+      ],
+      "title": "Record publication events in a transactional outbox",
+      "scope": "Add an outbox model/migration and worker claiming/recovery for publication, unpublish and trash events. Exclude draft saves and private payload fields.",
+      "files": [
+        "api/app/models.py",
+        "api/app/content.py",
+        "api/app/main.py",
+        "api/migrations/versions"
+      ],
+      "depends_on": [
+        "MC-03",
+        "MC-04",
+        "MC-05"
+      ],
+      "acceptance_criteria": [
+        "Event and publication commit together; rollback emits nothing.",
+        "Events have stable IDs, workspace/type/entry/publication revision and bounded retention.",
+        "Worker restart/duplicate claims are safe and network requests stay outside write transactions."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-24",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-25",
+      "milestone": "M4",
+      "priority": "P2",
+      "requirements": [
+        "FR08"
+      ],
+      "title": "Deliver signed webhooks with bounded retries",
+      "scope": "Add administrator-managed webhook endpoints/secrets, signed events, retry backoff and delivery history. Validate destinations and use an explicit operator allowlist for local website callbacks.",
+      "files": [
+        "api/app/main.py",
+        "api/app/security.py",
+        "api/app/models.py",
+        "api/app/config.py",
+        "web/src/pages/Settings.tsx"
+      ],
+      "depends_on": [
+        "MC-24"
+      ],
+      "acceptance_criteria": [
+        "Receivers can verify timestamp/signature and deduplicate by event ID.",
+        "Redirects, private-network destinations and DNS changes cannot bypass destination policy.",
+        "Failures/retries are visible and bounded; secrets are not returned after creation or logged."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-25",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-26",
+      "milestone": "M4",
+      "priority": "P2",
+      "requirements": [
+        "FR08"
+      ],
+      "title": "Refresh example.com from publication events",
+      "scope": "Add an authenticated invalidation endpoint, current-content cache and lightweight browser update signal. Retain polling recovery and account for signed media URL lifetimes.",
+      "files": [
+        "personal-site/server/index.mjs",
+        "personal-site/server/moss.mjs",
+        "personal-site/src/App.tsx",
+        "compose.yaml"
+      ],
+      "depends_on": [
+        "MC-25"
+      ],
+      "acceptance_criteria": [
+        "Verified events update visible website content without an immediate manual reload.",
+        "Duplicate/out-of-order events do not regress content; failed fetch preserves last valid cache.",
+        "Fallback polling remains functional; cache/preview isolation and URL-expiry limits are explicit."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-26",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-27",
+      "milestone": "M4",
+      "priority": "P1",
+      "requirements": [
+        "FR09"
+      ],
+      "title": "Reconcile uncertain saves and expose request timing",
+      "scope": "Preserve GraphQL error codes/request IDs, reconcile committed mutations after timeouts, and show accurate publish versus website-update states. Reuse current timing logs/metrics to diagnose latency.",
+      "files": [
+        "web/src/lib/api.ts",
+        "web/src/pages/Content.tsx",
+        "api/app/main.py",
+        "api/app/graphql.py"
+      ],
+      "depends_on": [
+        "MC-06",
+        "MC-08",
+        "MC-26"
+      ],
+      "acceptance_criteria": [
+        "Timed-out saves are reconciled without duplicate entries or automatic blind publish retries.",
+        "Saving reaches a visible success/error/uncertain state and retains editable values.",
+        "Website update is marked confirmed only with acknowledgement/version evidence; logs omit secrets/body data."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-27",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-28",
+      "milestone": "M5",
+      "priority": "P2",
+      "requirements": [
+        "FR10"
+      ],
+      "title": "Correct schema delivery preview and make form preview interactive",
+      "scope": "Audit existing deliveryShape against backend-generated SDL; fix list/localized/private/reference/asset handling and show hidden-field summary. Wire form preview changes into previewData.",
+      "files": [
+        "web/src/lib/fields.ts",
+        "web/src/pages/Types.tsx",
+        "api/app/graphql.py"
+      ],
+      "depends_on": [],
+      "acceptance_criteria": [
+        "Preview agrees with actual generated API types and field signatures for all supported field kinds.",
+        "Private nested fields are omitted and the hidden-field count is clear.",
+        "Preview inputs accept changes without writing content, and reset only on meaningful shape changes."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-28",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-29",
+      "milestone": "M5",
+      "priority": "P2",
+      "requirements": [
+        "FR10"
+      ],
+      "title": "Suggest schema migrations from explicit field diffs",
+      "scope": "Show before/after changes and propose defaults/drops; request explicit rename mapping. Preserve user-edited migration JSON and keep server all-entry validation.",
+      "files": [
+        "web/src/pages/Types.tsx",
+        "web/src/lib/fields.ts"
+      ],
+      "depends_on": [
+        "MC-28"
+      ],
+      "acceptance_criteria": [
+        "Removed/new required/changed fields are identified before save.",
+        "No rename or destructive drop is silently inferred or applied.",
+        "Suggestions are editable and cannot overwrite a user migration without confirmation."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-29",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-30",
+      "milestone": "M5",
+      "priority": "P2",
+      "requirements": [
+        "FR10"
+      ],
+      "title": "Improve enum editing and reference confidence",
+      "scope": "Allow inline enum choice renames with duplicate/identifier validation; validate reference targets and show their entry counts, including empty targets. Explain title-driven slug behavior.",
+      "files": [
+        "web/src/components/FieldBuilder.tsx",
+        "web/src/lib/fields.ts",
+        "api/app/content.py",
+        "api/app/graphql.py"
+      ],
+      "depends_on": [],
+      "acceptance_criteria": [
+        "Invalid/duplicate enum edits are explained inline and blocked from save.",
+        "Unknown reference target is an error; zero entries is a warning; permitted self-reference behavior is explicit.",
+        "Counts are workspace-scoped and no valid existing schema is silently rewritten."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-30",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-31",
+      "milestone": "M5",
+      "priority": "P3",
+      "requirements": [
+        "FR11"
+      ],
+      "title": "Add schema outline, accessible reordering and version comparison",
+      "scope": "Optional scope: collapsible nested cards/outline, keyboard-supported ordering and read-only schema history diff. Retain current arrow controls as a usable fallback.",
+      "files": [
+        "web/src/components/FieldBuilder.tsx",
+        "web/src/pages/Types.tsx",
+        "web/src/lib/fields.ts"
+      ],
+      "depends_on": [
+        "MC-28"
+      ],
+      "acceptance_criteria": [
+        "Collapse/jump/reorder work for nested schemas without losing field settings.",
+        "Every reorder action is keyboard accessible and respects nesting limits.",
+        "Version comparison displays additions/removals/changes and never restores implicitly."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-31",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-32",
+      "milestone": "M5",
+      "priority": "P3",
+      "requirements": [
+        "FR11"
+      ],
+      "title": "Add type templates and safe duplication",
+      "scope": "Optional scope: starter Article/Product/Person/Event templates and whole-type or field duplication. Require unique type/field keys and never copy entries implicitly.",
+      "files": [
+        "web/src/pages/Types.tsx",
+        "web/src/components/FieldBuilder.tsx",
+        "web/src/lib/fields.ts"
+      ],
+      "depends_on": [
+        "MC-30"
+      ],
+      "acceptance_criteria": [
+        "Templates produce valid editable schemas under existing constraints.",
+        "Duplicating a type requires a new key and does not overwrite its source or clone content.",
+        "Field duplication catches same-level name conflicts before save."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-32",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-33",
+      "milestone": "M6",
+      "priority": "P1",
+      "requirements": [
+        "FR12"
+      ],
+      "title": "Record end-to-end release acceptance evidence",
+      "scope": "After the selected implementation scope is approved and complete, perform the PRD acceptance walkthrough on a separate restored database. Record actual results, fixture/load context, role boundaries and limitations; never manufacture pass claims.",
+      "files": [
+        "docs/PRD.md",
+        "docs/planning/TASKS.md",
+        "api/app",
+        "web/src",
+        "personal-site/src"
+      ],
+      "depends_on": [
+        "MC-09",
+        "MC-11",
+        "MC-14",
+        "MC-18",
+        "MC-21",
+        "MC-23",
+        "MC-27",
+        "MC-29",
+        "MC-30"
+      ],
+      "acceptance_criteria": [
+        "Evidence covers draft/live/schedule transitions, preview isolation, formatting, media, legacy routes and failures.",
+        "Latency/freshness targets are measured with documented conditions and unmet targets are recorded.",
+        "Upgrade preserves IDs/counts/history; evidence lists any external OAuth/S3 checks not performed."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-33",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    },
+    {
+      "code": "MC-34",
+      "milestone": "M6",
+      "priority": "P1",
+      "requirements": [
+        "FR12"
+      ],
+      "title": "Document deployment, recovery and new publishing workflows",
+      "scope": "Update operator/editor docs for the final approved behavior, environment options, previews, callbacks, Markdown, schedules, upgrade and rollback. Reconcile stale TODO/type-improvement entries after evidence is available.",
+      "files": [
+        "README.md",
+        "personal-site/README.md",
+        "TODO.md",
+        "TYPE_IMPROVEMENTS.md",
+        "docs"
+      ],
+      "depends_on": [
+        "MC-33"
+      ],
+      "acceptance_criteria": [
+        "An operator can configure the services, diagnose failures and restore a matching backup/image pair.",
+        "Editor instructions explain live drafts, fixed scheduled revisions, cancel/unpublish and preview.",
+        "Docs distinguish shipped features from optional P3 work and deployment/provider setup still required."
+      ],
+      "status": "proposed",
+      "source": "Agent-proposed improvement; review against PRD before implementation.",
+      "aftur_id": "TASK-34",
+      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+    }
+  ],
+  "aftur_project_path": "/Users/nirtuttnauer/Documents/Code/MossCMS/ProjectMemory/MossCMS",
+  "aftur_prd_id": "PRD-e46f6b17",
+  "prd_sha256": "c06a7be846f3c2c1c2f3b231adb3492006d2b829807d77addf586d2b163bf622"
+}

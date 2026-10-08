@@ -1,0 +1,150 @@
+from datetime import datetime, timezone
+from uuid import uuid4
+
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, create_engine, event
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
+
+
+def uid():
+    return str(uuid4())
+
+
+def now():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Project(Base):
+    __tablename__ = "projects"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    name: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    email: Mapped[str] = mapped_column(String(254), unique=True)
+    name: Mapped[str] = mapped_column(String(100))
+    password_hash: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class Membership(Base):
+    __tablename__ = "memberships"
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    role: Mapped[str] = mapped_column(String(16))
+
+
+class Token(Base):
+    __tablename__ = "tokens"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(16), index=True)
+    user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    project_id: Mapped[str | None] = mapped_column(ForeignKey("projects.id"), nullable=True)
+    name: Mapped[str] = mapped_column(String(100), default="")
+    email: Mapped[str] = mapped_column(String(254), default="")
+    role: Mapped[str] = mapped_column(String(16), default="reader")
+    scopes: Mapped[list] = mapped_column(JSON, default=list)
+    csrf: Mapped[str] = mapped_column(String(64), default="")
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class ContentType(Base):
+    __tablename__ = "content_types"
+    __table_args__ = (UniqueConstraint("project_id", "key"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
+    key: Mapped[str] = mapped_column(String(60))
+    name: Mapped[str] = mapped_column(String(100))
+    fields: Mapped[list] = mapped_column(JSON)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    __mapper_args__ = {"version_id_col": version}
+
+
+class SchemaRevision(Base):
+    __tablename__ = "schema_revisions"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    type_id: Mapped[str] = mapped_column(ForeignKey("content_types.id"))
+    version: Mapped[int] = mapped_column(Integer)
+    fields: Mapped[list] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class Entry(Base):
+    __tablename__ = "entries"
+    __table_args__ = (UniqueConstraint("project_id", "type_id", "slug"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
+    type_id: Mapped[str] = mapped_column(ForeignKey("content_types.id"), index=True)
+    slug: Mapped[str] = mapped_column(String(220))
+    title: Mapped[str] = mapped_column(String(200))
+    data: Mapped[dict] = mapped_column(JSON)
+    published_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    status: Mapped[str] = mapped_column(String(16), index=True, default="draft")
+    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
+    author_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    __mapper_args__ = {"version_id_col": version}
+
+
+class Revision(Base):
+    __tablename__ = "revisions"
+    __table_args__ = (UniqueConstraint("entry_id", "number"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
+    entry_id: Mapped[str] = mapped_column(ForeignKey("entries.id"), index=True)
+    number: Mapped[int] = mapped_column(Integer)
+    snapshot: Mapped[dict] = mapped_column(JSON)
+    author: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class Asset(Base):
+    __tablename__ = "assets"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
+    name: Mapped[str] = mapped_column(String(254))
+    key: Mapped[str] = mapped_column(String(300))
+    storage: Mapped[str] = mapped_column(String(16))
+    mime: Mapped[str] = mapped_column(String(100))
+    size: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class Audit(Base):
+    __tablename__ = "audit"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    project_id: Mapped[str | None] = mapped_column(ForeignKey("projects.id"), index=True, nullable=True)
+    actor: Mapped[str] = mapped_column(String(254))
+    action: Mapped[str] = mapped_column(String(60))
+    details: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+def database(url):
+    engine = create_engine(
+        url, pool_pre_ping=True, connect_args={"check_same_thread": False} if url.startswith("sqlite") else {}
+    )
+    if url.startswith("sqlite"):
+
+        @event.listens_for(engine, "connect")
+        def foreign_keys(connection, _):
+            connection.execute("PRAGMA foreign_keys=ON")
+
+    return engine, sessionmaker(engine, expire_on_commit=False)
+
+
+class OAuthIdentity(Base):
+    __tablename__ = "oauth_identities"
+    __table_args__ = (UniqueConstraint("provider", "subject"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    provider: Mapped[str] = mapped_column(String(40))
+    subject: Mapped[str] = mapped_column(String(254))
