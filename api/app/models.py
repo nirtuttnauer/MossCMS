@@ -78,7 +78,10 @@ class SchemaRevision(Base):
 
 class Entry(Base):
     __tablename__ = "entries"
-    __table_args__ = (UniqueConstraint("project_id", "type_id", "slug"),)
+    __table_args__ = (
+        UniqueConstraint("project_id", "type_id", "slug"),
+        UniqueConstraint("project_id", "type_id", "published_slug", name="uq_entries_public_slug"),
+    )
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
     type_id: Mapped[str] = mapped_column(ForeignKey("content_types.id"), index=True)
@@ -86,6 +89,17 @@ class Entry(Base):
     title: Mapped[str] = mapped_column(String(200))
     data: Mapped[dict] = mapped_column(JSON)
     published_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    published_slug: Mapped[str | None] = mapped_column(String(220), nullable=True)
+    published_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
+    published_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    published_schema_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    scheduled_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    scheduled_slug: Mapped[str | None] = mapped_column(String(220), nullable=True)
+    scheduled_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    scheduled_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    scheduled_schema_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    schedule_error: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     status: Mapped[str] = mapped_column(String(16), index=True, default="draft")
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     version: Mapped[int] = mapped_column(Integer, default=1)
