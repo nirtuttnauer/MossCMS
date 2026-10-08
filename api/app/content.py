@@ -537,6 +537,43 @@ def move_entry(session, identity, id, type_key, version):
     return record
 
 
+def retry_publication(session, identity, id, version):
+    """Requeue the failed immutable capture; never silently substitute newer edits."""
+    require(identity, "editor", write=True)
+    record = get_entry(session, identity, id)
+    if record.version != version:
+        raise CmsError("This entry changed. Reload before retrying.", "CONFLICT")
+    if record.status == "deleted" or not record.schedule_error or record.scheduled_data is None:
+        raise CmsError("There is no failed captured schedule to retry.")
+    definition = session.get(ContentType, record.type_id)
+    validate_data(definition.fields, record.scheduled_data, session, identity["project_id"])
+    collision = session.scalar(
+        select(Entry.id).where(
+            Entry.project_id == record.project_id,
+            Entry.type_id == record.type_id,
+            Entry.published_slug == record.scheduled_slug,
+            Entry.id != record.id,
+            Entry.status != "deleted",
+        )
+    )
+    if collision:
+        raise CmsError("The captured URL is still in use. Resolve the conflict or replace the schedule.", "CONFLICT")
+    record.scheduled_at = now()
+    record.schedule_error = None
+    record.updated_at = now()
+    summarize_status(record)
+    revision(session, identity, record)
+    audit(
+        session,
+        record.project_id,
+        identity["actor"],
+        "entry.schedule_retry",
+        entryId=id,
+        scheduledRevision=record.scheduled_revision,
+    )
+    return record
+
+
 def publication_action(session, identity, id, version, unpublish=False):
     require(identity, "editor", write=True)
     record = get_entry(session, identity, id)

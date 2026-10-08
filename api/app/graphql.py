@@ -309,6 +309,30 @@ class Query:
         )
 
     @strawberry.field
+    def publication_queue(self, info: strawberry.Info, failed: bool = False, first: int = 25, offset: int = 0) -> JSON:
+        c = info.context
+        require(c)
+        if c["delivery"]:
+            raise CmsError("Publication queues are editorial only.", "FORBIDDEN")
+        if not 1 <= first <= 100 or not 0 <= offset <= 100000:
+            raise CmsError("Use a bounded publication queue page.")
+        query = content.scoped(c["session"], Entry, c).where(Entry.status != "deleted")
+        query = (
+            query.where(Entry.schedule_error["code"].as_string().is_not(None))
+            if failed
+            else query.where(Entry.scheduled_at.is_not(None))
+        )
+        total = c["session"].scalar(select(func.count()).select_from(query.subquery()))
+        rows = (
+            c["session"]
+            .scalars(
+                query.order_by(Entry.scheduled_at.asc(), Entry.updated_at.desc(), Entry.id).offset(offset).limit(first)
+            )
+            .all()
+        )
+        return cast(JSON, {"nodes": [content.entry_dict(c["session"], c, r) for r in rows], "total": total})
+
+    @strawberry.field
     def overview(self, info: strawberry.Info) -> JSON:
         c = info.context
         require(c)
@@ -396,6 +420,12 @@ class Mutation:
     def unpublish_entry(self, info: strawberry.Info, id: strawberry.ID, version: int) -> EntryNode:
         c = info.context
         record = content.publication_action(c["session"], c, str(id), version, unpublish=True)
+        return EntryNode.from_dict(content.entry_dict(c["session"], c, record))
+
+    @strawberry.mutation
+    def retry_publication(self, info: strawberry.Info, id: strawberry.ID, version: int) -> EntryNode:
+        c = info.context
+        record = content.retry_publication(c["session"], c, str(id), version)
         return EntryNode.from_dict(content.entry_dict(c["session"], c, record))
 
     @strawberry.mutation

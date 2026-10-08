@@ -218,3 +218,39 @@ def test_markdown_assets_resolve_only_visible_scoped_published_content(app, clie
         client, admin, data={"title": "Post", "body": "![New](asset:private)"}, id=live["id"], version=live["version"]
     )
     assert public(client, token, query)["entries"]["nodes"][0]["resolvedAssets"][0]["id"] == "visible"
+
+
+def test_failed_queue_and_retry_keep_captured_revision(app, client, admin):
+    from datetime import timedelta
+    from app.models import Entry, now
+    from app.content import publish_due
+    from test_cms import invited
+
+    define(client, admin)
+    saved = entry(client, admin, status="scheduled", scheduledAt=(now() + timedelta(hours=1)).isoformat())["data"][
+        "saveEntry"
+    ]
+    with app.state.db.begin() as session:
+        record = session.get(Entry, saved["id"])
+        record.scheduled_at = None
+        record.schedule_error = {
+            "code": "VALIDATION",
+            "message": "Temporary failure",
+            "revision": 1,
+            "failedAt": now().isoformat(),
+        }
+    failed = gql(client, admin, "{publicationQueue(failed:true)}")["data"]["publicationQueue"]
+    assert failed["total"] == 1
+    retry = "mutation($id:ID!,$version:Int!){retryPublication(id:$id,version:$version){version scheduledRevision scheduleError}}"
+    args = {"id": saved["id"], "version": saved["version"]}
+    reader, headers, _ = invited(app, client, admin, "reader", "queue-reader@example.com")
+    assert "errors" in gql(reader, headers, retry, args)
+    assert "errors" in gql(client, admin, retry, {**args, "version": 0})
+    result = gql(client, admin, retry, args)["data"]["retryPublication"]
+    assert result["scheduledRevision"] == 1 and result["scheduleError"] is None
+    assert gql(client, admin, "{publicationQueue(failed:true)}")["data"]["publicationQueue"]["total"] == 0
+    assert gql(client, admin, "{publicationQueue}")["data"]["publicationQueue"]["total"] == 1
+    publish_due(app.state.db)
+    token = delivery(client, admin)
+    assert public(client, token)["entries"]["nodes"][0]["version"] == 1
+    assert "errors" in gql(client, token, "{publicationQueue}", delivery=True)
