@@ -230,6 +230,7 @@ def test_assets_references_and_cross_project_validation(app, client, admin):
     assert result["data"]["allCmsPage"][0]["parent"]["entry"]["slug"] == "hello"
     new = client.post("/api/projects", headers=admin, json={"name": "Other"}).json()
     other = {**admin, "x-moss-project": new["id"]}
+    define(client, other, "article")
     define(client, other, "page", fields)
     assert "errors" in entry(client, other, key="page", data={"title": "Wrong", "file": asset["id"]})
 
@@ -508,5 +509,5 @@ def test_reference_targets_counts_and_self_reference_are_explicit(client, admin)
     assert gql(client, admin, "{contentTypes{key entryCount}}")["data"]["contentTypes"] == [
         {"key": "article", "entryCount": 0}
     ]
-    assert "errors" not in entry(client, admin, data={"title":"Counted"})
+    assert "errors" not in entry(client, admin, data={"title": "Counted"})
     assert gql(client, admin, "{contentTypes{entryCount}}")["data"]["contentTypes"][0]["entryCount"] == 1

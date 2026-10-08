@@ -72,3 +72,29 @@ def test_preview_origin_configuration_is_admin_only_and_origin_scoped(app, clien
         reader.patch("/api/project/preview", headers=headers, json={"origin": "https://other.example"}).status_code
         == 403
     )
+
+
+def test_development_preview_issuer_is_allowed_only_with_explicit_bypass(tmp_path):
+    from fastapi.testclient import TestClient
+    from app.config import Settings
+    from app.main import create_app
+
+    local = create_app(
+        Settings(
+            skip_auth=True,
+            secret="s" * 40,
+            setup_token="t" * 30,
+            database_url=f"sqlite:///{tmp_path}/local.db",
+            storage_dir=tmp_path / "media",
+        )
+    )
+    with TestClient(local) as client:
+        me = client.get("/auth/me").json()
+        headers = {"x-moss-project": me["projects"][0]["id"], "x-moss-csrf": me["csrf"]}
+        define(client, headers)
+        saved = entry(client, headers)["data"]["saveEntry"]
+        grant = gql(client, headers, CREATE, {"id": saved["id"], "version": saved["version"]})["data"][
+            "createPreviewGrant"
+        ]
+        token = delivery(client, headers)
+        assert client.post("/api/preview/redeem", headers=token, json={"token": grant["token"]}).status_code == 200

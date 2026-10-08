@@ -16,6 +16,13 @@ from .models import Asset, Audit, ContentType, Entry, Membership, Revision, Sche
 from .security import CmsError, audit, require
 
 
+class SafeSchema(strawberry.Schema):
+    def process_errors(self, errors, execution_context=None):
+        # Strawberry's default logger includes the submitted query (possibly inline secrets).
+        # The HTTP layer reports structured codes/request IDs without bodies instead.
+        pass
+
+
 @strawberry.type
 class EntryNode:
     id: strawberry.ID
@@ -634,4 +641,4 @@ def generated_schema(definitions, delivery=False, scopes=None):
         typ = object_type(definition.fields, name, root=True)
         attributes["all" + name] = make_list(definition.key, typ)
     query = strawberry.type(type("ProjectQuery", (Query,), attributes))
-    return strawberry.Schema(query=query, mutation=None if delivery else Mutation)
+    return SafeSchema(query=query, mutation=None if delivery else Mutation)

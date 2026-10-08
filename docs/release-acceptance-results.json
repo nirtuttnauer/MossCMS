@@ -1,0 +1,46 @@
+{
+  "hardware": "arm64 macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "apiSaves": 12,
+  "saveP95Seconds": 0.0644,
+  "eventFreshnessP95Seconds": 1.0746,
+  "eventFreshnessRangeSeconds": [
+    0.6206,
+    1.0746
+  ],
+  "scheduledPublishDelaySeconds": 0.4444,
+  "scheduledBatchSamples": 10,
+  "scheduledBatchP95Seconds": 2.9782,
+  "localCoverGalleryVariantHTTP": "passed",
+  "fallbackPollSeconds": [
+    10.0624,
+    10.0556
+  ],
+  "previewRevocationAndIsolation": "passed",
+  "metadataRoutesFeeds": "passed",
+  "legacyDatasetEntries": 1004,
+  "concurrency": "one HTTP author, sequential requests",
+  "build": "local uvicorn + production Node website; PostgreSQL17 Docker",
+  "reproductionRun": {
+    "hardware": "arm64 macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "apiSaves": 12,
+    "saveP95Seconds": 0.0315,
+    "eventFreshnessP95Seconds": 1.0765,
+    "eventFreshnessRangeSeconds": [
+      0.6536,
+      1.0765
+    ],
+    "scheduledPublishDelaySeconds": 0.4358,
+    "scheduledBatchSamples": 10,
+    "scheduledBatchP95Seconds": 3.0421,
+    "localCoverGalleryVariantHTTP": "passed",
+    "fallbackPollSeconds": [
+      10.0498,
+      10.0663
+    ],
+    "previewRevocationAndIsolation": "passed",
+    "metadataRoutesFeeds": "passed",
+    "legacyDatasetEntries": 1004,
+    "concurrency": "one HTTP author, sequential requests",
+    "build": "local uvicorn + production Node website; PostgreSQL17 Docker"
+  }
+}

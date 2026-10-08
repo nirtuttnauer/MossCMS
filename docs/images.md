@@ -9,8 +9,7 @@ images. `fit` is `cover` (default) or `contain`; focal coordinates are percentag
 Rerunning setup only adds optional fields and retains custom fields and content.
 
 Raster processing accepts JPEG, PNG and WebP, at most 20 million decoded pixels,
-10,000 pixels per dimension and the configured upload byte limit. Animated images
-and SVG remain original downloads with no raster variants or inline website display.
+10,000 pixels per dimension and the configured upload byte limit. Animated JPEG/PNG/WebP inputs are rejected. Other image formats and SVG remain original downloads with no raster variants or inline website display.
 Invalid raster data is rejected. EXIF orientation is applied and metadata removed
 from variants. Original uploads are retained for compatibility. Missing, removed,
 non-image or out-of-workspace assets render no image; text remains usable.

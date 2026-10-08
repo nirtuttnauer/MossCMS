@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from . import content
+from .development import DEVELOPMENT_USER_ID
 from .graphql import asset_node
 from .models import Asset, Membership, PreviewGrant, Project, Revision, now
 from .security import CmsError, audit, digest, identify, require
@@ -73,7 +74,9 @@ def redeem(body: Redemption, request: Request):
         if not grant or grant.revoked_at or grant.expires_at <= now() or grant.project_id != identity["project_id"]:
             raise CmsError("Preview grant expired, revoked or out of scope.", "FORBIDDEN")
         membership = session.get(Membership, (grant.project_id, grant.user_id))
-        if not membership or membership.role not in {"admin", "editor"}:
+        if (not membership or membership.role not in {"admin", "editor"}) and not (
+            request.app.state.settings.skip_auth and grant.user_id == DEVELOPMENT_USER_ID
+        ):
             raise CmsError("Preview issuer no longer has editing access.", "FORBIDDEN")
         definition = content.get_type(session, identity, grant.type_key)
         # A preview never inherits the draft visibility of ordinary editorial context.

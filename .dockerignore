@@ -17,3 +17,10 @@ backups
 
 **/.env
 **/.env.*
+
+ProjectMemory
+.pnpm-store
+**/*.test.ts
+**/*.test.tsx
+**/*.test.mjs
+api/tests

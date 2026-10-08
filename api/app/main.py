@@ -85,31 +85,33 @@ def create_app(settings=None):
         if settings.skip_auth:
             await asyncio.to_thread(initialize_development, factory)
 
+        stopping = asyncio.Event()
+
+        async def pause(seconds):
+            with suppress(asyncio.TimeoutError):
+                await asyncio.wait_for(stopping.wait(), seconds)
+
         async def scheduler():
-            while True:
+            while not stopping.is_set():
                 try:
                     await asyncio.to_thread(publish_due, factory)
-                except Exception:
-                    logger.exception("Publishing scheduler failed")
-                await asyncio.sleep(5)
+                except Exception as exc:
+                    logger.error("Publishing scheduler failed: %s", type(exc).__name__)
+                await pause(5)
 
         async def webhook_worker():
-            while True:
+            while not stopping.is_set():
                 try:
                     await asyncio.to_thread(deliver, factory, settings)
-                except Exception:
-                    logger.exception("Webhook worker failed")
-                await asyncio.sleep(5)
+                except Exception as exc:
+                    logger.error("Webhook worker failed: %s", type(exc).__name__)
+                await pause(1)
 
         hooks_job = asyncio.create_task(webhook_worker())
         job = asyncio.create_task(scheduler())
         yield
-        hooks_job.cancel()
-        with suppress(asyncio.CancelledError):
-            await hooks_job
-        job.cancel()
-        with suppress(asyncio.CancelledError):
-            await job
+        stopping.set()
+        await asyncio.gather(job, hooks_job)
         engine.dispose()
 
     app = FastAPI(title="MossCMS", version="0.2.0", lifespan=lifespan)
@@ -151,7 +153,13 @@ def create_app(settings=None):
             return JSONResponse({"detail": "Invalid Content-Length."}, status_code=400)
         if length > settings.max_upload + 1024 * 1024:
             return JSONResponse({"detail": "Request body is too large."}, status_code=413)
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        except Exception as exc:
+            logger.error(json.dumps({"requestId": request_id, "errorType": type(exc).__name__}))
+            response = JSONResponse(
+                {"detail": "The request could not be completed.", "code": "INTERNAL"}, status_code=500
+            )
         duration = time.monotonic() - started
         app.state.metrics["requests"] += 1
         app.state.metrics["errors"] += int(response.status_code >= 400)
@@ -272,16 +280,30 @@ def create_app(settings=None):
                         }
                     ],
                 }
-            except Exception:
+            except Exception as exc:
                 session.rollback()
-                logger.exception("GraphQL operation failed")
+                logger.error(
+                    json.dumps(
+                        {"requestId": request.state.request_id, "operation": "graphql", "errorType": type(exc).__name__}
+                    )
+                )
                 payload = {
                     "data": None,
                     "errors": [
                         {"message": "The operation could not be completed.", "extensions": {"code": "INTERNAL"}}
                     ],
                 }
-        for error in payload.get("errors") or []:
+        response_errors = payload.get("errors") or []
+        if response_errors:
+            logger.warning(
+                json.dumps(
+                    {
+                        "requestId": request.state.request_id,
+                        "graphqlErrorCodes": [e.get("extensions", {}).get("code") for e in response_errors],
+                    }
+                )
+            )
+        for error in response_errors:
             error.setdefault("extensions", {})["requestId"] = request.state.request_id
         headers = {
             "Cache-Control": "private, no-cache" if delivery and not payload.get("errors") else "no-store",

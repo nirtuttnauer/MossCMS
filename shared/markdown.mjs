@@ -2,7 +2,7 @@
 export function markdownUrl(assets = []) {
   return (raw, key) => {
     if (key === 'src' && raw.startsWith('asset:')) {
-      raw = assets.find(asset => asset.id === raw.slice(6) && asset.mime.startsWith('image/'))?.url || '';
+      raw = assets.find(asset => asset.id === raw.slice(6) && ['image/jpeg','image/png','image/webp'].includes(asset.mime))?.url || '';
     }
     if (!raw || /[\u0000-\u0020\u007f]/.test(raw)) return '';
     try {

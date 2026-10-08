@@ -68,3 +68,14 @@ def test_publication_receipt_prevents_duplicate_events_and_preserves_request_id(
     assert failed.json()["errors"][0]["extensions"]["requestId"] == failed.headers["x-request-id"]
     assert failed.json()["errors"][0]["extensions"]["code"] == "CONFLICT"
     assert failed.headers["server-timing"].startswith("app;dur=")
+
+
+def test_graphql_error_logs_do_not_include_inline_body_secrets(client, admin, caplog):
+    import logging
+
+    with caplog.at_level(logging.WARNING):
+        gql(
+            client, admin, 'mutation{saveEntry(typeKey:"missing",slug:"x",data:{title:"DO_NOT_LOG_INLINE_SECRET"}){id}}'
+        )
+    assert "DO_NOT_LOG_INLINE_SECRET" not in caplog.text
+    assert "graphqlErrorCodes" in caplog.text
