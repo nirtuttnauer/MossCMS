@@ -138,6 +138,12 @@ def asset_node(record, settings):
 @strawberry.type
 class Query:
     @strawberry.field
+    def draft_receipt(self, info: strawberry.Info, key: str) -> EntryNode | None:
+        c = info.context
+        response = content.draft_receipt(c["session"], c, key)
+        return EntryNode.from_dict(response) if response else None
+
+    @strawberry.field
     def content_groups(self, info: strawberry.Info, status: str | None = None) -> JSON:
         c = info.context
         return cast(JSON, content.content_groups(c["session"], c, status))
@@ -292,6 +298,23 @@ class Query:
 
 @strawberry.type
 class Mutation:
+    @strawberry.mutation
+    def save_draft(
+        self,
+        info: strawberry.Info,
+        request_key: str,
+        type_key: str,
+        slug: str,
+        data: JSON,
+        id: strawberry.ID | None = None,
+        version: int | None = None,
+    ) -> EntryNode:
+        c = info.context
+        response = content.save_draft(
+            c["session"], c, request_key, type_key, slug, data, str(id) if id else None, version
+        )
+        return EntryNode.from_dict(response)
+
     @strawberry.mutation
     def unpublish_entry(self, info: strawberry.Info, id: strawberry.ID, version: int) -> EntryNode:
         c = info.context

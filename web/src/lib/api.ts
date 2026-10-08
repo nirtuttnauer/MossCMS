@@ -29,3 +29,6 @@ export const typeFields = 'id key name fields version'
 export const saveEntryMutation = `mutation Save($typeKey:String!,$slug:String!,$data:JSON!,$status:String!,$id:ID,$version:Int,$scheduledAt:String){saveEntry(typeKey:$typeKey,slug:$slug,data:$data,status:$status,id:$id,version:$version,scheduledAt:$scheduledAt){${entryFields}}}`
 export function slugify(value: string) { return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') }
 export function message(error: unknown) { return error instanceof Error ? error.message : 'Something went wrong.' }
+
+export const saveDraftMutation = `mutation Draft($requestKey:String!,$typeKey:String!,$slug:String!,$data:JSON!,$id:ID,$version:Int){saveDraft(requestKey:$requestKey,typeKey:$typeKey,slug:$slug,data:$data,id:$id,version:$version){${entryFields}}}`
+export const draftReceiptQuery = `query Receipt($key:String!){draftReceipt(key:$key){${entryFields}}}`

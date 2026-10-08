@@ -1,5 +1,6 @@
 """Project-scoped content operations, schema validation and publishing."""
 
+import hashlib
 import base64
 import json
 import re
@@ -10,7 +11,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import StaleDataError
 
-from .models import Asset, ContentType, Entry, Revision, SchemaRevision, now
+from .models import Asset, ContentType, DraftReceipt, Entry, Revision, SchemaRevision, now
 from .security import CmsError, audit, require
 
 KINDS = {"text", "richText", "number", "boolean", "date", "enum", "object", "list", "reference", "asset"}
@@ -429,6 +430,38 @@ def save_entry(
         status=status,
     )
     return record
+
+
+def draft_receipt(session, identity, key):
+    require(identity, "editor")
+    receipt = session.get(DraftReceipt, (identity["project_id"], identity["user"].id, key))
+    return receipt.response if receipt else None
+
+
+def save_draft(session, identity, key, type_key, slug, data, id=None, version=None):
+    require(identity, "editor", write=True)
+    if not re.fullmatch(r"[A-Za-z0-9_-]{16,100}", key):
+        raise CmsError("Use a stable draft request key of 16–100 letters, digits, dashes or underscores.")
+    payload = {"typeKey": type_key, "slug": slug, "data": data, "id": id, "version": version}
+    fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+    previous = session.get(DraftReceipt, (identity["project_id"], identity["user"].id, key))
+    if previous:
+        if previous.fingerprint != fingerprint:
+            raise CmsError("This request key was already used with different draft values.", "CONFLICT")
+        return previous.response
+    record = save_entry(session, identity, type_key, slug, data, "draft", id, version)
+    response = entry_dict(session, identity, record)
+    session.add(
+        DraftReceipt(
+            project_id=identity["project_id"],
+            user_id=identity["user"].id,
+            key=key,
+            fingerprint=fingerprint,
+            response=response,
+        )
+    )
+    session.flush()
+    return response
 
 
 def move_entry(session, identity, id, type_key, version):
