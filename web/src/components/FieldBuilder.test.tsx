@@ -73,3 +73,16 @@ it('explains invalid and duplicate inline enum edits',()=>{
   expect(screen.getAllByRole('alert')).toHaveLength(3)
   expect(screen.getByLabelText('Choice 1 for choices')).toBeTruthy()
 })
+
+it('outline opens nested cards and arrow reorder retains complete field settings',()=>{
+ const change=vi.fn(),first:Field={name:'group',type:'object',fields:[{name:'child',type:'enum',options:['One'],private:true}]},second:Field={name:'title',type:'text',required:true}
+ render(<FieldBuilder value={[first,second]} onChange={change} types={[]} />)
+ const child=screen.getByLabelText('Field name child').closest('details')!
+ child.open=false
+ fireEvent.click(screen.getByText('Schema outline'))
+ fireEvent.click(screen.getByRole('button',{name:'child · enum'}))
+ expect(child.open).toBe(true)
+ fireEvent.click(screen.getByRole('button',{name:'Move group down'}))
+ expect(change).toHaveBeenLastCalledWith([second,first])
+ expect(screen.getAllByRole('status')[0].textContent).toContain('position 2')
+})

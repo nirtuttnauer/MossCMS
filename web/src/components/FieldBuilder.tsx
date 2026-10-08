@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from './ui/button'
 import { cn } from '../lib/utils'
@@ -6,6 +6,9 @@ import type { ContentType, Field } from '../lib/api'
 import { ENUM_RE, FIELD_TYPES, emptyField, metaFor, nameError, switchTemplate } from '../lib/fields'
 
 type EditorProps = {
+  id: string
+  path: string
+  rootId: string
   field: Field
   name: string
   peers: string[]
@@ -16,7 +19,7 @@ type EditorProps = {
   onMove: (dir: -1 | 1) => void
 }
 
-function FieldEditor({ field, name, peers, types, selfKey, onPatch, onRemove, onMove }: EditorProps) {
+function FieldEditor({ id, path, rootId, field, name, peers, types, selfKey, onPatch, onRemove, onMove }: EditorProps) {
   const [optionInput, setOptionInput] = useState('')
   const meta = metaFor(field.type)
   const label = name || 'Unnamed field'
@@ -31,7 +34,7 @@ function FieldEditor({ field, name, peers, types, selfKey, onPatch, onRemove, on
     setOptionInput('')
   }
   function patchItem(patch: Partial<Field>) { onPatch({ item: { ...(field.item || emptyField('text')), ...patch } }) }
-  return <div className="field-editor">
+  return <details className="field-editor" id={id} open><summary>{label} · {meta.label}{field.required ? ' · required' : ''}{field.private ? ' · private' : ''}</summary>
     <div className="field-editor-head">
       <input aria-label={`Field name ${label}`} placeholder="camelCase name" value={field.name} onChange={e => onPatch({ name: e.target.value })} className={cn(nameIssue && 'is-error')} />
       {nameIssue && <small className="field-issue" role="alert">{nameIssue}</small>}
@@ -55,26 +58,36 @@ function FieldEditor({ field, name, peers, types, selfKey, onPatch, onRemove, on
     </div>}
     {field.type === 'object' && <div className="field-config">
       <p className="config-title">Sub-fields</p>
-      <FieldBuilder value={field.fields || []} types={types} selfKey={selfKey} onChange={next => onPatch({ fields: next })} />
+      <FieldBuilder rootId={rootId} parentPath={path} value={field.fields || []} types={types} selfKey={selfKey} onChange={next => onPatch({ fields: next })} />
     </div>}
     {field.type === 'list' && <div className="field-config">
       <p className="config-title">Item <small>each repeated entry is one of these</small></p>
-      <div className="nested-item"><FieldEditor field={field.item || { name: '', type: 'text' }} name="item" peers={[]} types={types} selfKey={selfKey} onPatch={patchItem} onRemove={() => onPatch({ item: emptyField('text') })} onMove={() => {}} /></div>
+      <div className="nested-item"><FieldEditor id={`${rootId}-${path}.item`} rootId={rootId} path={`${path}.item`} field={field.item || { name: '', type: 'text' }} name="item" peers={[]} types={types} selfKey={selfKey} onPatch={patchItem} onRemove={() => onPatch({ item: emptyField('text') })} onMove={() => {}} /></div>
     </div>}
     <div className="field-flags">
       <label className="checkbox-label"><input type="checkbox" checked={Boolean(field.required)} onChange={e => onPatch({ required: e.target.checked || undefined })} />Required</label>
       <label className="checkbox-label"><input type="checkbox" checked={Boolean(field.localized)} onChange={e => onPatch({ localized: e.target.checked || undefined })} />Localized</label>
       <label className="checkbox-label"><input type="checkbox" checked={Boolean(field.private)} onChange={e => onPatch({ private: e.target.checked || undefined })} />Private <small>hidden from delivery</small></label>
     </div>
-  </div>
+  </details>
 }
 
-export function FieldBuilder({ value, onChange, types, selfKey }: { value: Field[]; onChange: (next: Field[]) => void; types: ContentType[]; selfKey?: string }) {
+export function FieldBuilder({ value, onChange, types, selfKey, rootId:providedRoot,parentPath='' }: { value: Field[]; onChange: (next: Field[]) => void; types: ContentType[]; selfKey?: string;rootId?:string;parentPath?:string }) {
+  const generatedRoot=useId(),rootId=providedRoot || generatedRoot
+  const identities=useRef<string[]>([])
+  while(identities.current.length<value.length)identities.current.push(crypto.randomUUID())
+  identities.current.length=value.length
+  const [announcement,setAnnouncement]=useState('')
+  const path=(index:number)=>parentPath?`${parentPath}.${index}`:String(index)
   function patch(index: number, next: Partial<Field>) { onChange(value.map((f, i) => (i === index ? { ...f, ...next } : f))) }
-  function remove(index: number) { onChange(value.filter((_, i) => i !== index)) }
-  function move(index: number, dir: -1 | 1) { const target = index + dir; if (target < 0 || target >= value.length) return; const next = [...value]; const [item] = next.splice(index, 1); next.splice(target, 0, item); onChange(next) }
+  function remove(index: number) { identities.current.splice(index,1);onChange(value.filter((_, i) => i !== index)) }
+  function move(index: number, dir: -1 | 1) { const target = index + dir; if (target < 0 || target >= value.length) return; const next = [...value]; const [item] = next.splice(index, 1); next.splice(target, 0, item);const [identity]=identities.current.splice(index,1);identities.current.splice(target,0,identity);setAnnouncement(`Moved ${item.name || 'field'} to position ${target+1}.`);onChange(next) }
+  function jump(target:string) {const element=document.getElementById(rootId+'-'+target);if(!element)return;let parent:HTMLElement|null=element;while(parent){if(parent instanceof HTMLDetailsElement)parent.open=true;parent=parent.parentElement}element.scrollIntoView?.({block:'center'});element.querySelector('summary')?.focus()}
+  function outline(fields:Field[],prefix=''):React.ReactNode {return <ul>{fields.map((field,index)=>{const current=prefix?`${prefix}.${index}`:String(index);return <li key={current}><button type="button" onClick={()=>jump(current)}>{field.name || 'Unnamed field'} · {field.type}</button>{field.fields && outline(field.fields,current)}{field.item?.fields && outline(field.item.fields,current+'.item')}</li>})}</ul>}
   return <div className="field-builder">
-    {value.map((field, i) => <FieldEditor key={`${field.name || 'new'}-${i}`} field={field} name={field.name || `Field ${i + 1}`} peers={value.filter((_, j) => j !== i).map(f => f.name)} types={types} selfKey={selfKey} onPatch={next => patch(i, next)} onRemove={() => remove(i)} onMove={dir => move(i, dir)} />)}
+    {!parentPath && <details className="schema-outline"><summary>Schema outline</summary>{outline(value)}</details>}
+    <span role="status" className="sr-only">{announcement}</span>
+    {value.map((field, i) => <FieldEditor key={identities.current[i]} id={`${rootId}-${path(i)}`} rootId={rootId} path={path(i)} field={field} name={field.name || `Field ${i + 1}`} peers={value.filter((_, j) => j !== i).map(f => f.name)} types={types} selfKey={selfKey} onPatch={next => patch(i, next)} onRemove={() => remove(i)} onMove={dir => move(i, dir)} />)}
     {!value.length && <p className="empty-state">No fields yet. Add your first field below.</p>}
     <Button type="button" variant="outline" disabled={value.length >= 40} onClick={() => onChange([...value, emptyField('text')])}><Plus size={14} />Add field</Button>
   </div>
