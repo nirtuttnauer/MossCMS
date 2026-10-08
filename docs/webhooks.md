@@ -27,3 +27,16 @@ use 5s, 30s, 120s, 600s, 3600s backoff and a five-second socket timeout. Deliver
 history shows the latest 100 records and safe error categories. Completed/failed
 history and processed outbox events are pruned after 30 days; pending work is
 retained until delivered or explicitly disabled. Restarting the API resumes work.
+
+Publication saves accept a stable `requestKey`. The same operation replays its
+stored response without creating a second entry or event; a changed payload with
+the same key conflicts. Editorial `draftReceipt(key:)` checks both draft and
+publication receipts, scoped to the issuing user/workspace. After a lost response
+the editor checks the receipt, retains the submitted values, and offers an explicit
+retry of the identical operation. CMS publication success does not prove that a
+browser has displayed it; the editor says website confirmation is pending.
+
+Responses include `X-Request-ID` and `Server-Timing: app;dur=...`. GraphQL errors
+include `extensions.code` and `extensions.requestId`. Correlate that ID with
+structured request logs (`method`, path, status, duration only) and `/metrics`.
+Request bodies, bearer tokens, preview grants and webhook secrets are omitted.

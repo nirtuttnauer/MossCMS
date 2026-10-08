@@ -483,8 +483,24 @@ class Mutation:
         id: strawberry.ID | None = None,
         version: int | None = None,
         scheduled_at: str | None = None,
+        request_key: str | None = None,
     ) -> EntryNode:
         c = info.context
+        if request_key:
+            return EntryNode.from_dict(
+                content.save_entry_receipt(
+                    c["session"],
+                    c,
+                    request_key,
+                    type_key,
+                    slug,
+                    data,
+                    status,
+                    str(id) if id else None,
+                    version,
+                    scheduled_at,
+                )
+            )
         entry = content.save_entry(
             c["session"], c, type_key, slug, data, status, str(id) if id else None, version, scheduled_at
         )

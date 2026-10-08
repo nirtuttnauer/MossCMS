@@ -25,3 +25,22 @@ test('readers can inspect publication state without action controls', async () =
   expect(screen.queryByRole('button',{name:'Unpublish'})).toBeNull()
   expect(screen.queryByRole('button',{name:/^Save draft$/})).toBeNull()
 })
+
+test('lost publication response remains checkable without blind repeated publish',async()=>{
+  const {EntryEditor}=await import('./Content')
+  const {ApiError}=await import('../lib/api')
+  const saved=vi.fn()
+  vi.mocked(gql).mockImplementation(async(query)=>{
+    if(query.includes('saveEntry('))throw new ApiError('Lost response','NETWORK',undefined,true)
+    if(query.includes('draftReceipt('))return {draftReceipt:null}
+    return {entries:{nodes:[]},assets:[]}
+  })
+  render(<EntryEditor entry={entry} initialType="article" types={types} editable onClose={vi.fn()} onSaved={saved} />)
+  fireEvent.click(screen.getByRole('button',{name:/^Publish nowMake/}))
+  fireEvent.submit(screen.getByRole('button',{name:'Publish now'}).closest('form')!)
+  await screen.findByText(/Publication outcome is unconfirmed/)
+  expect(saved).not.toHaveBeenCalled()
+  fireEvent.click(screen.getAllByRole('button',{name:'Check outcome'})[0])
+  await waitFor(()=>expect(vi.mocked(gql).mock.calls.filter(([query])=>query.includes('draftReceipt(')).length).toBe(2))
+  expect(vi.mocked(gql).mock.calls.filter(([query])=>query.includes('saveEntry(')).length).toBe(1)
+})

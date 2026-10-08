@@ -6,7 +6,7 @@ import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Dialog } from '../components/ui/dialog'
 import { FieldInput } from '../components/Fields'
-import { entryFields, gql, message, saveEntryMutation, slugify, type Asset, type ContentType, type Entry, type Field } from '../lib/api'
+import { ApiError, draftReceiptQuery, entryFields, gql, message, saveEntryMutation, slugify, type Asset, type ContentType, type Entry, type Field } from '../lib/api'
 
 type Page = { nodes: Entry[]; total: number; endCursor: string | null; hasNextPage: boolean }
 type Group = { key: string; name: string; count: number }
@@ -39,15 +39,17 @@ export function EntryEditor({ entry: initialEntry, types, initialType, editable,
   const [status, setStatus] = useState('draft')
   const [schedule, setSchedule] = useState(initialEntry?.scheduledAt ? localDateTime(new Date(initialEntry.scheduledAt)) : localDateTime(new Date(Date.now() + 3600000)))
   const [error, setError] = useState('')
+  const [pendingPublication,setPendingPublication]=useState<Record<string,unknown>|null>(null)
+  const [publicationState,setPublicationState]=useState('')
   const [busy, setBusy] = useState(false)
   const [references, setReferences] = useState<Entry[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
   const [preview, setPreview] = useState<{id:string;previewUrl:string;revision:number;expiresAt:string} | null>(null)
   const [history, setHistory] = useState<Revision[] | null>(null)
   const requiredComplete = (fields: Field[], values: Record<string, unknown>): boolean => fields.every(f => !f.required || (values[f.name] !== null && values[f.name] !== undefined && values[f.name] !== ''))
-  const autosave = useDraftAutosave(initialEntry, {typeKey:key, slug, data}, editable && !busy && initialEntry?.status !== 'deleted', Boolean(slug) && requiredComplete(definition.fields,data))
+  const autosave = useDraftAutosave(initialEntry, {typeKey:key, slug, data}, editable && !busy && !pendingPublication && initialEntry?.status !== 'deleted', Boolean(slug) && requiredComplete(definition.fields,data))
   const entry = autosave.entry
-  const confirmClose = useUnsavedChanges(editable && (busy || autosave.dirty || status !== 'draft'))
+  const confirmClose = useUnsavedChanges(editable && (busy || Boolean(pendingPublication) || autosave.dirty || status !== 'draft'))
   const close = () => { if (!busy && confirmClose()) onClose() }
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const fields = definition.fields.filter(field => !(['siteProject', 'sitePost'].includes(key) && ['kind', 'parentSlug'].includes(field.name)))
@@ -55,6 +57,7 @@ export function EntryEditor({ entry: initialEntry, types, initialType, editable,
   async function save(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError('')
     try {
+      if(pendingPublication){await checkPublication(pendingPublication,false);return}
       let scheduledAt = null
       if (status === 'scheduled') {
         const date = new Date(schedule)
@@ -63,10 +66,23 @@ export function EntryEditor({ entry: initialEntry, types, initialType, editable,
       }
       const saved = await autosave.flush()
       if (status === 'draft') { onSaved('Draft saved. Existing live content and schedule are preserved.'); return }
-      await gql(saveEntryMutation, { typeKey: key, slug, data, status, id: saved?.id, version: saved?.version, scheduledAt })
-      onSaved(status === 'published' ? 'Entry published.' : status === 'scheduled' ? `Scheduled for ${timestamp(scheduledAt!)} (${timezone}).` : 'Draft saved. Existing live content and schedule are preserved.')
+      const operation={typeKey:key,slug,data,status,id:saved?.id,version:saved?.version,scheduledAt,requestKey:crypto.randomUUID()}
+      setPendingPublication(operation)
+      await checkPublication(operation,true)
     } catch (reason) { setError(message(reason)) }
     finally { setBusy(false) }
+  }
+  async function checkPublication(operation:Record<string,unknown>,send:boolean) {
+    const complete=()=>{setPendingPublication(null);onSaved(operation.status==='published'?'Published in CMS. Website refresh requested; display is not yet confirmed.':`Captured schedule saved for ${timestamp(String(operation.scheduledAt))} (${timezone}).`)}
+    try {
+      if(send){await gql(saveEntryMutation,operation);complete();return}
+      const result=await gql<{draftReceipt:Entry|null}>(draftReceiptQuery,{key:operation.requestKey})
+      if(result.draftReceipt){complete();return}
+      setPublicationState('Publication outcome is unconfirmed. Check again or explicitly retry the same operation. Your values are retained.')
+    }catch(reason){
+      if(reason instanceof ApiError && reason.uncertain){setPublicationState('Response lost. Checking the saved operation…');if(send)await checkPublication(operation,false);else setPublicationState('Outcome is unconfirmed. Check again when connected.')}
+      else {if(send)setPendingPublication(null);throw reason}
+    }
   }
   async function preparePreview() {
     setBusy(true); setError(''); setPreview(null)
@@ -105,7 +121,7 @@ export function EntryEditor({ entry: initialEntry, types, initialType, editable,
       {editable && <div role="status">Draft: {autosave.state}{autosave.state === 'Incomplete' && ' — complete the slug and required fields to autosave.'}</div>}
       {autosave.error && <div className="form-error" role="alert">{autosave.error}<Button type="button" variant="outline" onClick={autosave.state === 'Conflict' ? autosave.compare : autosave.retry}>{autosave.state === 'Conflict' ? 'Compare server version' : 'Check and retry'}</Button></div>}
       {autosave.server && <section><h3>Server version {autosave.server.version}</h3><pre>{JSON.stringify(autosave.server.data,null,2)}</pre><p>Your edits remain in the form above. Copy any changes you want to keep before reloading.</p><Button type="button" onClick={() => { if (confirmClose()) {const next=autosave.reload();if(next){setData(next.data);setSlug(next.slug);setKey(next.typeKey);setStatus('draft')}} }}>Discard local edits and reload server</Button></section>}
-      <fieldset disabled={!editable || busy || initialEntry?.status === 'deleted'}>
+      <fieldset disabled={!editable || busy || Boolean(pendingPublication) || initialEntry?.status === 'deleted'}>
         {!entry && <label>Content type<select value={key} onChange={event => { setKey(event.target.value); setData(dataForType(types.find(t => t.key === event.target.value)!)) }}>{types.map(t => <option key={t.key} value={t.key}>{t.name}</option>)}</select></label>}
         <section className="publishing-panel" aria-label="Publishing options">
           <div className="publishing-title"><CalendarClock size={16} /><strong>Publishing</strong></div>
@@ -124,9 +140,10 @@ export function EntryEditor({ entry: initialEntry, types, initialType, editable,
         {fields.map(field => <FieldInput key={field.name} field={field} value={data[field.name]} onChange={value => { setData(old => ({ ...old, [field.name]: value })); if (field.name === 'title' && !slugEdited) { const title = typeof value === 'string' ? value : value && typeof value === 'object' ? Object.values(value)[0] : ''; setSlug(slugify(String(title || ''))) } }} references={references} assets={assets} />)}
       </fieldset>
       {editable && initialEntry?.status !== 'deleted' && typeOrder.includes(key) && <section><Button type="button" variant="outline" disabled={busy} onClick={preparePreview}>Save draft & prepare website preview</Button>{preview && <p><a href={preview.previewUrl} target="_blank" rel="noopener noreferrer">Open saved revision {preview.revision}</a> · expires {timestamp(preview.expiresAt)} <Button type="button" variant="outline" onClick={async()=>{try{await gql('mutation($id:ID!){revokePreviewGrant(id:$id)}',{id:preview.id});setPreview(null)}catch(reason){setError(message(reason))}}}>Revoke preview</Button></p>}</section>}
+      {pendingPublication && <section role="status"><p>{publicationState || 'Saving publication…'}</p><Button type="button" disabled={busy} onClick={async()=>{setBusy(true);try{await checkPublication(pendingPublication,false)}catch(reason){setError(message(reason))}finally{setBusy(false)}}}>Check outcome</Button><Button type="button" variant="outline" disabled={busy} onClick={async()=>{setBusy(true);try{await checkPublication(pendingPublication,true)}catch(reason){setError(message(reason))}finally{setBusy(false)}}}>Retry same operation</Button></section>}
       {history && <section className="revision-list"><h3>History</h3>{history.map(revision => <article key={revision.number}><div className="inline-form"><strong>Version {revision.number}</strong><small>{revision.author} · {new Date(revision.createdAt).toLocaleString()}</small>{editable && <Button type="button" variant="outline" disabled={busy} onClick={() => restore(revision.number)}>Restore draft</Button>}</div><details><summary>Preview this revision</summary><pre>{JSON.stringify(revision.snapshot, null, 2)}</pre></details></article>)}</section>}
       {error && <p className="form-error" role="alert">{error}</p>}
-      <div className="modal-actions"><Button type="button" variant="outline" disabled={busy} onClick={close}>Close</Button>{editable && initialEntry?.status !== 'deleted' && <Button type="submit" disabled={busy}>{busy ? 'Saving…' : status === 'published' ? 'Publish now' : status === 'scheduled' ? 'Schedule publication' : 'Save draft'}</Button>}</div>
+      <div className="modal-actions"><Button type="button" variant="outline" disabled={busy} onClick={close}>Close</Button>{editable && initialEntry?.status !== 'deleted' && <Button type="submit" disabled={busy}>{busy ? 'Saving…' : pendingPublication ? 'Check outcome' : status === 'published' ? 'Publish now' : status === 'scheduled' ? 'Schedule publication' : 'Save draft'}</Button>}</div>
     </form>
   </Dialog>
 }

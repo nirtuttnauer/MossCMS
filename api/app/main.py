@@ -134,12 +134,13 @@ def create_app(settings=None):
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization", "X-Moss-Project", "X-Moss-CSRF", "If-None-Match"],
-        expose_headers=["ETag", "X-Request-ID"],
+        expose_headers=["ETag", "X-Request-ID", "Server-Timing"],
     )
 
     @app.middleware("http")
     async def requests(request, call_next):
         request_id = str(uuid4())
+        request.state.request_id = request_id
         started = time.monotonic()
         origin = request.headers.get("origin")
         if request.method not in {"GET", "HEAD", "OPTIONS"} and origin and origin.rstrip("/") not in settings.origins:
@@ -156,6 +157,7 @@ def create_app(settings=None):
         app.state.metrics["errors"] += int(response.status_code >= 400)
         app.state.metrics["seconds"] += duration
         response.headers["X-Request-ID"] = request_id
+        response.headers["Server-Timing"] = f"app;dur={duration * 1000:.1f}"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "same-origin"
         response.headers["X-Frame-Options"] = "DENY"
@@ -279,6 +281,8 @@ def create_app(settings=None):
                         {"message": "The operation could not be completed.", "extensions": {"code": "INTERNAL"}}
                     ],
                 }
+        for error in payload.get("errors") or []:
+            error.setdefault("extensions", {})["requestId"] = request.state.request_id
         headers = {
             "Cache-Control": "private, no-cache" if delivery and not payload.get("errors") else "no-store",
             "Vary": "Authorization, Origin",

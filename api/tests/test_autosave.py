@@ -45,3 +45,26 @@ def test_draft_update_preserves_live_schedule_and_rejects_stale_version(client, 
         gql(client, admin, DRAFT, {**args, "key": "draft_request_00003"})["errors"][0]["extensions"]["code"]
         == "CONFLICT"
     )
+
+
+def test_publication_receipt_prevents_duplicate_events_and_preserves_request_id(app, client, admin):
+    from sqlalchemy import select
+    from app.models import PublicationEvent
+
+    define(client, admin)
+    query = 'mutation($key:String!){saveEntry(typeKey:"article",slug:"post",data:{title:"Hello"},status:"published",requestKey:$key){id version publishedRevision}}'
+    args = {"key": "publish_request_00001"}
+    first = gql(client, admin, query, args)
+    assert gql(client, admin, query, args) == first
+    assert (
+        gql(client, admin, '{draftReceipt(key:"publish_request_00001"){id}}')["data"]["draftReceipt"]["id"]
+        == first["data"]["saveEntry"]["id"]
+    )
+    with app.state.db() as session:
+        assert len(session.scalars(select(PublicationEvent)).all()) == 1
+    failed = client.post(
+        "/graphql", headers=admin, json={"query": query.replace("Hello", "Changed"), "variables": args}
+    )
+    assert failed.json()["errors"][0]["extensions"]["requestId"] == failed.headers["x-request-id"]
+    assert failed.json()["errors"][0]["extensions"]["code"] == "CONFLICT"
+    assert failed.headers["server-timing"].startswith("app;dur=")

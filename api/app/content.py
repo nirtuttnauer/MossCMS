@@ -507,6 +507,41 @@ def save_draft(session, identity, key, type_key, slug, data, id=None, version=No
     return response
 
 
+def save_entry_receipt(session, identity, key, type_key, slug, data, status, id, version, scheduled_at):
+    require(identity, "editor", write=True)
+    if not re.fullmatch(r"[A-Za-z0-9_-]{16,100}", key):
+        raise CmsError("Use a stable mutation request key of 16–100 characters.")
+    values = {
+        "operation": "saveEntry",
+        "typeKey": type_key,
+        "slug": slug,
+        "data": data,
+        "status": status,
+        "id": id,
+        "version": version,
+        "scheduledAt": scheduled_at,
+    }
+    fingerprint = hashlib.sha256(json.dumps(values, sort_keys=True).encode()).hexdigest()
+    previous = session.get(DraftReceipt, (identity["project_id"], identity["user"].id, key))
+    if previous:
+        if previous.fingerprint != fingerprint:
+            raise CmsError("Request key was already used with different values.", "CONFLICT")
+        return previous.response
+    record = save_entry(session, identity, type_key, slug, data, status, id, version, scheduled_at)
+    response = entry_dict(session, identity, record)
+    session.add(
+        DraftReceipt(
+            project_id=identity["project_id"],
+            user_id=identity["user"].id,
+            key=key,
+            fingerprint=fingerprint,
+            response=response,
+        )
+    )
+    session.flush()
+    return response
+
+
 def move_entry(session, identity, id, type_key, version):
     """Change an entry's type without replacing its ID, history or publishing schedule."""
     require(identity, "admin", write=True)
