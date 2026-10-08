@@ -99,7 +99,7 @@ class Entry(Base):
     scheduled_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
     scheduled_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
     scheduled_schema_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    schedule_error: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    schedule_error: Mapped[dict | None] = mapped_column(JSON(none_as_null=True), nullable=True)
     status: Mapped[str] = mapped_column(String(16), index=True, default="draft")
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     version: Mapped[int] = mapped_column(Integer, default=1)

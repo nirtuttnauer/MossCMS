@@ -7,6 +7,8 @@ from copy import deepcopy
 from datetime import date, datetime
 
 from sqlalchemy import and_, func, or_, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import StaleDataError
 
 from .models import Asset, ContentType, Entry, Revision, SchemaRevision, now
 from .security import CmsError, audit, require
@@ -551,21 +553,59 @@ def publish_due(factory):
     with factory.begin() as session:
         for record in session.scalars(
             select(Entry)
-            .where(Entry.status == "scheduled", Entry.scheduled_at <= now())
+            .where(Entry.status != "deleted", Entry.scheduled_at <= now())
             .with_for_update(skip_locked=True)
         ).all():
-            definition = session.get(ContentType, record.type_id)
+            due, captured = record.scheduled_at, record.scheduled_revision
             try:
-                validate_data(definition.fields, record.data, session, record.project_id)
-            except CmsError as exc:
-                record.status, record.scheduled_at = "draft", None
+                with session.begin_nested():
+                    definition = session.get(ContentType, record.type_id)
+                    if record.scheduled_data is None or not record.scheduled_slug or captured is None:
+                        raise CmsError("Scheduled snapshot is missing; save a new schedule.")
+                    validate_data(definition.fields, record.scheduled_data, session, record.project_id)
+                    publish_snapshot(
+                        record,
+                        definition,
+                        record.scheduled_data,
+                        record.scheduled_slug,
+                        record.scheduled_title,
+                        captured,
+                    )
+                    record.updated_at = now()
+                    revision(session, {"actor": "scheduler"}, record)
+                    audit(
+                        session,
+                        record.project_id,
+                        "scheduler",
+                        "entry.publish",
+                        entryId=record.id,
+                        scheduledRevision=captured,
+                    )
+            except (CmsError, IntegrityError, StaleDataError) as exc:
+                code = exc.code if isinstance(exc, CmsError) else "CONFLICT"
+                reason = (
+                    str(exc)
+                    if isinstance(exc, CmsError)
+                    else "The scheduled URL conflicts with live content. Choose another slug and reschedule."
+                )
+                record.schedule_error = {
+                    "code": code,
+                    "message": reason,
+                    "revision": captured,
+                    "dueAt": due.isoformat() + "Z",
+                    "failedAt": now().isoformat() + "Z",
+                }
+                record.scheduled_at = None
                 record.updated_at = now()
+                summarize_status(record)
                 revision(session, {"actor": "scheduler"}, record)
                 audit(
-                    session, record.project_id, "scheduler", "entry.schedule_failed", entryId=record.id, reason=str(exc)
+                    session,
+                    record.project_id,
+                    "scheduler",
+                    "entry.schedule_failed",
+                    entryId=record.id,
+                    scheduledRevision=captured,
+                    reason=reason,
+                    code=code,
                 )
-                continue
-            publish_snapshot(record, definition, record.data, record.slug, record.title, record.version)
-            record.updated_at = now()
-            revision(session, {"actor": "scheduler"}, record)
-            audit(session, record.project_id, "scheduler", "entry.publish", entryId=record.id)

@@ -67,3 +67,72 @@ def test_live_slug_collision_rolls_back_entire_publish(client, admin):
     result = entry(client, admin, "claimed", status="published", id=second["id"], version=second["version"])
     assert result["errors"][0]["extensions"]["code"] == "CONFLICT"
     assert public(client, token) == before
+
+
+def test_scheduler_publishes_captured_revision_and_keeps_newer_draft(app, client, admin):
+    from datetime import timedelta
+    from app.models import Entry, now
+    from app.content import publish_due
+
+    define(client, admin)
+    scheduled = entry(
+        client,
+        admin,
+        "queued",
+        {"title": "Queued", "body": "captured"},
+        "scheduled",
+        scheduledAt=(now() + timedelta(hours=1)).isoformat(),
+    )["data"]["saveEntry"]
+    later = entry(
+        client, admin, "later", {"title": "Later", "body": "draft"}, id=scheduled["id"], version=scheduled["version"]
+    )["data"]["saveEntry"]
+    with app.state.db.begin() as s:
+        s.get(Entry, scheduled["id"]).scheduled_at = now() - timedelta(seconds=1)
+    publish_due(app.state.db)
+    token = delivery(client, admin)
+    node = public(client, token)["entries"]["nodes"][0]
+    assert (node["slug"], node["data"]["body"], node["version"]) == ("queued", "captured", scheduled["version"])
+    draft = gql(
+        client,
+        admin,
+        "query($id:ID!){entry(id:$id){slug data version scheduledAt hasUnpublishedChanges}}",
+        {"id": later["id"]},
+    )["data"]["entry"]
+    assert draft["slug"] == "later" and draft["data"]["body"] == "draft"
+    assert draft["scheduledAt"] is None and draft["hasUnpublishedChanges"]
+    publish_due(app.state.db)
+    assert public(client, token)["entries"]["nodes"][0] == node
+
+
+def test_schedule_slug_failure_preserves_live_and_does_not_retry(app, client, admin):
+    from datetime import timedelta
+    from app.models import Entry, now
+    from app.content import publish_due
+
+    define(client, admin)
+    live = entry(client, admin, "live", status="published")["data"]["saveEntry"]
+    scheduled = entry(
+        client,
+        admin,
+        "collision",
+        {"title": "Future"},
+        "scheduled",
+        id=live["id"],
+        version=live["version"],
+        scheduledAt=(now() + timedelta(hours=1)).isoformat(),
+    )["data"]["saveEntry"]
+    entry(client, admin, "moved", id=live["id"], version=scheduled["version"])
+    entry(client, admin, "collision", status="published")
+    token = delivery(client, admin)
+    before = public(client, token)
+    with app.state.db.begin() as s:
+        s.get(Entry, live["id"]).scheduled_at = now() - timedelta(seconds=1)
+    publish_due(app.state.db)
+    assert public(client, token) == before
+    query = "query($id:ID!){entry(id:$id){version scheduleError scheduledRevision scheduledAt}}"
+    failed = gql(client, admin, query, {"id": live["id"]})["data"]["entry"]
+    assert failed["scheduleError"]["code"] == "CONFLICT"
+    assert failed["scheduleError"]["revision"] == scheduled["version"]
+    assert failed["scheduledAt"] is None
+    publish_due(app.state.db)
+    assert gql(client, admin, query, {"id": live["id"]})["data"]["entry"] == failed
