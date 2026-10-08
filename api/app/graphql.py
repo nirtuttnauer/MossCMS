@@ -82,6 +82,14 @@ class TypeNode:
     fields: JSON
     version: int
 
+    @strawberry.field
+    def entry_count(self, info: strawberry.Info) -> int:
+        c = info.context
+        query = content.scoped(c["session"], Entry, c).where(Entry.type_id == str(self.id), Entry.status != "deleted")
+        if c["delivery"]:
+            query = query.where(Entry.published_slug.is_not(None))
+        return c["session"].scalar(select(func.count()).select_from(query.subquery())) or 0
+
 
 def type_node(record, delivery=False):
     def visible(fields):
@@ -465,6 +473,9 @@ class Mutation:
         definition = content.get_type(session, c, key)
         if session.scalar(select(Entry.id).where(Entry.type_id == definition.id).limit(1)):
             raise CmsError("This content type has entries or history and cannot be deleted.")
+        for other in session.scalars(content.scoped(session, ContentType, c)).all():
+            if other.id != definition.id and key in content.reference_targets(other.fields):
+                raise CmsError("Another schema references this type. Update that reference first.")
         for revision in session.scalars(select(SchemaRevision).where(SchemaRevision.type_id == definition.id)):
             session.delete(revision)
         session.flush()

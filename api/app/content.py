@@ -674,11 +674,31 @@ def restore_entry(session, identity, id, number, version):
     )
 
 
+def reference_targets(fields):
+    targets = set()
+    for field in fields:
+        if field["type"] == "reference" and field.get("target"):
+            if not isinstance(field["target"], str):
+                raise CmsError("Reference targets must be content type keys.")
+            targets.add(field["target"])
+        if field["type"] == "object":
+            targets.update(reference_targets(field["fields"]))
+        if field["type"] == "list":
+            targets.update(reference_targets([field["item"]]))
+    return targets
+
+
 def save_type(session, identity, key, name, fields, version=None, migration=None):
     require(identity, "admin", write=True)
     if not NAME.fullmatch(key) or not name.strip() or len(name) > 100:
         raise CmsError("Use a content type key beginning with a lower-case letter and a name of 1–100 characters.")
     validate_fields(fields)
+    known = set(
+        session.scalars(select(ContentType.key).where(ContentType.project_id == identity["project_id"])).all()
+    ) | {key}
+    unknown = reference_targets(fields) - known
+    if unknown:
+        raise CmsError("Unknown reference target in this workspace: " + ", ".join(sorted(unknown)))
     record = session.scalar(scoped(session, ContentType, identity).where(ContentType.key == key))
     if record:
         if version != record.version:

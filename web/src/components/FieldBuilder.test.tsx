@@ -53,11 +53,11 @@ describe('FieldBuilder interactions', () => {
     fireEvent.change(screen.getByLabelText(/Field name/), { target: { value: 'title' } })
     expect(change).toHaveBeenLastCalledWith([{ name: 'title', type: 'text' }])
   })
-  it('shows the reference target select with other types only', () => {
+  it('shows reference targets with counts and permits self references', () => {
     render(<FieldBuilder value={[{ name: 'author', type: 'reference' }]} onChange={vi.fn()} types={types} />)
     const target = screen.getByLabelText('Reference target for author') as HTMLSelectElement
     expect(Array.from(target.options).map(option => option.value)).toEqual(['', 'person'])
-    expect(screen.getByRole('option', { name: 'Person (person)' })).toBeTruthy()
+    expect(screen.getByRole('option', { name: /Person \(person\)/ })).toBeTruthy()
   })
   it('adds an enum choice', () => {
     const change = vi.fn()
@@ -66,4 +66,10 @@ describe('FieldBuilder interactions', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add' }))
     expect(change).toHaveBeenLastCalledWith([{ name: 'cat', type: 'enum', options: ['news'] }])
   })
+})
+
+it('explains invalid and duplicate inline enum edits',()=>{
+  render(<FieldBuilder value={[{name:'choices',type:'enum',options:['One','One','bad choice']}]} types={[]} onChange={vi.fn()} />)
+  expect(screen.getAllByRole('alert')).toHaveLength(3)
+  expect(screen.getByLabelText('Choice 1 for choices')).toBeTruthy()
 })

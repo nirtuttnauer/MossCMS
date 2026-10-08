@@ -138,9 +138,11 @@ function checkLevel(fields: Field[], path: string, depth: number, named: boolean
   })
 }
 
-export function validateSchema(fields: Field[]): string[] {
+export function validateSchema(fields: Field[],targets?:string[]): string[] {
   const ctx: CheckCtx = { errors: [] }
   checkLevel(fields, 'Fields', 0, true, ctx)
+  const references=(values:Field[])=>{for(const field of values){if(field.type==='reference' && field.target && targets && !targets.includes(field.target))ctx.errors.push(`${field.name}: unknown reference target ${field.target}.`);references(field.fields || []);if(field.item)references([field.item])}}
+  references(fields)
   return ctx.errors
 }
 

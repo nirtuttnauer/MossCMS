@@ -136,6 +136,7 @@ export function EntryEditor({ entry: initialEntry, types, initialType, editable,
           {editable && entry?.scheduledAt && <Button type="button" variant="outline" onClick={() => publicationAction('cancelSchedule')}>Cancel schedule</Button>}
           {editable && entry?.isLive && <Button type="button" variant="outline" onClick={() => publicationAction('unpublishEntry')}>Unpublish</Button>}
         </section>
+        <p className="field-help">New slugs follow the title until you edit the slug. Existing slugs stay stable; draft slug changes reach the website only when published.</p>
         <label>Slug<input required maxLength={220} value={slug} onChange={event => { setSlugEdited(true); setSlug(slugify(event.target.value)) }} /></label>
         {fields.map(field => <FieldInput key={field.name} field={field} value={data[field.name]} onChange={value => { setData(old => ({ ...old, [field.name]: value })); if (field.name === 'title' && !slugEdited) { const title = typeof value === 'string' ? value : value && typeof value === 'object' ? Object.values(value)[0] : ''; setSlug(slugify(String(title || ''))) } }} references={references} assets={assets} />)}
       </fieldset>

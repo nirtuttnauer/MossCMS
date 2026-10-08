@@ -34,7 +34,7 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
   const close = () => { if (!busy && confirmClose()) onClose() }
   const signature = shapeSignature(fields)
   const lastSignature = useRef(signature)
-  const issues = validateSchema(fields)
+  const issues = validateSchema(fields,[...types.map(t=>t.key),key])
   const diffs=definition?fieldDiff(definition.fields,fields):[]
   const suggestion=definition?migrationSuggestion(definition.fields,fields,rename):{}
   const invalid = !definition && key !== '' && !/^[a-z][a-zA-Z0-9_]*$/.test(key)
@@ -68,7 +68,7 @@ function TypeEditor({ definition, types, onClose, onSaved }: { definition: Conte
         <div className="section-head">
           <h2 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>Fields <Button type="button" variant="ghost" onClick={() => setShowJson(v => !v)}>{showJson ? 'Hide JSON' : 'View JSON'}</Button></h2>
         </div>
-        <FieldBuilder value={fields} types={types} selfKey={definition?.key} onChange={setFields} />
+        <FieldBuilder value={fields} types={types} selfKey={key} onChange={setFields} />
         {showJson && <pre className="schema-json" aria-label="Schema JSON" style={{backgroundColor: 'var(--card)', padding: '1rem', borderRadius: '8px', overflowX: 'auto', fontSize: '0.8rem'}}>{JSON.stringify(toSchema(fields), null, 2)}</pre>}
         {issues.length > 0 && <div className="schema-issues" role="alert" style={{marginTop: '1rem', color: 'var(--error)'}}><ul style={{listStyle: 'none', padding: 0}}>{issues.map((issue, i) => <li key={i} style={{marginBottom: '4px'}}>• {issue}</li>)}</ul></div>}
       </div>

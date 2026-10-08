@@ -1,5 +1,5 @@
 export type Field = { imageOnly?: boolean; name: string; label?: string; type: string; required?: boolean; localized?: boolean; private?: boolean; fields?: Field[]; item?: Field; options?: string[]; target?: string }
-export type ContentType = { id: string; key: string; name: string; fields: Field[]; version: number }
+export type ContentType = { entryCount?:number; id: string; key: string; name: string; fields: Field[]; version: number }
 export type Entry = { id: string; typeKey: string; slug: string; title: string; data: Record<string, unknown>; status: string; version: number; updatedAt: string; scheduledAt?: string | null; isLive: boolean; hasUnpublishedChanges: boolean; publishedAt?: string | null; publishedRevision?: number | null; scheduledRevision?: number | null; scheduleError?: {code: string; message: string; revision: number; dueAt: string;failedAt?:string} | null }
 export type Asset = { width?:number|null; height?:number|null; variants?: {width:number;height:number;size:number;url:string}[]; id: string; name: string; mime: string; size: number; url: string }
 export type Project = { previewOrigin?: string | null; id: string; name: string; role: 'admin' | 'editor' | 'reader' }
@@ -30,7 +30,7 @@ export async function gql<T>(query: string, variables?: Record<string, unknown>,
   return result.data
 }
 export const entryFields = 'id typeKey slug title data status version updatedAt scheduledAt isLive hasUnpublishedChanges publishedAt publishedRevision scheduledRevision scheduleError'
-export const typeFields = 'id key name fields version'
+export const typeFields = 'id key name fields version entryCount'
 export const saveEntryMutation = `mutation Save($typeKey:String!,$slug:String!,$data:JSON!,$status:String!,$id:ID,$version:Int,$scheduledAt:String,$requestKey:String){saveEntry(typeKey:$typeKey,slug:$slug,data:$data,status:$status,id:$id,version:$version,scheduledAt:$scheduledAt,requestKey:$requestKey){${entryFields}}}`
 export function slugify(value: string) { return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') }
 export function message(error: unknown) { return error instanceof ApiError && (error.requestId || error.code !== 'REQUEST_FAILED') ? `${error.message} (${error.code}${error.requestId ? ` · request ${error.requestId}` : ''})` : error instanceof Error ? error.message : 'Something went wrong.' }

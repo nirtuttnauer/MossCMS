@@ -490,3 +490,23 @@ def test_generated_delivery_signatures_and_localized_list_items(client, admin):
     ]:
         assert signature in schema
     assert "private(locale:" not in schema
+
+
+def test_reference_targets_counts_and_self_reference_are_explicit(client, admin):
+    invalid = gql(
+        client,
+        admin,
+        'mutation{saveContentType(key:"article",name:"Articles",fields:[{name:"author",type:"reference",target:"unknown"}]){id}}',
+    )
+    assert "errors" in invalid
+    valid = define(
+        client,
+        admin,
+        fields=[{"name": "parent", "type": "reference", "target": "article"}, {"name": "title", "type": "text"}],
+    )
+    assert "errors" not in valid
+    assert gql(client, admin, "{contentTypes{key entryCount}}")["data"]["contentTypes"] == [
+        {"key": "article", "entryCount": 0}
+    ]
+    assert "errors" not in entry(client, admin, data={"title":"Counted"})
+    assert gql(client, admin, "{contentTypes{entryCount}}")["data"]["contentTypes"][0]["entryCount"] == 1
