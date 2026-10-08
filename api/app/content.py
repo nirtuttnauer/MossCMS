@@ -212,7 +212,7 @@ def entry_page(
     elif status:
         if status not in {"draft", "published", "scheduled", "deleted"}:
             raise CmsError("Unknown status.")
-        query = query.where(Entry.status == status)
+        query = query.where(editorial_condition(status))
     else:
         query = query.where(Entry.status != "deleted")
     if type_key:
@@ -299,13 +299,21 @@ def entry_page(
     }
 
 
+def editorial_condition(status):
+    if status == "published":
+        return and_(Entry.published_slug.is_not(None), Entry.status != "deleted")
+    if status == "scheduled":
+        return and_(Entry.scheduled_at.is_not(None), Entry.status != "deleted")
+    return Entry.status == status
+
+
 def content_groups(session, identity, status=None):
     require(identity)
     if identity.get("delivery"):
         raise CmsError("Content groups are editorial only.", "FORBIDDEN")
     if status and status not in {"draft", "published", "scheduled", "deleted"}:
         raise CmsError("Unknown status.")
-    condition = Entry.status == status if status else Entry.status != "deleted"
+    condition = editorial_condition(status) if status else Entry.status != "deleted"
     rows = session.execute(
         select(ContentType.key, ContentType.name, func.count(Entry.id))
         .outerjoin(

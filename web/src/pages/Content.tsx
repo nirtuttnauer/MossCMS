@@ -34,7 +34,7 @@ function EntryEditor({ entry, types, initialType, editable, onClose, onSaved }: 
   const [data, setData] = useState(entry?.data || dataForType(definition))
   const [slug, setSlug] = useState(entry?.slug || '')
   const [slugEdited, setSlugEdited] = useState(Boolean(entry))
-  const [status, setStatus] = useState(entry?.status === 'deleted' ? 'draft' : entry?.status || 'draft')
+  const [status, setStatus] = useState('draft')
   const [schedule, setSchedule] = useState(entry?.scheduledAt ? localDateTime(new Date(entry.scheduledAt)) : localDateTime(new Date(Date.now() + 3600000)))
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -54,7 +54,7 @@ function EntryEditor({ entry, types, initialType, editable, onClose, onSaved }: 
         scheduledAt = date.toISOString()
       }
       await gql(saveEntryMutation, { typeKey: key, slug, data, status, id: entry?.id, version: entry?.version, scheduledAt })
-      onSaved(status === 'published' ? 'Entry published.' : status === 'scheduled' ? `Scheduled for ${timestamp(scheduledAt!)} (${timezone}).` : entry?.status === 'scheduled' ? 'Schedule cancelled. Entry saved as a draft.' : 'Draft saved.')
+      onSaved(status === 'published' ? 'Entry published.' : status === 'scheduled' ? `Scheduled for ${timestamp(scheduledAt!)} (${timezone}).` : 'Draft saved. Existing live content and schedule are preserved.')
     } catch (reason) { setError(message(reason)) }
     finally { setBusy(false) }
   }
@@ -68,19 +68,32 @@ function EntryEditor({ entry, types, initialType, editable, onClose, onSaved }: 
     catch (reason) { setError(message(reason)) }
     finally { setBusy(false) }
   }
+  async function publicationAction(action: 'unpublishEntry' | 'cancelSchedule') {
+    if (!entry) return
+    setBusy(true); setError('')
+    try {
+      await gql(`mutation($id:ID!,$version:Int!){${action}(id:$id,version:$version){id}}`, { id: entry.id, version: entry.version })
+      onSaved(action === 'unpublishEntry' ? 'Entry unpublished. Draft and history retained.' : 'Schedule cancelled. Live content preserved.')
+    } catch (reason) { setError(message(reason)) }
+    finally { setBusy(false) }
+  }
   return <Dialog title={entry ? entry.title : creationLabels[key] || 'New entry'} open onClose={onClose}>
     <form className="editor-form" onSubmit={save}>
-      <div className="editor-meta"><span className={`content-type-label ${key}`}><FileText size={13} />{definition.name}</span>{entry && <><Badge className={entry.status}>{entry.status}</Badge><small>Version {entry.version}</small><Button type="button" variant="outline" disabled={busy} onClick={loadHistory}>History & restore</Button></>}</div>
+      <div className="editor-meta"><span className={`content-type-label ${key}`}><FileText size={13} />{definition.name}</span>{entry && <><Badge>{entry.status === 'deleted' ? 'Trash' : entry.isLive ? 'Live' : 'Unpublished'}</Badge>{entry.hasUnpublishedChanges && entry.status !== 'deleted' && <Badge>Unpublished changes</Badge>}<small>Version {entry.version}</small><Button type="button" variant="outline" disabled={busy} onClick={loadHistory}>History & restore</Button></>}</div>
       <fieldset disabled={!editable || busy}>
         {!entry && <label>Content type<select value={key} onChange={event => { setKey(event.target.value); setData(dataForType(types.find(t => t.key === event.target.value)!)) }}>{types.map(t => <option key={t.key} value={t.key}>{t.name}</option>)}</select></label>}
         <section className="publishing-panel" aria-label="Publishing options">
           <div className="publishing-title"><CalendarClock size={16} /><strong>Publishing</strong></div>
           <div className="publishing-options" role="group" aria-label="Publishing status">{[
-            { value: 'draft', label: 'Draft', description: 'Keep it private' },
+            { value: 'draft', label: 'Save draft', description: 'Preserve live content and schedule' },
             { value: 'published', label: 'Publish now', description: 'Make it available' },
-            { value: 'scheduled', label: 'Schedule', description: 'Publish at a later date' },
+            { value: 'scheduled', label: entry?.scheduledAt ? 'Replace schedule' : 'Schedule', description: 'Capture these edits for later' },
           ].map(option => <button type="button" key={option.value} className={status === option.value ? 'selected' : ''} aria-pressed={status === option.value} onClick={() => setStatus(option.value)}><span>{option.label}{status === option.value && <Check size={12} />}</span><small>{option.description}</small></button>)}</div>
-          {status === 'scheduled' ? <div className="schedule-fields"><label>Publish on<input type="datetime-local" required min={localDateTime(new Date(Date.now() + 60000))} value={schedule} onChange={event => setSchedule(event.target.value)} /></label><p className="field-help">Timezone: <strong>{timezone}</strong>. This entry stays private until its scheduled time. You can change the date or select Draft to cancel.</p></div> : <p className="field-help">{status === 'published' ? 'Publishing makes this entry available to your connected frontends.' : entry?.status === 'scheduled' ? 'Saving as a draft will cancel the scheduled publication.' : 'Drafts are only visible in MossCMS.'}</p>}
+          {status === 'scheduled' ? <div className="schedule-fields"><label>Publish on<input type="datetime-local" required min={localDateTime(new Date(Date.now() + 60000))} value={schedule} onChange={event => setSchedule(event.target.value)} /></label><p className="field-help">Timezone: <strong>{timezone}</strong>. This captures the selected draft. Later draft edits will not change it. Existing live content stays available.</p></div> : <p className="field-help">{status === 'published' ? 'Publishing makes this entry available to your connected frontends.' : 'Draft saves preserve existing live content and any pending schedule.'}</p>}
+          {entry?.scheduledAt && <p className="field-help">Scheduled revision {entry.scheduledRevision} for {timestamp(entry.scheduledAt)} ({timezone}). {entry.scheduledRevision !== entry.version && 'Newer draft changes are not scheduled. Use Replace schedule to include them.'}</p>}
+          {entry?.scheduleError && <p className="form-error" role="alert">Publication failed: {entry.scheduleError.message} Resolve the cause and schedule again.</p>}
+          {editable && entry?.scheduledAt && <Button type="button" variant="outline" onClick={() => publicationAction('cancelSchedule')}>Cancel schedule</Button>}
+          {editable && entry?.isLive && <Button type="button" variant="outline" onClick={() => publicationAction('unpublishEntry')}>Unpublish</Button>}
         </section>
         <label>Slug<input required maxLength={220} value={slug} onChange={event => { setSlugEdited(true); setSlug(slugify(event.target.value)) }} /></label>
         {fields.map(field => <FieldInput key={field.name} field={field} value={data[field.name]} onChange={value => { setData(old => ({ ...old, [field.name]: value })); if (field.name === 'title' && !slugEdited) { const title = typeof value === 'string' ? value : value && typeof value === 'object' ? Object.values(value)[0] : ''; setSlug(slugify(String(title || ''))) } }} references={references} assets={assets} />)}
@@ -146,7 +159,7 @@ export function Content({ types, role, onChanged }: { types: ContentType[]; role
       <div className="table-scroll"><table><thead><tr><th className="check-cell"><input type="checkbox" aria-label="Select all entries" checked={page.nodes.length > 0 && selected.length === page.nodes.length} onChange={event => setSelected(event.target.checked ? page.nodes.map(row => row.id) : [])} /></th><th>TITLE</th><th>TYPE</th><th>STATUS / PUBLISHING</th><th>UPDATED</th><th>ACTIONS</th></tr></thead><tbody>
         {busy && !page.nodes.length ? <tr><td colSpan={6} className="empty-state">Loading entries…</td></tr> : page.nodes.map(entry => {
           const Icon = typeIcons[entry.typeKey as keyof typeof typeIcons] || FileText
-          return <tr key={entry.id}><td className="check-cell"><input type="checkbox" aria-label={`Select ${entry.title}`} checked={selected.includes(entry.id)} onChange={event => setSelected(old => event.target.checked ? [...old, entry.id] : old.filter(id => id !== entry.id))} /></td><td><button className="title-cell text-button" onClick={() => setEditor(entry)}><div className={`doc-icon ${entry.typeKey}`}><Icon size={15} /></div><div><strong>{entry.title}</strong><span className="entry-slug">/{entry.slug}</span></div></button></td><td><span className={`content-type-label ${entry.typeKey}`}>{types.find(item => item.key === entry.typeKey)?.name || entry.typeKey}</span></td><td><div className="publishing-cell"><Badge className={entry.status}><span />{entry.status}</Badge>{entry.scheduledAt && <span className="scheduled-date" title={`${timestamp(entry.scheduledAt)} (${Intl.DateTimeFormat().resolvedOptions().timeZone})`}><CalendarClock size={12} /><time dateTime={entry.scheduledAt}>{timestamp(entry.scheduledAt)}</time></span>}</div></td><td className="updated">{new Date(entry.updatedAt).toLocaleDateString()}</td><td><div className="row-actions"><button className="text-button" onClick={() => setEditor(entry)}>{editable ? entry.status === 'deleted' ? 'Restore' : 'Edit' : 'View'}</button>{editable && entry.status !== 'deleted' && <button className="text-button muted" onClick={() => setDeleting([entry])}>Trash</button>}</div></td></tr>
+          return <tr key={entry.id}><td className="check-cell"><input type="checkbox" aria-label={`Select ${entry.title}`} checked={selected.includes(entry.id)} onChange={event => setSelected(old => event.target.checked ? [...old, entry.id] : old.filter(id => id !== entry.id))} /></td><td><button className="title-cell text-button" onClick={() => setEditor(entry)}><div className={`doc-icon ${entry.typeKey}`}><Icon size={15} /></div><div><strong>{entry.title}</strong><span className="entry-slug">/{entry.slug}</span></div></button></td><td><span className={`content-type-label ${entry.typeKey}`}>{types.find(item => item.key === entry.typeKey)?.name || entry.typeKey}</span></td><td><div className="publishing-cell"><Badge className={entry.isLive ? 'published' : entry.status}><span />{entry.status === 'deleted' ? 'Trash' : entry.isLive ? 'Live' : 'Unpublished'}</Badge>{entry.hasUnpublishedChanges && entry.status !== 'deleted' && <small>Unpublished changes</small>}{entry.scheduledAt && <small>Scheduled revision {entry.scheduledRevision}</small>}{entry.scheduleError && <small role="status">Publication failed</small>}{entry.scheduledAt && <span className="scheduled-date" title={`${timestamp(entry.scheduledAt)} (${Intl.DateTimeFormat().resolvedOptions().timeZone})`}><CalendarClock size={12} /><time dateTime={entry.scheduledAt}>{timestamp(entry.scheduledAt)}</time></span>}</div></td><td className="updated">{new Date(entry.updatedAt).toLocaleDateString()}</td><td><div className="row-actions"><button className="text-button" onClick={() => setEditor(entry)}>{editable ? entry.status === 'deleted' ? 'Restore' : 'Edit' : 'View'}</button>{editable && entry.status !== 'deleted' && <button className="text-button muted" onClick={() => setDeleting([entry])}>Trash</button>}</div></td></tr>
         })}
         {!busy && page.total === 0 && <tr><td className="empty-state" colSpan={6}>No matching entries.</td></tr>}
       </tbody></table></div>

@@ -256,9 +256,9 @@ class Query:
             JSON,
             {
                 "total": count(Entry, Entry.status != "deleted"),
-                "published": count(Entry, Entry.status == "published"),
+                "published": count(Entry, Entry.published_slug.is_not(None), Entry.status != "deleted"),
                 "drafts": count(Entry, Entry.status == "draft"),
-                "scheduled": count(Entry, Entry.status == "scheduled"),
+                "scheduled": count(Entry, Entry.scheduled_at.is_not(None), Entry.status != "deleted"),
                 "types": count(ContentType),
                 "assets": count(Asset),
                 "members": count(Membership),
