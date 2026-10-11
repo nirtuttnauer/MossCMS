@@ -16,6 +16,7 @@ dependencies = [
     "strawberry-graphql[fastapi]>=0.250.0",
     "uvicorn[standard]>=0.32.0",
     "pillow>=11.3,<13",
+    "markdown-it-py>=3,<5",
 ]
 
 [dependency-groups]

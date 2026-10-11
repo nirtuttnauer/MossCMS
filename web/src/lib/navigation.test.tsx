@@ -3,7 +3,7 @@ import { contentHash, readContentRoute } from './navigation'
 import { formatFieldPath } from './api'
 test('invalid filters and cursors recover and unknown credential parameters are excluded', () => {
   const route = readContentRoute([], '#content?type=missing&status=invalid&sort=bad&cursor=stale&entry=e1&workspace=w1&token=secret&csrf=secret&preview=secret')
-  expect(route).toEqual({ workspace: 'w1', entry: 'e1', type: '', status: '', sort: 'updated_desc', search: '' })
+  expect(route).toEqual({ workspace: 'w1', entry: 'e1', field: '', seoSnapshot: '', type: '', status: '', sort: 'updated_desc', search: '' })
   expect(contentHash(route)).toBe('#content?workspace=w1&entry=e1')
 })
 test('legacy hashes remain compatible', () => {

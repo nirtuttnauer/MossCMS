@@ -81,13 +81,13 @@ export function Content({ types, role, onChanged, projectId, defaultLocale = 'en
     listScroll.current = window.scrollY
     setSeed(null)
     setEditor(item)
-    setHashParams(p => p.set('entry', item?.id || 'new'), true)
+    setHashParams(p => { p.set('entry', item?.id || 'new'); p.delete('field'); p.delete('seoSnapshot') }, true)
   }
 
   const closeEditor = () => {
     setSeed(null)
     setEditor(undefined)
-    setHashParams(p => p.delete('entry'), true)
+    setHashParams(p => { p.delete('entry'); p.delete('field'); p.delete('seoSnapshot') }, true)
     requestAnimationFrame(() => window.scrollTo(0, listScroll.current))
   }
 
@@ -112,7 +112,7 @@ export function Content({ types, role, onChanged, projectId, defaultLocale = 'en
       data: copiedData,
     })
     setEditor(null)
-    setHashParams(p => p.set('entry', 'new'), true)
+    setHashParams(p => { p.set('entry', 'new'); p.delete('field'); p.delete('seoSnapshot') }, true)
   }
 
   const copyEntryLink = async (item: Entry) => {
@@ -147,10 +147,10 @@ export function Content({ types, role, onChanged, projectId, defaultLocale = 'en
         .then(result => {
           if (!alive || request !== loadId.current) return
           if (result.entry && types.some(type => type.key === result.entry!.typeKey)) { setEditor(result.entry); setError('') }
-          else { setError('Entry not found or access denied.'); setEditor(undefined); setHashParams(p => p.delete('entry')) }
+          else { setError('Entry not found or access denied.'); setEditor(undefined); setHashParams(p => { p.delete('entry'); p.delete('field'); p.delete('seoSnapshot') }) }
         }).catch(() => {
           if (!alive || request !== loadId.current) return
-          setError('Entry not found or access denied.'); setEditor(undefined); setHashParams(p => p.delete('entry'))
+          setError('Entry not found or access denied.'); setEditor(undefined); setHashParams(p => { p.delete('entry'); p.delete('field'); p.delete('seoSnapshot') })
         })
     }
     syncFromUrl()

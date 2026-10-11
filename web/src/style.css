@@ -709,3 +709,28 @@ pre, .code-input { font-size: 13px !important; }
 
 .duplication-banner { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #c8d8c6; border-radius: 8px; background: #f3f7f2; margin-bottom: 16px; font-size: 13.5px; color: #2e4433; }
 .duplication-banner svg { flex-shrink: 0; color: #43694c; }
+
+/* SEO reports share the editor's surfaces and semantic badges. */
+.seo-audit > *, .seo-entry-panel > * { min-width: 0; }
+.seo-audit > section, .seo-audit > details { margin-block: 1.25rem; }
+.seo-audit h1 { display: flex; align-items: center; gap: .6rem; }
+.seo-filters { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 1.25rem; }
+.seo-filters label { flex: 1 1 180px; display: grid; gap: .4rem; }
+.seo-filters select { width: 100%; min-height: 44px; }
+.seo-counts { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+.seo-counts strong { font-size: 1.6rem; display: block; }
+.seo-findings { list-style: none; padding: 0; margin: 1rem 0; display: grid; gap: 1rem; }
+.seo-findings > li { border: 1px solid var(--border); border-radius: 10px; padding: 1rem; background: var(--card); overflow-wrap: anywhere; }
+.seo-findings h3 { margin-block: .75rem .4rem; }
+.seo-findings p { margin-block: .6rem; }
+.seo-finding-meta { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; font-size: .85rem; }
+.seo-field-path { display: block; margin-block: .75rem; overflow-wrap: anywhere; }
+.seo-mappings summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; }
+.seo-mappings ul { padding-left: 1.2rem; }
+.seo-mappings li { margin-block: .8rem; overflow-wrap: anywhere; }
+.seo-pagination { flex-wrap: wrap; margin-block: 1rem; }
+.seo-findings .text-link { display: inline-flex; align-items: center; min-height: 44px; }
+.seo-entry-panel .seo-findings > li { padding: .75rem; }
+.seo-entry-panel .seo-mappings { padding: .75rem; }
+.seo-entry-panel .seo-finding-meta { font-size: .8rem; }
+.seo-critical { font-weight: 700; }

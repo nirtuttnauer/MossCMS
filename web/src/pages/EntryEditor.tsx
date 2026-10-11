@@ -4,6 +4,9 @@ import { useDraftAutosave } from '../lib/autosave'
 import { useUnsavedChanges } from '../lib/unsaved'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
+import { SeoEntryPanel } from '../components/SeoEntryPanel'
+import { focusSeoField } from '../lib/seo'
+import { readContentRoute } from '../lib/navigation'
 import { FieldInput, fieldInputId } from '../components/Fields'
 import { RevisionCompare, type Revision } from '../components/RevisionCompare'
 import { isEntryValid, validateEntry } from '../lib/validation'
@@ -99,6 +102,12 @@ export function EntryEditor({
   )
   useEffect(() => { if (Object.keys(autosave.validationErrors).length) setFieldErrors(autosave.validationErrors) }, [autosave.validationErrors])
   useEffect(() => { setFieldErrors({}) }, [definition.version, projectId])
+  const seoRoute = readContentRoute()
+  useEffect(() => {
+    if (!initialEntry || seoRoute.entry !== initialEntry.id || !seoRoute.field) return
+    const frame = requestAnimationFrame(() => focusSeoField(seoRoute.field))
+    return () => cancelAnimationFrame(frame)
+  }, [initialEntry?.id, seoRoute.entry, seoRoute.field])
   const entry = autosave.entry
   const confirmClose = useUnsavedChanges(editable && (isUnsavedDuplicate || busy || Boolean(pendingPublication) || autosave.dirty || status !== 'draft'))
   const close = () => { if (!busy && confirmClose()) onClose() }
@@ -205,6 +214,7 @@ export function EntryEditor({
       <h1 ref={heading} tabIndex={-1}>{entry?.title || (seed && !initialEntry ? `${seed.title} (Copy)` : creationLabels[key] || 'New entry')}</h1>
       <div className="editor-meta"><span className={`content-type-label ${key}`}><FileText size={14} aria-hidden="true" />{definition.name}</span>{entry && <><Badge className={entry.isLive ? 'published' : entry.status}>{entry.status === 'deleted' ? 'Trash' : entry.isLive ? 'Live' : 'Unpublished'}</Badge>{entry.hasUnpublishedChanges && entry.status !== 'deleted' && <Badge>Unpublished changes</Badge>}<small>Version {entry.version}</small>{onCopyLink && <Button type="button" variant="ghost" onClick={() => onCopyLink(entry)} title="Copy link to this entry"><LinkIcon size={14} aria-hidden="true" />Copy link</Button>}{onDuplicate && editable && entry.status !== 'deleted' && <Button type="button" variant="ghost" onClick={() => onDuplicate(entry)} title="Duplicate into a new draft"><Copy size={14} aria-hidden="true" />Duplicate</Button>}</>}</div>
     </header>
+    {seoRoute.seoSnapshot === 'live' && <p className="notice" role="status">You opened a live SEO finding. You are viewing the editable draft; save and publish fixes to update live content.</p>}
     <form className="editor-form entry-page-form" noValidate onSubmit={save}>
       {autosave.error && <div className="form-error" role="alert">{autosave.error}<Button type="button" variant="outline" onClick={autosave.state === 'Conflict' ? autosave.compare : autosave.retry}>{autosave.state === 'Conflict' ? 'Compare server version' : 'Check and retry'}</Button></div>}
       {autosave.server && <section><h3>Server version {autosave.server.version}</h3><details><summary>Server data</summary><pre>{JSON.stringify(autosave.server.data,null,2)}</pre></details><p>Your edits remain in the form above. Copy any changes you want to keep before reloading.</p><Button type="button" onClick={() => { if (confirmClose()) {const next=autosave.reload();if(next){setData(next.data);setSlug(next.slug);setKey(next.typeKey);setStatus('draft')}} }}>Discard local edits and reload server</Button></section>}
@@ -308,6 +318,7 @@ export function EntryEditor({
       </fieldset>
       {editable && initialEntry?.status !== 'deleted' && typeOrder.includes(key) && <section className="editor-surface preview-controls"><h2><Eye size={17} aria-hidden="true" />Website preview</h2><p>Review a saved draft on your website before publishing.</p><Button type="button" variant="outline" disabled={busy || isUnsavedDuplicate} onClick={preparePreview}>Save draft & prepare website preview</Button>{preview && <p><a href={preview.previewUrl} target="_blank" rel="noopener noreferrer">Open saved revision {preview.revision}</a> · expires {timestamp(preview.expiresAt)} <Button type="button" variant="outline" onClick={async()=>{try{await gql('mutation($id:ID!){revokePreviewGrant(id:$id)}',{id:preview.id});setPreview(null)}catch(reason){setError(message(reason))}}}>Revoke preview</Button></p>}</section>}
       {pendingPublication && <section role="status"><p>{publicationState || 'Saving publication…'}</p><Button type="button" disabled={busy} onClick={async()=>{setBusy(true);try{await checkPublication(pendingPublication,false)}catch(reason){setError(message(reason))}finally{setBusy(false)}}}>Check outcome</Button><Button type="button" variant="outline" disabled={busy} onClick={async()=>{setBusy(true);try{await checkPublication(pendingPublication,true)}catch(reason){setError(message(reason))}finally{setBusy(false)}}}>Retry same operation</Button></section>}
+      <SeoEntryPanel entry={entry} dirty={autosave.dirty} projectId={projectId || context.project} />
       {entry && <section className="editor-surface history-controls"><h2><History size={17} aria-hidden="true" />Revision history</h2><p>Version {entry.version} · updated {timestamp(entry.updatedAt)}</p><div className="inline-form"><Button type="button" variant="outline" disabled={busy} onClick={loadHistory}>{history ? 'Refresh history' : 'History & restore'}</Button><Button type="button" variant="outline" disabled={busy} onClick={async () => { if (!history) await loadHistory(); setShowCompare(true) }}>Compare revisions & live</Button></div></section>}
       </aside>
       </div>

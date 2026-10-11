@@ -231,6 +231,10 @@ API tests live in `api/tests/`; admin and website server tests sit beside the co
 
 The [maintainability review](docs/maintainability-review.md) records refactors, retained boundaries, checks, and untested integrations. Operator and release-script safeguard tests also run with the API suite.
 
+## SEO audit
+
+Use **SEO audit** to review draft and live records separately, inspect detected SEO field mappings, and follow prioritized findings into the editor. Checks are advisory and leave publishing available. Website rendering and indexing remain unverified. See [SEO audit rules and API](docs/seo-audit.md).
+
 ## Local development and checks
 
 Generate `.env` first. In separate terminals:

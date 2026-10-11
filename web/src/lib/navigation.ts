@@ -8,6 +8,8 @@ export function readContentRoute(types?: ContentType[], hash = location.hash) {
   return {
     workspace: source.get('workspace') || '',
     entry: source.get('entry') || '',
+    field: (source.get('field') || '').slice(0, 500),
+    seoSnapshot: source.get('seoSnapshot') === 'live' ? 'live' : source.get('seoSnapshot') === 'draft' ? 'draft' : '',
     type: !types || types.some(item => item.key === type) ? type : '',
     status: statuses.includes(source.get('status') || '') ? source.get('status') || '' : '',
     search: (source.get('search') || '').slice(0, 500),

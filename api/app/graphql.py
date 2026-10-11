@@ -9,6 +9,7 @@ from sqlalchemy import and_, func, or_, select
 from strawberry.scalars import JSON
 
 from . import content
+from .seo import SeoReport, audit_records
 from .images import RASTER_MIMES
 from .media_links import media_url
 from .models import Asset, Audit, ContentType, Entry, Membership, Revision, SchemaRevision
@@ -163,6 +164,31 @@ def resolved_image_assets(session, identity, fields, data, settings) -> list[Ass
 
 @strawberry.type
 class Query:
+    @strawberry.field
+    def seo_audit(
+        self,
+        info: strawberry.Info,
+        snapshot: str = "live",
+        type_key: str | None = None,
+        severity: str | None = None,
+        first: int = 20,
+        after: str | None = None,
+    ) -> SeoReport:
+        c = info.context
+        return audit_records(c["session"], c, snapshot, type_key, severity, first, after)
+
+    @strawberry.field
+    def seo_entry_audit(
+        self,
+        info: strawberry.Info,
+        id: strawberry.ID,
+        snapshot: str = "draft",
+        first: int = 20,
+        after: str | None = None,
+    ) -> SeoReport:
+        c = info.context
+        return audit_records(c["session"], c, snapshot, first=first, after=after, entry_id=str(id))
+
     @strawberry.field
     def website_reserved_paths(self, info: strawberry.Info) -> list[str]:
         c = info.context
