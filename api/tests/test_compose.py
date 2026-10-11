@@ -17,6 +17,16 @@ def compose(tmp_path):
     if version.returncode:
         pytest.skip("Docker Compose is unavailable.")
 
+    project = tmp_path / "project"
+    project.mkdir()
+    for name in ["compose.yaml", "compose.database.false.yaml", "compose.database.true.yaml"]:
+        shutil.copyfile(ROOT / name, project / name)
+    website = project / "example-site"
+    website.mkdir()
+    (website / ".env").write_text(
+        "MOSS_API_URL=http://app:8001\nMOSS_PROJECT_ID=fixture\nMOSS_DELIVERY_TOKEN=fixture-token\n"
+    )
+
     def config(flag, website=False, postgres=True):
         values = {"MOSS_SECRET_KEY": "s" * 40, "MOSS_SETUP_TOKEN": "t" * 30}
         if flag is not None:
@@ -28,12 +38,12 @@ def compose(tmp_path):
         environment = {
             key: value for key, value in os.environ.items() if not key.startswith(("MOSS_", "POSTGRES_", "COMPOSE_"))
         }
-        command = ["docker", "compose", "--env-file", str(file), "-f", str(ROOT / "compose.yaml")]
+        command = ["docker", "compose", "--env-file", str(file), "-f", str(project / "compose.yaml")]
         if website:
             command += ["--profile", "website"]
         return subprocess.run(
             [*command, "config", "--no-env-resolution", "--format", "json"],
-            cwd=ROOT,
+            cwd=project,
             env=environment,
             capture_output=True,
             text=True,
