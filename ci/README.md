@@ -2,6 +2,8 @@
 
 The `production_docker` job in [Checks](../.github/workflows/checks.yml) builds the repository's production Dockerfile and starts it with PostgreSQL, `MOSS_ENV=production`, a non-root user and a read-only filesystem. It runs on every push and pull request and needs no repository secrets.
 
+The [Docker Hub workflow](../.github/workflows/docker.yml) also calls the complete Checks workflow from the same commit. Publishing depends on that call succeeding, including every current or future check. Failed, cancelled or skipped checks prevent publishing; pull requests never publish. Main pushes, version tags and manual Docker runs each validate the commit they will publish. Missing Docker Hub credentials explicitly skip publication until both repository secrets are configured.
+
 The Chromium tests check readiness; the packaged logo and WebP artwork's contents, MIME types and decoding; administrator setup; login, logout and failed-password feedback; Secure/HttpOnly session cookies; sidebar branding; desktop/mobile layouts; and browser errors or failed asset requests. The job uploads screenshots, traces and the HTML report, with container logs on failure, and always removes the disposable stack.
 
 Run from the repository root with Docker Compose and Node.js 22 or newer:
