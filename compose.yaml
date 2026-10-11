@@ -1,5 +1,6 @@
 services:
   app:
+    image: ${MOSS_IMAGE:-nirtuttnauer/mosscms:latest}
     build:
       context: .
       args:
@@ -9,7 +10,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:?Run python3 scripts/configure.py}
       POSTGRES_USER: ${POSTGRES_USER:?Run python3 scripts/configure.py}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run python3 scripts/configure.py}
-      PORT: ${MOSS_PORT:-8001}
+      PORT: 8001
       MOSS_ENV: ${MOSS_ENV:-development}
       MOSS_SKIP_AUTH: ${MOSS_SKIP_AUTH:-false}
       MOSS_SECRET_KEY: ${MOSS_SECRET_KEY:?Run python3 scripts/configure.py}

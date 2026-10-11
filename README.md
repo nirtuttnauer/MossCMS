@@ -40,6 +40,24 @@ There is no automatic seed. After setup, an optional repeatable seed command is:
 docker compose exec app python -m app.cli seed --project YOUR_WORKSPACE_ID
 ```
 
+### Run a published Docker Hub image
+
+The image repository is `nirtuttnauer/mosscms`. Images include the API and built admin, with PostgreSQL supplied by Compose. After the [first Docker Hub publication](docs/docker.md#publish-to-docker-hub), run these commands from the cloned repository to start without building locally:
+
+```sh
+python3 scripts/configure.py
+docker compose pull app db
+docker compose up --no-build -d --wait app
+```
+
+Open [localhost:8001](http://localhost:8001) and use `MOSS_SETUP_TOKEN` from `.env` to create the first administrator. Database and uploaded files persist in the same named volumes as a local build.
+
+Compose defaults to `nirtuttnauer/mosscms:latest`. Set `MOSS_IMAGE` in `.env` to a published version (for example, `nirtuttnauer/mosscms:1.2.3`) or digest for a repeatable deployment. `latest` tracks `main`; version tags are published from Git tags such as `v1.2.3`. The publishing workflow builds Linux AMD64 and ARM64 images. Use `MOSS_PORT` to change the host port; the container listens on 8001.
+
+To build from your checkout, keep using `docker compose up --build -d`. To avoid replacing a locally cached release tag, use `MOSS_IMAGE=mosscms:local docker compose up --build -d`. The optional example website is built separately with `docker compose --profile website up --build -d example-site`.
+
+See [Docker setup and publishing](docs/docker.md) for registry configuration and upgrade instructions.
+
 ## Your first content
 
 1. **Choose a workspace.** Use the workspace menu in the sidebar. Administrators can create or rename workspaces in **Settings**.

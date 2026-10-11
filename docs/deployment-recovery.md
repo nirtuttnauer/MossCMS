@@ -6,6 +6,8 @@ Run commands from the repository root. [Release evidence](release-acceptance-202
 
 For a fresh instance, run `python3 scripts/configure.py --production --public-url https://cms.example.com`, review `.env`, then `docker compose up --build -d`. Preserve generated secrets and keep `.env` private. Existing development databases require an operator password rotation before production; changing `.env` alone does not change a PostgreSQL role password. Production rejects development auth bypass, SQLite, default database credentials and HTTP browser origins.
 
+For a published Docker Hub image, set `MOSS_IMAGE` in `.env` to a published `nirtuttnauer/mosscms` version or digest, run `docker compose pull app db`, then `docker compose up --no-build -d --wait app`. The same configuration, volumes and recovery tools apply. See [Docker publishing and upgrades](docker.md).
+
 Terminate TLS at a reverse proxy. Keep the default loopback bindings (CMS 8001, website 5174); PostgreSQL has no published host port. Allow required request/upload sizes and timeouts. Proxy website `/api/events` with streaming enabled and buffering disabled; polling remains a recovery path. Do not cache preview pages or `/api/preview`, and do not log preview bodies, cookies, bearer tokens or authorization headers. Keep the website's server routes available; uploading only its static build is insufficient.
 
 | Location | Setting | Purpose |
