@@ -1,0 +1,379 @@
+{
+  "date": "2026-10-12",
+  "role": "Senior product manager: first-use evaluation",
+  "baseline_commit": "a47713d",
+  "baseline_note": "Current checkout includes pre-existing uncommitted Docker and documentation changes. The audit used a disposable copy of that working tree, not a pristine remote clone.",
+  "environment": {
+    "browser": "Chromium 156.0.8078.4",
+    "viewports": [
+      "1440x1000",
+      "390x844"
+    ],
+    "compose_project": "mosscms-first-use-audit",
+    "cms_url": "http://localhost:18082",
+    "website_url": "http://localhost:18084",
+    "storage": "Separate initially empty PostgreSQL and media volumes",
+    "credentials": "Synthetic administrator and locally generated secrets; omitted from evidence"
+  },
+  "verified": [
+    "Configuration generation and Docker image build/start/readiness",
+    "First administrator creation and native minimum-password validation",
+    "Article template creation and automatic title-to-slug generation",
+    "Draft creation, explicit save, publication, scoped delivery token creation and delivery verification",
+    "API explorer returns the published Article",
+    "Autosaved newer draft body differs from the unchanged body returned by delivery",
+    "Inline image upload, automatic selection and Markdown insertion",
+    "Mobile editor and library have no horizontal overflow",
+    "Sign out and sign in",
+    "Example website setup, Docker build and public Home/Blog content",
+    "Normal administrator cannot see the example workspace after the documented auth-bypass setup",
+    "Documented local API command listens on 8000 while Vite proxies to 8001; Vite continues returning auth status after that temporary API is stopped",
+    "Custom public URL configuration leaves the default host port at 8001",
+    "Example workspace website preview origin is null after automatic setup; preview action rejects it",
+    "A local invitation accepted by the original administrator repairs access without directly editing database membership",
+    "After explicitly configuring the trusted website origin, a saved revision opens with a preview banner under normal authentication",
+    "A newer example-site post draft stays absent from the public site; publishing it subsequently exposes the exact edited body in /api/site and the rendered public page"
+  ],
+  "manual_workarounds": [
+    "While the isolated API used development bypass, create an admin invitation for the existing synthetic administrator in Example website. No message or email was sent.",
+    "Restore normal auth, reload the invitation route, and accept it as the intended administrator. The account then sees Example website, My workspace and its separately created trial workspace.",
+    "Set Website preview origin explicitly to http://localhost:18084 and open the saved revision.",
+    "Edit the sample post, confirm the public payload still has the previous body, publish, and confirm the new body renders publicly. Evidence: 16-confirmed-website-publication.png."
+  ],
+  "application_changes": "No application source edits were made for this audit. Tickets describe future fixes. Manual workarounds only changed synthetic records in the disposable instance.",
+  "aftur_ticket_mapping": "aftur-tickets.json",
+  "limits": [
+    "This is an expert walkthrough, not a timed study with representative first-time users.",
+    "Docker build layers and installed package caches were available; cold-machine installation/download time is unmeasured.",
+    "Docker Hub pull-only installation, external TLS/hosting, OAuth, S3, accessibility with a screen reader, Safari and production migration are unverified.",
+    "Browser-harness selector/time-out failures are not counted as product defects.",
+    "A stale-CSRF upload rejection occurred while the audit deliberately recreated the API with another auth mode; retry after reload succeeded. This is not counted as a standalone product defect."
+  ],
+  "recommended_journey": [
+    "Run one local-start command and receive a ready URL plus a protected administrator setup handoff.",
+    "Enter personal details and a workspace name, with password requirements visible.",
+    "Choose an explained starter type and open its first entry directly.",
+    "Write and save in place; publish through an unambiguous action.",
+    "Create and verify a narrowly scoped frontend token within the guide.",
+    "Copy a populated integration example or initialize the example website as the authenticated administrator.",
+    "Open a working saved-draft website preview and verify a published change on the website.",
+    "Collapse the completed guide so the content library becomes the primary workspace."
+  ],
+  "tickets": [
+    {
+      "audit_id": "ONB-01",
+      "priority": "P1",
+      "kind": "Bug",
+      "title": "[P1] Preserve administrator access when bootstrapping the example website",
+      "objective": "A real administrator can initialize and edit the example website with normal authentication enabled.",
+      "observed": "After creating the first administrator, setup_moss.py rejects normal auth with 'Automatic setup needs MOSS_SKIP_AUTH=true in the local CMS.' Following the documented bypass sequence creates the Example website workspace and a working website. After restoring MOSS_SKIP_AUTH=false, /auth/me and the workspace picker show only My workspace; the new example workspace is inaccessible to its operator. Reload and sign-in do not repair access. accounts.create_project deliberately omits Membership when auth is skipped.",
+      "impact": "The advertised first-website path ends with public content the administrator cannot edit. A new user has to understand development identities and repair membership manually.",
+      "reproduction": [
+        "Create the first administrator on an empty normal-auth instance.",
+        "Enable MOSS_SKIP_AUTH=true and recreate only the local app.",
+        "Run python3 example-site/scripts/setup_moss.py, then restore MOSS_SKIP_AUTH=false.",
+        "Sign in as the original administrator and inspect /auth/me and the Workspace menu."
+      ],
+      "recommendation": "Let the bootstrap script authenticate as the intended administrator and create the workspace with that user's membership. Provide an explicit operator recovery path for a specifically selected workspace already created by the old shortcut; do not broadly grant access to other workspaces.",
+      "files": [
+        "example-site/scripts/setup_moss.py",
+        "api/app/accounts.py",
+        "README.md",
+        "example-site/README.md"
+      ],
+      "evidence": [
+        "13-example-workspace-missing.png",
+        "API evidence: authSkipped=false; projects contains only the synthetic administrator's My workspace",
+        "Source: create_project adds Membership only when skip_auth is false"
+      ],
+      "acceptance_criteria": [
+        "From an empty database, a real administrator completes automated example setup without enabling MOSS_SKIP_AUTH; after logout/login they can select and edit Example website.",
+        "Repeating setup preserves edits and administrator membership; delivery remains functional with normal auth.",
+        "Recovering a legacy unowned example workspace is an explicit, scoped operator action with no cross-workspace access grant; regression coverage exercises the documented sequence."
+      ]
+    },
+    {
+      "audit_id": "ONB-02",
+      "priority": "P1",
+      "kind": "Bug",
+      "title": "[P1] Align the documented local API port with the Vite proxy",
+      "objective": "The README's local development commands connect the admin to the API those commands started.",
+      "observed": "README tells the user to run uv run uvicorn app.main:app --reload. Reproducing that invocation starts Uvicorn on 127.0.0.1:8000. web/vite.config.ts defaults its backend to localhost:8001. In this environment, the temporary Vite proxy still returned HTTP 200 from /auth/status after the port-8000 API was stopped, because an existing MossCMS instance was on 8001.",
+      "impact": "A fresh machine gets proxy connection failures; a machine with another running instance can silently connect to that other instance.",
+      "reproduction": [
+        "Follow Local development and checks in README.",
+        "Read Uvicorn's startup port and Vite's backend default.",
+        "Stop the API on 8000 and query the Vite /auth/status endpoint when another API exists on 8001."
+      ],
+      "recommendation": "Use one documented port consistently, most simply by adding --port 8001 to the Uvicorn command, and make custom VITE_BACKEND_URL configuration explicit. Document required uv/Node/Python versions alongside this path.",
+      "files": [
+        "README.md",
+        "web/vite.config.ts",
+        "api/pyproject.toml"
+      ],
+      "evidence": [
+        "Terminal: Uvicorn running on http://127.0.0.1:8000",
+        "Terminal: Vite proxy still returns HTTP 200 after documented port-8000 API stopped"
+      ],
+      "acceptance_criteria": [
+        "On a fresh environment, the copied README development commands serve the intended admin and API with no manual port correction.",
+        "A custom port example configures both Uvicorn and Vite consistently.",
+        "Documentation lists the development prerequisites and versions before the commands."
+      ]
+    },
+    {
+      "audit_id": "ONB-03",
+      "priority": "P2",
+      "kind": "Bug",
+      "title": "[P2] Keep the configured public URL and Compose host port consistent",
+      "objective": "Changing the local public port produces an instance reachable at the configured origin.",
+      "observed": "In a second disposable configuration directory, configure.py --public-url http://localhost:18090 produced MOSS_PUBLIC_URL=http://localhost:18090 and MOSS_PORT=8001. Following Compose defaults would bind port 8001 while callbacks and operator-facing URLs use 18090. The audit required separate MOSS_PORT, MOSS_PUBLIC_URL and MOSS_ORIGINS overrides to avoid existing services.",
+      "impact": "Changing a port requires understanding multiple environment variables; the advertised URL can disagree with the listening service.",
+      "recommendation": "Provide an explicit local --port option that sets the bind port, public URL and trusted origins coherently, or validate/document their relationship. Preserve existing values and support intentional reverse-proxy mappings.",
+      "files": [
+        "scripts/configure.py",
+        "compose.yaml",
+        ".env.example",
+        "README.md"
+      ],
+      "evidence": [
+        "Configuration reproduction: MOSS_PUBLIC_URL=http://localhost:18090; MOSS_PORT=8001"
+      ],
+      "acceptance_criteria": [
+        "A documented non-default local port example binds and opens the same origin, including setup, auth and media links.",
+        "Existing secrets are retained, and intentional production reverse-proxy URLs need not share the container/host port.",
+        "Conflicting local options produce actionable guidance rather than silently inconsistent configuration."
+      ]
+    },
+    {
+      "audit_id": "ONB-04",
+      "priority": "P2",
+      "kind": "Improvement",
+      "title": "[P2] Finish local startup with readiness and a guided administrator handoff",
+      "objective": "A first-time operator reaches the administrator setup screen without searching configuration files or guessing readiness.",
+      "observed": "The quick start requires Python configuration, a separate Docker command, manually opening localhost:8001 and retrieving MOSS_SETUP_TOKEN from .env. configure.py only prints 'Configuration saved to .env. Use MOSS_SETUP_TOKEN from that file for the first administrator setup.' The setup form gives the variable name but no guided operator retrieval step. The README startup command does not wait for application readiness.",
+      "impact": "The first product interaction depends on terminal/file-system knowledge and leaves unclear whether the service is ready. This is an observed manual hurdle, not a reproduced readiness race.",
+      "recommendation": "Provide a single supported local-start entry point, or a tightly guided command sequence, that waits for /ready, prints the correct URL and explains how the authorized operator completes the protected first-admin setup. Keep the setup-token security boundary.",
+      "files": [
+        "scripts/configure.py",
+        "README.md",
+        "compose.yaml",
+        "web/src/pages/Auth.tsx"
+      ],
+      "evidence": [
+        "01-setup.png",
+        "configure.py terminal output"
+      ],
+      "acceptance_criteria": [
+        "A documented local-start flow checks prerequisites and waits for readiness before reporting success and its actual URL.",
+        "The authorized operator gets a clear protected setup handoff; no setup credential is committed, logged by the server, or exposed to an arbitrary browser visitor.",
+        "The startup flow preserves existing configuration, accounts and volumes when repeated."
+      ]
+    },
+    {
+      "audit_id": "ONB-05",
+      "priority": "P2",
+      "kind": "Improvement",
+      "title": "[P2] Distinguish account creation from workspace naming in first setup",
+      "objective": "New users understand what their name controls and can name their initial workspace during setup.",
+      "observed": "The first screen says 'Create your workspace' but has only Name, Email, Password and Setup token. Name becomes the person's display name; the workspace is automatically called My workspace. Password requires 12 characters but the form gives no visible requirement until native validation rejects a short value. Renaming requires finding Settings later.",
+      "impact": "The setup promise and fields do not match, and avoidable validation/renaming steps slow activation.",
+      "recommendation": "Use explicit 'Your name' and 'Workspace name' fields, or make the account-only step explicit and immediately guide workspace naming. Show the password rule before submission.",
+      "files": [
+        "web/src/pages/Auth.tsx",
+        "api/app/accounts.py"
+      ],
+      "evidence": [
+        "01-setup.png",
+        "02-first-content.png",
+        "Browser validation: Please lengthen this text to 12 characters or more"
+      ],
+      "acceptance_criteria": [
+        "The first-admin screen clearly distinguishes personal identity from workspace identity, and a chosen workspace name appears in the sidebar immediately.",
+        "Password length requirements are visible before submit and connected to the field accessibly.",
+        "Existing setup API clients retain a compatible default workspace name when no new name is supplied."
+      ]
+    },
+    {
+      "audit_id": "ONB-06",
+      "priority": "P1",
+      "kind": "Improvement",
+      "title": "[P1] Make checklist actions open the exact next creation or publishing step",
+      "objective": "Each active onboarding action advances the user to the work needed to complete that step.",
+      "observed": "After Add Article, step 2 offers 'Go to Content to draft an entry' on the Content page itself. Clicking it changes the route to #content, then the user must find New entry. After saving, 'Open Content and publish' likewise returns to the same list rather than opening the draft. Both links discard explicit route parameters and do not select the template/draft they refer to.",
+      "impact": "The guide reports progress but makes the novice navigate and rediscover the intended action at the two most important activation steps.",
+      "recommendation": "Open a new editor for the selected starter type directly; open the user's first suitable draft for publication. Keep an explicit type/draft choice when there are several candidates and preserve workspace context.",
+      "files": [
+        "web/src/components/OnboardingChecklist.tsx",
+        "web/src/pages/Content.tsx",
+        "web/src/pages/App.tsx"
+      ],
+      "evidence": [
+        "02-first-content.png",
+        "04-saved-draft.png",
+        "Browser: publishStepUrl=http://localhost:18082/#content"
+      ],
+      "acceptance_criteria": [
+        "After selecting Article, the next guide action opens a new Article editor in that workspace with one click.",
+        "After creating the first draft, the publish-step action opens that draft; ambiguous candidates are handled explicitly.",
+        "Workspace and navigation context survive the actions, and reader/editor permissions remain enforced."
+      ]
+    },
+    {
+      "audit_id": "ONB-07",
+      "priority": "P1",
+      "kind": "Ambiguity",
+      "title": "[P1] Distinguish the publishing mode selector from the publish action",
+      "objective": "A new editor can tell whether they have selected a mode or actually published an entry.",
+      "observed": "The Publishing panel contains a button labeled Publish now / Make it available. Clicking it only selects status='published'; the entry remains unpublished. A second button in the sticky footer is also labeled Publish now and must be clicked to perform publication. Save draft appears in both the mode selector and the footer too. The browser reproduced the intermediate state with an unpublished header and two Publish now buttons.",
+      "impact": "An action-sounding control can leave a user believing content is live before the publishing operation occurs.",
+      "recommendation": "Use clearly labeled mode choices with one action button, or make Publish now perform the actual action through the existing validation/snapshot contract. Preserve explicit scheduling behavior.",
+      "files": [
+        "web/src/pages/EntryEditor.tsx"
+      ],
+      "evidence": [
+        "05-publish-selection.png",
+        "Source: publishing option onClick only calls setStatus(option.value)"
+      ],
+      "acceptance_criteria": [
+        "Publishing choices communicate selection rather than completion, and only one visible control claims to perform immediate publication.",
+        "A novice can determine draft/live status after selection and after the real operation on desktop and mobile.",
+        "Validation, autosave flushing, uncertain-response recovery and scheduled/live snapshot semantics remain intact."
+      ]
+    },
+    {
+      "audit_id": "ONB-08",
+      "priority": "P2",
+      "kind": "Improvement",
+      "title": "[P2] Keep token creation and delivery verification in one guided flow",
+      "objective": "A first-time administrator completes delivery verification without hunting for token settings or losing the setup context.",
+      "observed": "At step 4 the user must open Settings → Delivery tokens, create and copy a token, navigate back to Content and paste it. The named token link is only #settings and opens the top of the page. At 1440x1000, the Delivery tokens heading was approximately 1290px below the top, after account, workspace, preview, locales and workspace creation forms.",
+      "impact": "The final activation step sends the user away from the guide and requires an avoidable scroll/copy/paste round trip.",
+      "recommendation": "Create a scoped token through an inline step or focused dialog, verify it immediately and provide its one-time copy handoff. At minimum, deep-link and focus the exact Settings section and return to the guide.",
+      "files": [
+        "web/src/components/OnboardingChecklist.tsx",
+        "web/src/pages/Settings.tsx"
+      ],
+      "evidence": [
+        "06-published.png",
+        "07-settings.png",
+        "Browser: settings scrollY=0; Delivery tokens heading top=1289.97px"
+      ],
+      "acceptance_criteria": [
+        "The token-step action reveals token creation directly without searching or scrolling unrelated settings.",
+        "A narrowly scoped token for the selected published type can be created and tested in one guided sequence.",
+        "Tokens remain one-time secrets, are not put in URLs or persistent browser storage, and existing token revocation/expiry behavior remains intact."
+      ]
+    },
+    {
+      "audit_id": "ONB-09",
+      "priority": "P2",
+      "kind": "Improvement",
+      "title": "[P2] Keep the entry editor open after an explicit draft save",
+      "objective": "Saving a checkpoint lets an author continue writing or publish without reopening their entry.",
+      "observed": "Clicking the primary Save draft button on the first Article returns to the Content list. To publish or continue editing, the user has to reopen the row. Content.tsx's onSaved callback unconditionally closes the editor, including draft saves; autosave itself keeps the editor open.",
+      "impact": "The same save outcome has different navigation behavior depending on whether it is automatic or explicit, adding an extra navigation loop during first authoring.",
+      "recommendation": "Save in place with saved feedback and the durable entry URL; provide an explicit Back/Save and close action when the user wants to leave.",
+      "files": [
+        "web/src/pages/Content.tsx",
+        "web/src/pages/EntryEditor.tsx"
+      ],
+      "evidence": [
+        "03-new-entry.png",
+        "04-saved-draft.png",
+        "Source: onSaved calls closeEditor()"
+      ],
+      "acceptance_criteria": [
+        "Explicit Save draft leaves the author in the editor with the persisted entry ID, version and a saved announcement.",
+        "The user can publish or continue editing without reopening the entry; intentional navigation still works.",
+        "Save failures, conflicts, autosave recovery and dirty-navigation safeguards retain their current protections."
+      ]
+    },
+    {
+      "audit_id": "ONB-10",
+      "priority": "P2",
+      "kind": "Improvement",
+      "title": "[P2] Collapse completed onboarding so content remains visible",
+      "objective": "The guide helps activation without displacing daily content work after setup is complete.",
+      "observed": "After delivery verification the full four-step checklist remains at the top of Content. At 390x844, the Content heading is at approximately y=1664px, below almost two viewport heights of navigation and completed guidance. A manual dismiss/resume mechanism already exists, but completion does not collapse the guide automatically.",
+      "impact": "Completed setup repeatedly forces scrolling before reaching the product's primary working area, especially on mobile.",
+      "recommendation": "Collapse completed steps and show only the next action during onboarding; after completion show a small resumable summary, using the existing dismissal storage behavior.",
+      "files": [
+        "web/src/components/OnboardingChecklist.tsx",
+        "web/src/style.css"
+      ],
+      "evidence": [
+        "08-ready.png",
+        "11-checklist-mobile.png",
+        "Browser at 390x844: Content heading top=1663.78px; no horizontal overflow"
+      ],
+      "acceptance_criteria": [
+        "After 4/4 completion, the content heading and primary creation action are visible in the first 390x844 viewport without manually dismissing the guide.",
+        "The user can reopen the full guide and retest delivery; stored progress remains scoped to user and workspace.",
+        "Before completion, the active step remains discoverable and accessible without showing every completed explanation at full height."
+      ]
+    },
+    {
+      "audit_id": "ONB-11",
+      "priority": "P2",
+      "kind": "Improvement",
+      "title": "[P2] Guide example-site users through a working website preview connection",
+      "objective": "After initializing the example site, the author can complete the preview connection and open a saved draft.",
+      "observed": "Automatic setup creates schemas, published samples and a delivery token but leaves project.previewOrigin=null. In the generated sample post, clicking Save draft & prepare website preview fails with 'Ask an administrator to set the website preview origin in Settings.' No first-use guide points from successful website initialization to this missing connection.",
+      "impact": "A prominently exposed preview control fails immediately after the recommended setup, requiring another undocumented-in-context configuration detour. The ownership bug in ONB-01 makes this worse with normal sign-in.",
+      "recommendation": "Allow an explicit trusted website URL during bootstrap or provide a focused connection step. Show a setup action when preview is unconfigured instead of leaving an apparently ready preview action.",
+      "files": [
+        "example-site/scripts/setup_moss.py",
+        "web/src/pages/EntryEditor.tsx",
+        "web/src/pages/Settings.tsx",
+        "example-site/README.md"
+      ],
+      "evidence": [
+        "15-preview-not-configured.png",
+        "API: Example website previewOrigin=null after automatic setup"
+      ],
+      "depends_on_audit_ids": [
+        "ONB-01"
+      ],
+      "acceptance_criteria": [
+        "With normal authentication, an initialized example workspace either has an explicitly approved trusted preview origin or clearly exposes the required connection step.",
+        "The author can prepare and open a saved unpublished revision on the website without publishing it.",
+        "Preview-origin validation, workspace/type scope, grant expiry and no-store/noindex protections remain enforced; existing user-configured origins are preserved on rerun."
+      ]
+    },
+    {
+      "audit_id": "ONB-12",
+      "priority": "P2",
+      "kind": "Improvement",
+      "title": "[P2] Turn delivery verification into a concrete frontend handoff",
+      "objective": "A user who reaches Workspace ready understands how to consume the verified content in their frontend.",
+      "observed": "The 4/4 screen offers Open API explorer and Test another token. The explorer starts with a generic editable GraphQL query but provides no copyable populated curl/server example or selected-type integration instructions. The working curl example and the separate example-website workspace live in README; the UI does not explain that an Article in My workspace is not automatically rendered by the five-type Example website.",
+      "impact": "The guide stops at successful API verification, leaving the user to bridge the gap from a CMS entry to visible website content through separate documentation and configuration.",
+      "recommendation": "After verification, show the actual delivery endpoint, a query for the selected type and copyable server-side integration instructions. Offer a clearly explained example-site path and distinguish API readiness from confirmed website display.",
+      "files": [
+        "web/src/components/OnboardingChecklist.tsx",
+        "web/src/pages/Explorer.tsx",
+        "README.md",
+        "example-site/README.md"
+      ],
+      "evidence": [
+        "08-ready.png",
+        "12-example-website.png",
+        "Explorer default query and verified published Article response"
+      ],
+      "acceptance_criteria": [
+        "The completed guide supplies a runnable query/example for its selected workspace/type and actual origin, with a token placeholder or deliberate one-time handoff.",
+        "Guidance keeps credentials on the frontend server and explains the independent workspace/types used by the example site.",
+        "Completion distinguishes successful API delivery from a website display check, and offers a clear next action to confirm rendering."
+      ]
+    }
+  ],
+  "post_audit_review": {
+    "date": "2026-10-12",
+    "reviewed_readme_commit": "9321596",
+    "aftur_review_revision": 567,
+    "task47": "The README now specifies --port 8001, addressing the primary mismatch observed in the audit baseline. Custom-port guidance and API/proxy isolation acceptance checks were not independently rerun; proposal remains open.",
+    "scope": "Report, images, references, task mapping and source consistency reviewed. No browser trial repeated or proposed application fixes implemented.",
+    "source_note": "Historical audited snapshot and original proposal receipt remain unchanged."
+  }
+}
