@@ -76,3 +76,43 @@ jobs:
         working-directory: example-site
       - run: npm run check && npm test && npm run build && npm audit --audit-level=high
         working-directory: example-site
+  production_docker:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ci/package-lock.json
+      - run: npm ci
+        working-directory: ci
+      - run: npx playwright install --with-deps chromium
+        working-directory: ci
+      - name: Build production image
+        run: docker build --tag mosscms:smoke .
+      - name: Start isolated production stack
+        run: docker compose -f ci/compose.yaml -p mosscms-smoke up --no-build -d --wait --wait-timeout 180
+      - name: Check production login and branding
+        run: npm test
+        working-directory: ci
+      - name: Capture container logs on failure
+        if: failure()
+        run: |
+          mkdir -p ci/test-results
+          docker compose -f ci/compose.yaml -p mosscms-smoke logs --no-color > ci/test-results/containers.log 2>&1
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: production-smoke-results
+          path: |
+            ci/test-results/
+            ci/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Remove disposable production stack
+        if: always()
+        run: docker compose -f ci/compose.yaml -p mosscms-smoke down --volumes

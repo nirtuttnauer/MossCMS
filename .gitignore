@@ -18,3 +18,5 @@ backups/
 
 .mypy_cache/
 /ProjectMemory/
+ci/test-results/
+ci/playwright-report/

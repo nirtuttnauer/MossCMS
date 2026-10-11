@@ -1,0 +1,39 @@
+# Disposable fixtures only. These credentials must never be used for deployment.
+services:
+  app:
+    image: mosscms:smoke
+    build:
+      context: ..
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: smoke
+      POSTGRES_USER: smoke
+      POSTGRES_PASSWORD: ci-only-database-password
+      MOSS_ENV: production
+      MOSS_SKIP_AUTH: "false"
+      MOSS_SECRET_KEY: ci-only-secret-key-not-for-production
+      MOSS_SETUP_TOKEN: ci-only-setup-token-not-for-production
+      MOSS_PUBLIC_URL: http://localhost:18081
+      MOSS_ORIGINS: http://localhost:18081
+    ports:
+      - "127.0.0.1:18081:8001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+      - /data:uid=10001,gid=10001
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: smoke
+      POSTGRES_USER: smoke
+      POSTGRES_PASSWORD: ci-only-database-password
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U smoke -d smoke"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
