@@ -393,3 +393,17 @@ test.each(['partial', 'complete'])('recovers bulk-trash keyboard focus after a %
     expect(opener.isConnected).toBe(false)
   }
 })
+
+
+test('a delayed search preserves navigation to another workspace before the old content unmounts', async () => {
+  history.replaceState(null, '', '/#content?workspace=a&type=article')
+  vi.mocked(gql).mockResolvedValue({ entries: { nodes: [entry], total: 1, hasNextPage: false, endCursor: null }, contentGroups: [] })
+  render(<Content projectId="a" types={types} role="editor" onChanged={vi.fn()} />)
+  await screen.findByRole('button', { name: 'Edit' })
+  fireEvent.change(screen.getByLabelText('Search entries'), { target: { value: 'pending search' } })
+  const destination = '#content?workspace=b&type=beta'
+  history.replaceState(null, '', destination)
+  fireEvent(window, new Event('hashchange'))
+  await waitFor(() => expect(vi.mocked(gql).mock.calls.some(([, variables]) => variables?.search === 'pending search')).toBe(true))
+  expect(location.hash).toBe(destination)
+})

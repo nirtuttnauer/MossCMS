@@ -24,6 +24,7 @@ export function Content({ types, role, onChanged, projectId, defaultLocale = 'en
   const context = useRef(getContext()).current
   const setHashParams = (updater: (params: URLSearchParams) => void, push = false) => {
     const route = readContentRoute(types)
+    if (route.workspace && projectId && route.workspace !== projectId) return
     const params = new URLSearchParams(contentHash(route).split('?')[1] || '')
     updater(params)
     setContentRoute({ ...readContentRoute(types, `#content?${params}`), workspace: projectId || context.project || route.workspace }, push)

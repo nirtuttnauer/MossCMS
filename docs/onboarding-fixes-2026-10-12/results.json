@@ -16,7 +16,7 @@
     "TASK-51": {
       "priority": "P1",
       "change": "Creation links carry workspace/type and open the editor; publication guide opens the single draft or an explicit filtered choice.",
-      "verification": "Unit tests cover route parameters and multiple drafts; actual browser caught and verified correction of the programmatic navigation event."
+      "verification": "Unit tests cover route parameters and multiple drafts; actual browser caught and verified correction of the programmatic navigation event. A delayed-search regression reproduced an old-workspace URL overwrite without the guard and passed after preventing route writes to another workspace."
     },
     "TASK-52": {
       "priority": "P1",
@@ -66,11 +66,11 @@
     }
   },
   "checks": {
-    "web": "291 tests pass; TypeScript and build pass",
+    "web": "292 tests pass; TypeScript and build pass",
     "api": "274 tests pass, 2 optional checks skipped, with MOSS_USE_SQLITE=false isolating local .env backend selection; 44 operator/bootstrap/CLI tests also pass.",
     "python": "Ruff lint and formatting pass using api/pyproject.toml; mypy passes from api/",
     "browser": "Setup, direct creation/draft navigation, in-place save, publication, inline token, mobile completion, authenticated bootstrap/rerun, saved preview and live website publication verified; no page errors.",
-    "pr": "Clean worktree based on main 737d9ec: 274 API tests pass with 2 optional checks skipped, 291 frontend tests pass, Ruff lint/format, mypy, TypeScript and frontend build pass."
+    "pr": "Clean worktree based on main 737d9ec: 274 API tests pass with 2 optional checks skipped, 292 frontend tests pass, Ruff lint/format, mypy, TypeScript and frontend build pass."
   },
   "unverified": [
     "Cold-machine dependency download/install time",
@@ -101,5 +101,6 @@
     "backup_note": "A private database/uploads archive and previous runtime configuration are retained in the ignored local backups directory; a rollback image is also retained.",
     "browser": "Chromium confirms the deployed Your name and Workspace name fields, 12-character password hint, and no page errors. No primary accounts or content were created during deployment verification.",
     "setup_state": "Existing state preserved: first administrator setup is pending; the sole stored user is the pre-existing development identity."
-  }
+  },
+  "integration_note": "The first GitHub run exposed a workspace URL race in one frontend job; route writes now preserve a newly selected workspace, with a regression that fails before the fix and passes afterward. Initial GitHub API, PostgreSQL, example website and production Docker checks passed; final CI is being rerun."
 }
