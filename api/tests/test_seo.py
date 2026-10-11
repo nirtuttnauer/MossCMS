@@ -211,6 +211,21 @@ def test_website_profile_fallbacks_are_compared_but_not_missing_effective_metada
     assert "duplicate_description" in codes(result) and result["criticalCount"] == 0
 
 
+def test_generic_website_fallbacks_match_the_example_site(client, admin):
+    define(client, admin, key="sitePage", fields=FIELDS)
+    saved(client, admin, key="sitePage", slug="empty", data={"title": "", "description": ""})
+    saved(
+        client,
+        admin,
+        key="sitePage",
+        slug="explicit",
+        data={"title": "Example website", "description": "A example website."},
+    )
+    result = report(client, admin)
+    assert {"duplicate_title", "duplicate_description"} <= codes(result)
+    assert result["criticalCount"] == 0
+
+
 def test_markdown_reference_images_setext_headings_and_code_blocks(client, admin):
     define(client, admin, key="sitePost", fields=FIELDS)
     saved(

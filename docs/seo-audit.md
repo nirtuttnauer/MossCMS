@@ -6,7 +6,7 @@ The report is advisory and does not edit records, block publishing, or contact e
 
 ## Coverage and mappings
 
-`sitePage`, `sitePost`, and `siteProject` are pages. Their public `title` and `description` fields are audited using the bundled website's profile fallbacks. A home page (`kind: home`) uses the selected profile's `name` as its effective title. Missing page descriptions use the profile's `headline`, then `A personal website.`; missing effective titles use `Personal website`. The selected profile is the `profile` slug, or the most recently updated draft/published profile within the selected snapshot. Missing homepage profile names are reported on that profile; absent profiles are reported on the homepage.
+`sitePage`, `sitePost`, and `siteProject` are pages. Their public `title` and `description` fields are audited using the bundled website's profile fallbacks. A home page (`kind: home`) uses the selected profile's `name` as its effective title. Missing page descriptions use the profile's `headline`, then `A example website.`; missing effective titles use `Example website`. The selected profile is the `profile` slug, or the most recently updated draft/published profile within the selected snapshot. Missing homepage profile names are reported on that profile; absent profiles are reported on the homepage.
 
 `siteProfile` and `siteSlide` are supporting content: inspect their public Markdown, images, assets, and references without requiring page metadata.
 

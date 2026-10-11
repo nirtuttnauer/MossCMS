@@ -269,8 +269,8 @@ def audit_records(
                         profile_name, _ = value_at(profile_definition.fields, profile_data, "name", language)
                         headline, _ = value_at(profile_definition.fields, profile_data, "headline", language)
                     chosen_title = profile_name if kind == "home" else title
-                    effective_title = text(chosen_title) if chosen_title else "Personal website"
-                    effective_description = text(description or headline or "A personal website.")
+                    effective_title = text(chosen_title) if chosen_title else "Example website"
+                    effective_description = text(description or headline or "A example website.")
                     if kind == "home" and not text(profile_name):
                         if profile:
                             _, name_path = value_at(
