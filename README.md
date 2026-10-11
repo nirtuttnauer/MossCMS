@@ -4,7 +4,7 @@
 
 # MossCMS
 
-A self-hosted content service with a GraphQL API and a React admin. Define your data, publish entries, and consume them from any frontend. Python dependencies use **uv**; the admin uses **Vite, React, TypeScript, Tailwind, and Radix/shadcn-style components**. The multistage Docker image serves both from one origin, backed by PostgreSQL.
+A self-hosted content service with a GraphQL API and a React admin. Define your data, publish entries, and consume them from any frontend. One Docker image serves the API and admin from the same origin, backed by PostgreSQL.
 
 [MIT licensed](LICENSE). Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -12,25 +12,44 @@ A self-hosted content service with a GraphQL API and a React admin. Define your 
 
 ![MossCMS content library and getting-started checklist](docs/acceptance-2026-10-11/first-use-three-ready.jpg)
 
-Model content visually, write with Markdown, upload media, and publish immediately or on a schedule. Drafts stay separate from live content. Each workspace has its own schemas, team, and delivery tokens.
+| Build | Edit | Deliver |
+| --- | --- | --- |
+| Visual content schemas, nested fields, locales, and references | Markdown, media, autosave, and revision recovery | Schema-derived GraphQL and scoped delivery tokens |
+| Separate workspaces with their own teams and schemas | Independent drafts, live content, and scheduled revisions | Published content with private fields removed |
+| Local or S3-compatible asset storage | Role-based access and advisory SEO checks | An example website with saved draft previews |
 
-[Start locally](#start) · [First content walkthrough](#your-first-content) · [Run the example site](#example-website-frontend) · [Delivery API](#graphql-for-your-frontends) · [Production setup](#storage-and-production)
+[Start locally](#start) · [How it fits together](#how-it-fits-together) · [First content walkthrough](#your-first-content) · [Delivery API](#graphql-for-your-frontends) · [Example website](#example-website-frontend) · [Production setup](#storage-and-production)
+
+<details>
+<summary>Browse the full README</summary>
+
+- **Getting started:** [Start](#start), [architecture](#how-it-fits-together), [first content](#your-first-content), [example website](#example-website-frontend).
+- **Content and access:** [Admin and teams](#admin-and-teams), [OAuth](#oauth-sign-in), [data modeling](#define-data), [publishing](#draft-live-and-scheduled-content), [SEO audit](#seo-audit).
+- **Integration:** [GraphQL](#graphql-for-your-frontends), [documentation guides](#documentation).
+- **Operations:** [Storage and production](#storage-and-production), [backup, restore, and upgrades](#backup-restore-and-upgrades).
+- **Contributing:** [Code layout](#code-layout), [development and checks](#local-development-and-checks), [local sign-in bypass](#temporarily-skip-sign-in), [product plan](#product-plan).
+
+</details>
 
 ## Start
 
-Install Docker with Compose and Python 3, then clone the repository:
+You need **Docker with Compose** and **Python 3**. Node.js and a local Python dependency environment are only needed for [development outside Docker](#local-development-and-checks).
+
+Clone, generate configuration, and start:
 
 ```sh
 git clone https://github.com/nirtuttnauer/MossCMS.git
 cd MossCMS
-```
-
-```sh
 python3 scripts/configure.py
 docker compose up --build -d
 ```
 
 Open [localhost:8001](http://localhost:8001). Create your first administrator using `MOSS_SETUP_TOKEN` from `.env`. Choose your own email and a password of at least 12 characters. Configuration is generated locally with random secrets; `.env` is excluded from builds and source control.
+
+> **Keep your data:** PostgreSQL and local uploads live in named Docker volumes. Recreating containers retains them; `docker compose down -v` deletes them. [Back up before upgrading](#backup-restore-and-upgrades).
+
+<details>
+<summary>Existing starter database or optional sample content</summary>
 
 For an existing starter database, use `python3 scripts/configure.py --existing-db` before upgrading. This preserves its development password. The migration imports existing Articles and revisions into a workspace assigned to the first administrator, retaining the original table. Do not use starter database credentials in production.
 
@@ -39,6 +58,8 @@ There is no automatic seed. After setup, an optional repeatable seed command is:
 ```sh
 docker compose exec app python -m app.cli seed --project YOUR_WORKSPACE_ID
 ```
+
+</details>
 
 ### Run a published Docker Hub image
 
@@ -57,6 +78,24 @@ Compose defaults to `nirtuttnauer/mosscms:latest`. Set `MOSS_IMAGE` in `.env` to
 To build from your checkout, keep using `docker compose up --build -d`. To avoid replacing a locally cached release tag, use `MOSS_IMAGE=mosscms:local docker compose up --build -d`. The optional example website is built separately with `docker compose --profile website up --build -d example-site`.
 
 See [Docker setup and publishing](docs/docker.md) for registry configuration and upgrade instructions.
+
+## How it fits together
+
+The admin uses the editorial API to manage a workspace. Your frontend reads its published content through the separate delivery API. The optional example website demonstrates keeping the delivery token on the frontend's server.
+
+```mermaid
+flowchart LR
+    Admin["React admin"] -->|"Session and workspace"| Editorial
+    Frontend["Your frontend server"] -->|"Scoped delivery token"| Delivery
+    subgraph Moss["MossCMS · one Docker image / origin"]
+        Editorial["Editorial GraphQL<br/>/graphql"] --> Content["Content, permissions<br/>and publication workers"]
+        Delivery["Delivery GraphQL<br/>/delivery/graphql"] --> Content
+    end
+    Content --> Database[("PostgreSQL<br/>content, accounts, revisions")]
+    Content --> Media["Media storage<br/>local volume or private S3"]
+```
+
+**Stack:** FastAPI, Strawberry GraphQL, SQLAlchemy, and Alembic on Python; Vite, React, TypeScript, Tailwind, and Radix/shadcn-style components in the admin. Python dependencies use **uv**; Node dependencies use **npm**.
 
 ## Your first content
 
@@ -104,7 +143,13 @@ Existing content is retained. If you have not created a real administrator yet, 
 - Settings: create/rename workspaces, connect OAuth accounts, create/revoke delivery tokens, and inspect audit history.
 - API explorer: query the selected workspace or use a delivery token.
 
-**Administrators** manage schemas, membership, and tokens. **Editors** manage entries and media. **Readers** view editorial content including drafts. Every record and query is scoped to workspace membership. At least one administrator must remain. Invitations are shared manually; no email service is required.
+| Role | Access within a workspace |
+| --- | --- |
+| Administrator | Manage schemas, membership, tokens, entries, and media |
+| Editor | Manage entries and media; publish and schedule content |
+| Reader | View editorial content, including drafts; cannot edit or publish |
+
+Every record and query is scoped to workspace membership. At least one administrator must remain. Invitations are shared manually; no email service is required.
 
 Password recovery is available to the server operator:
 
@@ -152,13 +197,56 @@ Schema updates validate every stored entry and published snapshot in one transac
 
 Content is grouped by its schema type in the Content library. Each group shows its entry count and opens a filtered list; **New entry** uses the selected type. Create additional types in **Content types** to organize other collections. The example website includes separate Projects, Blog posts, Website page, Homepage slide, and Website profile groups.
 
-Entries have independent working, live and scheduled versions. **Save draft** and autosave preserve existing live content and captured schedules. **Publish now** replaces the complete live snapshot. **Schedule / Replace schedule** freezes the selected revision and UTC due time; later draft edits do not alter it. Use explicit **Cancel schedule** or **Unpublish** actions. The scheduler checks about every five seconds and on startup. Failed captures preserve live content and appear in **Publications**, where editors can retry the captured revision, replace it or discard it. Dates display the browser timezone. See [editor workflows](docs/editor-workflows.md) for autosave recovery, Markdown, media, saved website previews and schema tools, and [the publication contract](docs/publication-contract.md) for API transition semantics.
-
 Administrators can use the editorial `moveEntry(id, typeKey, version)` mutation to move compatible entries between schema types. It validates both editable and published data against the target schema and retains the entry ID, schedule, status, revision history and audit trail. Slug conflicts or incompatible data reject the move. The website setup script uses this to upgrade older projects and posts stored as Website pages.
+
+## Draft, live, and scheduled content
+
+An entry can have all three versions at once. Saving a draft changes the working copy; publishing or scheduling captures a specific revision.
+
+```mermaid
+flowchart LR
+    Draft["Working draft"] -->|"Save / autosave"| Draft
+    Draft -->|"Publish now"| Live["Live snapshot"]
+    Draft -->|"Schedule / replace schedule"| Scheduled["Captured scheduled revision"]
+    Scheduled -->|"Due and valid"| Live
+    Scheduled -->|"Validation or URL conflict"| Failed["Failed capture<br/>previous live content preserved"]
+    Failed -->|"Repair and retry capture"| Scheduled
+    Live -->|"Public fields only"| Delivery["Delivery API"]
+```
+
+| Action | Live content | Captured schedule |
+| --- | --- | --- |
+| Save draft / autosave | Preserved | Preserved |
+| Publish now | Replaced with the selected working revision | Cleared |
+| Schedule / replace schedule | Preserved | Captures the selected revision and UTC due time |
+| Cancel schedule | Preserved | Cleared |
+| Unpublish | Removed; working draft and history retained | Cleared |
+
+Later edits do not change a captured schedule. The scheduler checks about every five seconds and on startup; the CMS must stay running. Dates display in your browser's timezone. Failed captures appear in **Publications**, where editors can retry the captured revision, replace it, or discard it. [Editor workflows](docs/editor-workflows.md) covers recovery and previews; the [publication contract](docs/publication-contract.md) defines every transition.
 
 ## GraphQL for your frontends
 
 Create a delivery token in Settings. Tokens expire and can be scoped to selected content types. Keep privileged tokens in your frontend server's environment. A token embedded in a browser is accessible to its users and should expose only content you intend them to read.
+
+| Endpoint | Authentication | Content and operations |
+| --- | --- | --- |
+| `POST /delivery/graphql` | Bearer delivery token | Published content in token scope; public fields; queries only |
+| `POST /graphql` | Session, `X-Moss-Project`; `X-Moss-CSRF` for mutations | Workspace content, drafts, and revisions according to role; queries and mutations |
+
+The example website uses this request flow (the diagram omits its cache and preview handling):
+
+```mermaid
+sequenceDiagram
+    participant Visitor as Website visitor
+    participant Site as Frontend server
+    participant CMS as MossCMS delivery API
+    Visitor->>Site: Request website content
+    Site->>CMS: POST /delivery/graphql + Bearer token
+    Note over CMS: Enforce token scope, read live snapshots,<br/>remove private fields
+    CMS-->>Site: Published content + signed media URLs
+    Site-->>Visitor: Public website content
+    Note over Site: Delivery token stays on the server
+```
 
 **POST `/delivery/graphql`** with `Authorization: Bearer YOUR_TOKEN` reads published content only and has no mutations. Type `article` generates `allCmsArticle` with schema-derived fields:
 
@@ -236,14 +324,16 @@ Node/Python image digests and Python/npm lockfiles pin builds. To update, delibe
 
 ## Code layout
 
-- `api/app/schema.py`: field definitions, value validation, private-field filtering, and referenced asset IDs. `content.py` handles workspace-scoped queries, revisions, schema migrations, and publication transitions; `graphql.py` exposes them through editorial and delivery schemas.
-- `api/app/query_limits.py`: GraphQL depth, selection count, and fragment traversal checks. `main.py` applies them before executing editorial or delivery requests.
-- `api/app/accounts.py` and `security.py`: accounts, workspace permissions, sessions, and tokens. Database models live in `models.py`; database migrations live in `api/migrations/`.
-- `api/app/media_links.py`: original/variant media signing and expiry policy. `storage.py` handles upload/download operations; `images.py` handles bounded image decoding and variants.
-- `web/src/pages/` and `web/src/components/`: admin screens and form controls. `web/src/lib/` contains API requests, schema helpers, shared locale/entry validation, and autosave recovery.
-- `web/src/pages/Content.tsx` owns the content library; `EntryEditor.tsx` is shared by the content and publication screens. `web/src/lib/revisions.ts` builds field differences for the revision comparison component.
-- `example-site/src/`: public website components. `example-site/server/`: delivery loading, cache, preview sessions, publication events, routes, and metadata.
-- `shared/`: Markdown rendering policy and website routes shared across consumers. `scripts/`: operator configuration, backup/restore, and release acceptance tools.
+| Area | Start here | Responsibility |
+| --- | --- | --- |
+| Content model | [schema.py](api/app/schema.py), [content.py](api/app/content.py), [graphql.py](api/app/graphql.py) | Field validation, private-field filtering, workspace queries, revisions, migrations, and publication transitions |
+| HTTP and query limits | [main.py](api/app/main.py), [query_limits.py](api/app/query_limits.py) | Request handling, GraphQL depth, selection count, and fragment traversal |
+| Accounts and persistence | [accounts.py](api/app/accounts.py), [security.py](api/app/security.py), [models.py](api/app/models.py), [migrations/](api/migrations/) | Permissions, sessions, tokens, database models, and Alembic migrations |
+| Media | [media_links.py](api/app/media_links.py), [storage.py](api/app/storage.py), [images.py](api/app/images.py) | Signed original/variant links, upload/download operations, bounded decoding, and image variants |
+| Admin | [pages/](web/src/pages/), [components/](web/src/components/), [lib/](web/src/lib/) | Screens, controls, API requests, locale/entry validation, and autosave recovery |
+| Editor and revisions | [Content.tsx](web/src/pages/Content.tsx), [EntryEditor.tsx](web/src/pages/EntryEditor.tsx), [revisions.ts](web/src/lib/revisions.ts) | Content library, shared entry editor, and revision comparison |
+| Example website | [src/](example-site/src/), [server/](example-site/server/) | Public components, delivery loading, cache, previews, publication events, routes, and metadata |
+| Shared and operator tools | [shared/](shared/), [scripts/](scripts/) | Markdown policy, website routes, configuration, backup/restore, and release acceptance |
 
 API tests live in `api/tests/`; admin and website server tests sit beside the code they exercise. Keep schema validation and public-data filtering shared between editorial saves, scheduled publication, delivery, and preview.
 
@@ -255,12 +345,12 @@ Use **SEO audit** to review draft and live records separately, inspect detected 
 
 ## Local development and checks
 
-Generate `.env` first. In separate terminals:
+Install **Python 3.12+ with uv** and **Node.js 22+ with npm**. Generate `.env` with `python3 scripts/configure.py` first. In separate terminals, starting from the repository root:
 
 ```sh
 cd api
 uv sync --locked --group dev
-uv run uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload --port 8001
 ```
 
 ```sh
@@ -269,7 +359,7 @@ npm ci
 npm run dev
 ```
 
-Local API development defaults to SQLite; set `DATABASE_URL` to use PostgreSQL. Vite proxies API/auth/media endpoints to port 8001. Ensure `http://localhost:5173` is in development `MOSS_ORIGINS`.
+Open the admin at [localhost:5173](http://localhost:5173). Local API development defaults to SQLite; set `DATABASE_URL` to use PostgreSQL. Vite proxies API/auth/media endpoints to port 8001. Ensure `http://localhost:5173` is in development `MOSS_ORIGINS`.
 
 ```sh
 cd api
@@ -321,6 +411,26 @@ Open [localhost:5174](http://localhost:5174). Select **Example website** in the 
 
 Restore `MOSS_SKIP_AUTH=false` in the root `.env` and run `docker compose up -d app` when setup is complete. The delivery token continues working. For authenticated manual setup, local Vite development, deployment to your own domain, and signed publication events, follow the [example site guide](example-site/README.md).
 
+## Documentation
+
+| If you want to… | Read |
+| --- | --- |
+| Run or publish a Docker image | [Docker setup and publishing](docs/docker.md) |
+| Operate, upgrade, or recover an instance | [Deployment and recovery](docs/deployment-recovery.md) |
+| Understand autosave, conflicts, revisions, or draft previews | [Editor workflows](docs/editor-workflows.md) |
+| Understand publishing and scheduling guarantees | [Publication contract](docs/publication-contract.md) |
+| Work with Markdown, images, or storage limits | [Markdown](docs/markdown.md), [images](docs/images.md) |
+| Configure provider sign-in or publication callbacks | [OAuth setup](docs/oauth-setup.md), [webhook protocol](docs/webhooks.md) |
+| Build a frontend or inspect SEO findings | [Example website](example-site/README.md), [SEO audit](docs/seo-audit.md) |
+| Contribute or understand implementation boundaries | [Contributing](CONTRIBUTING.md), [maintainability review](docs/maintainability-review.md) |
+
 ## Product plan
 
+[PRD](docs/PRD.md) · [Tasks and acceptance criteria](docs/planning/TASKS.md) · [Implementation ledger](docs/planning/IMPLEMENTATION.md) · [Release evidence](docs/release-acceptance-2026-10-08.md)
+
+<details>
+<summary>Planning history and Aftur tracking</summary>
+
 The [PRD](docs/PRD.md) retains the 7 October baseline and records the approved release scope. The [task breakdown](docs/planning/TASKS.md) includes acceptance criteria and dependencies. The original task plan is tracked in the local Aftur project at `ProjectMemory/MossCMS`; open that folder in Aftur to review the PRD and plan. The owner approved all 34 tasks in this chat on 8 October 2026; they are now implemented sequentially on feature branches integrated into local `main`. [Execution ledger](docs/planning/IMPLEMENTATION.md) and [release evidence](docs/release-acceptance-2026-10-08.md) record the result. Aftur MCP attempts/artifacts record execution; its unfinished workflow statuses may still show proposed/dependency blocks. The original Markdown/JSON plan retains that historical status and is not current implementation evidence.
+
+</details>
