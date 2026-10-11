@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { CalendarClock } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { gql, message, type Entry, type ContentType } from '../lib/api';
+import { gql, message, type Entry, type ContentType, type Project } from '../lib/api';
 import { EntryEditor } from './EntryEditor';
 
 const PUBLICATION_POLL_INTERVAL_MS = 15000;
 const PUBLICATION_PAGE_SIZE = 25;
 
-export function PublicationQueue({ types, role, onChanged }: {
+export function PublicationQueue({ types, role, onChanged, project }: {
   types: ContentType[];
+  project?: Project;
   role: string;
   onChanged: () => void;
 }) {
@@ -80,9 +81,13 @@ export function PublicationQueue({ types, role, onChanged }: {
         initialType={editor.typeKey}
         editable={role !== 'reader'}
         role={role}
+        projectId={project?.id}
+        previewOrigin={project?.previewOrigin}
+        defaultLocale={project?.defaultLocale}
+        locales={project?.locales}
         onClose={() => setEditor(null)}
-        onSaved={text => {
-          setEditor(null);
+        onSaved={(text, draft) => {
+          setEditor(draft || null);
           setNotice(text);
           setRefresh(r => r + 1);
           onChanged();

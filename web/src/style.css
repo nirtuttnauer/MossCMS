@@ -560,6 +560,8 @@ pre, .code-input { font-size: 13px !important; }
 .onboarding-step.active { border-color: #7ab284; box-shadow: 0 0 0 1px #7ab284, 0 2px 6px #2438250a; }
 .onboarding-step.done { background: #fafcfa; border-color: #ebf0e9; }
 .onboarding-step.upcoming { opacity: .75; }
+.onboarding-step.done, .onboarding-step.upcoming { padding-block: 10px; }
+.onboarding-step.done .step-content > p, .onboarding-step.upcoming .step-content > p { display: none; }
 .step-indicator { flex-shrink: 0; }
 .step-num { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: #ebf0ea; color: #5a6658; font-size: 13px; font-weight: 700; }
 .onboarding-step.active .step-num { background: #316d43; color: #fff; }

@@ -164,10 +164,57 @@ describe('OnboardingChecklist (TASK-35 / MC-35)', () => {
     expect(screen.getByText(/Readers cannot create content types/)).toBeTruthy()
   })
 
+  it('creates a narrow token inline, verifies it, and keeps its one-time secret out of storage and URLs', async () => {
+    const types: ContentType[] = [{ id: 't', key: 'article', name: 'Article', version: 1, fields: [] }]
+    vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: async () => ({ token: 'one-time-secret' }) } as Response)
+    vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: async () => ({ data: { entries: { nodes: [{ id: 'live' }] } } }) } as Response)
+    vi.mocked(gql).mockResolvedValueOnce({ entry: { id: 'live', isLive: true, typeKey: 'article' } })
+    render(<OnboardingChecklist project={adminProject} userId="user-1" role="admin" types={types} overview={{ ...emptyOverview, total: 1, published: 1 }} onChanged={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Create token & verify delivery' }))
+    await screen.findByText(/Delivery verified:/)
+    expect(JSON.parse(String(vi.mocked(fetch).mock.calls[0][1]?.body))).toEqual({ name: 'Article frontend', days: 90, scopes: ['article'] })
+    expect(screen.getByRole('dialog', { name: 'Save your delivery token' })).toBeDefined()
+    expect((screen.getByLabelText('New delivery token') as HTMLInputElement).value).toBe('one-time-secret')
+    expect(JSON.stringify(storage)).not.toContain('one-time-secret')
+    expect(location.hash).not.toContain('one-time-secret')
+    fireEvent.click(screen.getByRole('button', { name: 'I saved this token' }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByText('First published entry checklist')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Resume getting started guide' }))
+    expect(screen.getByRole('region', { name: 'Frontend connection' }).textContent).toContain('YOUR_DELIVERY_TOKEN')
+    expect(screen.getByRole('region', { name: 'Frontend connection' }).textContent).toContain('article')
+  })
+
   it('does not offer schema creation to editors', () => {
     render(<OnboardingChecklist project={adminProject} userId="user-1" role="editor" types={[]} overview={emptyOverview} onChanged={vi.fn()} />)
     expect(screen.queryByRole('button', { name: 'Add Article' })).toBeNull()
     expect(screen.getByText(/Editors cannot create content types/)).toBeTruthy()
+  })
+
+  it('opens the chosen type directly and opens the only draft in the correct workspace', async () => {
+    history.replaceState(null, '', '#content?workspace=wrong-workspace')
+    const types: ContentType[] = [{ id: 't', key: 'article', name: 'Article', version: 1, fields: [] }]
+    const props = { project: adminProject, userId: 'user-1', role: 'admin', types, onChanged: vi.fn() }
+    const { rerender } = render(<OnboardingChecklist {...props} overview={emptyOverview} />)
+    const link = screen.getByRole('link', { name: 'Create your first Article' })
+    const params = new URLSearchParams(link.getAttribute('href')!.split('?')[1])
+    expect(params.get('workspace')).toBe('proj-1')
+    expect(params.get('type')).toBe('article')
+    expect(params.get('entry')).toBe('new')
+    rerender(<OnboardingChecklist {...props} overview={{ ...emptyOverview, total: 1, drafts: 1 }} />)
+    vi.mocked(gql).mockResolvedValueOnce({ entries: { nodes: [{ id: 'first-draft', typeKey: 'article' }] } })
+    fireEvent.click(screen.getByRole('button', { name: 'Open a draft to publish' }))
+    await waitFor(() => expect(location.hash).toContain('entry=first-draft'))
+    expect(location.hash).toContain('workspace=proj-1')
+  })
+
+  it('offers an explicit filtered choice when multiple drafts exist', async () => {
+    const types: ContentType[] = [{ id: 't', key: 'article', name: 'Article', version: 1, fields: [] }]
+    render(<OnboardingChecklist project={adminProject} userId="user-1" role="editor" types={types} overview={{ ...emptyOverview, total: 2, drafts: 2 }} onChanged={vi.fn()} />)
+    vi.mocked(gql).mockResolvedValueOnce({ entries: { nodes: [{ id: 'a', typeKey: 'article' }, { id: 'b', typeKey: 'article' }] } })
+    fireEvent.click(screen.getByRole('button', { name: 'Open a draft to publish' }))
+    await waitFor(() => expect(location.hash).toContain('status=draft'))
+    expect(location.hash).not.toContain('entry=')
   })
 
   it('does not verify an empty delivery response or content from another workspace', async () => {

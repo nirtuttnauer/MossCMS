@@ -47,6 +47,7 @@ export function EntryEditor({
   projectId,
   defaultLocale = 'en',
   locales = ['en'],
+  previewOrigin,
 }: {
   entry: Entry | null
   types: ContentType[]
@@ -55,9 +56,10 @@ export function EntryEditor({
   editable: boolean
   role?: string
   onClose: () => void
-  onSaved: (text: string) => void
+  onSaved: (text: string, draft?: Entry) => void
   onCopyLink?: (entry: Entry) => void
   onDuplicate?: (entry: Entry) => void
+  previewOrigin?: string | null
   backLabel?: string
   projectId?: string
   defaultLocale?: string
@@ -137,7 +139,7 @@ export function EntryEditor({
       }
       const saved = await autosave.flush()
       if (status === 'draft') {
-        onSaved(seed && !initialEntry ? 'Duplicated draft saved. Original entry is unchanged.' : 'Draft saved. Existing live content and schedule are preserved.')
+        onSaved(seed && !initialEntry ? 'Duplicated draft saved. Original entry is unchanged.' : 'Draft saved. Existing live content and schedule are preserved.', saved || undefined)
         return
       }
       const operation={typeKey:key,slug,data,status,id:saved?.id,version:saved?.version,scheduledAt,requestKey:crypto.randomUUID()}
@@ -304,10 +306,11 @@ export function EntryEditor({
         <section className="publishing-panel" aria-label="Publishing options">
           <div className="publishing-title"><CalendarClock size={16} /><h2>Publishing</h2></div><p className="publishing-intro">{entry?.isLive ? 'You’re editing a draft. Your live content stays available until you publish.' : 'Choose when this entry becomes available to your frontends.'}</p>
           {status === 'published' && entry?.isLive && nextPath !== livePath && ['sitePost', 'siteProject', 'sitePage'].includes(key) && <p className="notice" role="status">Publishing changes the public URL from <code>{livePath}</code> to <code>{nextPath}</code>. The previous URL will redirect to the new URL while this entry is live. Draft saves keep the current public URL.</p>}
-          <div className="publishing-options" role="group" aria-label="Publishing status">{[
-            { value: 'draft', label: 'Save draft', description: 'Preserve live content and schedule' },
-            { value: 'published', label: 'Publish now', description: 'Make it available' },
-            { value: 'scheduled', label: entry?.scheduledAt ? 'Replace schedule' : 'Schedule', description: 'Capture these edits for later' },
+          <p className="field-help">Select a publishing mode, then use the action below.</p>
+          <div className="publishing-options" role="group" aria-label="Publishing mode">{[
+            { value: 'draft', label: 'Draft', description: 'Preserve live content and schedule' },
+            { value: 'published', label: 'Immediate publication', description: 'Publish when you confirm below' },
+            { value: 'scheduled', label: 'Scheduled publication', description: entry?.scheduledAt ? 'Replace the captured schedule' : 'Capture these edits for later' },
           ].filter(option => !isUnsavedDuplicate || option.value === 'draft').map(option => <button type="button" key={option.value} className={status === option.value ? 'selected' : ''} aria-pressed={status === option.value} onClick={() => setStatus(option.value)}><span>{option.label}{status === option.value && <Check size={12} />}</span><small>{option.description}</small></button>)}</div>
           {status === 'scheduled' ? <div className="schedule-fields"><label>Publish on<input type="datetime-local" required min={localDateTime(new Date(Date.now() + 60000))} value={schedule} onChange={event => setSchedule(event.target.value)} /></label><p className="field-help">Timezone: <strong>{timezone}</strong>. This captures the selected draft. Later draft edits will not change it. Existing live content stays available.</p></div> : <p className="field-help">{status === 'published' ? 'Publishing makes this entry available to your connected frontends.' : 'Draft saves preserve existing live content and any pending schedule.'}</p>}
           {entry?.scheduledAt && <p className="field-help">Scheduled revision {entry.scheduledRevision} for {timestamp(entry.scheduledAt)} ({timezone}). {entry.scheduledRevision !== entry.version && 'Newer draft changes are not scheduled. Use Replace schedule to include them.'}</p>}
@@ -316,7 +319,7 @@ export function EntryEditor({
           {editable && entry?.isLive && <Button type="button" variant="outline" onClick={() => publicationAction('unpublishEntry')}>Unpublish</Button>}
         </section>
       </fieldset>
-      {editable && initialEntry?.status !== 'deleted' && typeOrder.includes(key) && <section className="editor-surface preview-controls"><h2><Eye size={17} aria-hidden="true" />Website preview</h2><p>Review a saved draft on your website before publishing.</p><Button type="button" variant="outline" disabled={busy || isUnsavedDuplicate} onClick={preparePreview}>Save draft & prepare website preview</Button>{preview && <p><a href={preview.previewUrl} target="_blank" rel="noopener noreferrer">Open saved revision {preview.revision}</a> · expires {timestamp(preview.expiresAt)} <Button type="button" variant="outline" onClick={async()=>{try{await gql('mutation($id:ID!){revokePreviewGrant(id:$id)}',{id:preview.id});setPreview(null)}catch(reason){setError(message(reason))}}}>Revoke preview</Button></p>}</section>}
+      {editable && initialEntry?.status !== 'deleted' && typeOrder.includes(key) && <section className="editor-surface preview-controls"><h2><Eye size={17} aria-hidden="true" />Website preview</h2><p>Review a saved draft on your website before publishing.</p>{previewOrigin === null ? <p>{role === 'admin' ? <a className="button button-outline" href={`#settings?workspace=${encodeURIComponent(projectId || context.project)}&section=website-preview`}>Connect website preview</a> : 'Ask an administrator to connect the website preview in Settings.'}</p> : <Button type="button" variant="outline" disabled={busy || isUnsavedDuplicate} onClick={preparePreview}>Save draft & prepare website preview</Button>}{preview && <p><a href={preview.previewUrl} target="_blank" rel="noopener noreferrer">Open saved revision {preview.revision}</a> · expires {timestamp(preview.expiresAt)} <Button type="button" variant="outline" onClick={async()=>{try{await gql('mutation($id:ID!){revokePreviewGrant(id:$id)}',{id:preview.id});setPreview(null)}catch(reason){setError(message(reason))}}}>Revoke preview</Button></p>}</section>}
       {pendingPublication && <section role="status"><p>{publicationState || 'Saving publication…'}</p><Button type="button" disabled={busy} onClick={async()=>{setBusy(true);try{await checkPublication(pendingPublication,false)}catch(reason){setError(message(reason))}finally{setBusy(false)}}}>Check outcome</Button><Button type="button" variant="outline" disabled={busy} onClick={async()=>{setBusy(true);try{await checkPublication(pendingPublication,true)}catch(reason){setError(message(reason))}finally{setBusy(false)}}}>Retry same operation</Button></section>}
       <SeoEntryPanel entry={entry} dirty={autosave.dirty} projectId={projectId || context.project} />
       {entry && <section className="editor-surface history-controls"><h2><History size={17} aria-hidden="true" />Revision history</h2><p>Version {entry.version} · updated {timestamp(entry.updatedAt)}</p><div className="inline-form"><Button type="button" variant="outline" disabled={busy} onClick={loadHistory}>{history ? 'Refresh history' : 'History & restore'}</Button><Button type="button" variant="outline" disabled={busy} onClick={async () => { if (!history) await loadHistory(); setShowCompare(true) }}>Compare revisions & live</Button></div></section>}

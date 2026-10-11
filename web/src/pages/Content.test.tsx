@@ -40,7 +40,7 @@ test('lost publication response remains checkable without blind repeated publish
     return {entries:{nodes:[]},assets:[]}
   })
   render(<EntryEditor entry={entry} initialType="article" types={types} editable onClose={vi.fn()} onSaved={saved} />)
-  fireEvent.click(screen.getByRole('button',{name:/^Publish nowMake/}))
+  fireEvent.click(screen.getByRole('button',{name:/^Immediate publication/}))
   fireEvent.submit(screen.getByRole('button',{name:'Publish now'}).closest('form')!)
   await screen.findByText(/Publication outcome is unconfirmed/)
   expect(saved).not.toHaveBeenCalled()
@@ -198,7 +198,7 @@ test('server field errors populate inline field errors and error summary', async
   })
 
   render(<EntryEditor entry={entryItem} initialType="post" types={postTypes} editable onClose={vi.fn()} onSaved={vi.fn()} />)
-  fireEvent.click(screen.getByRole('button', { name: /^Publish now/ }))
+  fireEvent.click(screen.getByRole('button', { name: /^Immediate publication/ }))
   const form = screen.getByRole('button', { name: /^Publish now$/ }).closest('form')!
   fireEvent.submit(form)
 
@@ -342,7 +342,7 @@ test('publishing URL impact follows homepage canonical paths', async () => {
   const home = { ...entry, typeKey: 'sitePage', slug: 'home', data: { title: 'Home', kind: 'home' }, publishedSlug: 'home', publishedData: { title: 'Home', kind: 'home' } }
   render(<EntryEditor entry={home} types={[pageType]} initialType="sitePage" editable onSaved={vi.fn()} onClose={vi.fn()} />)
   fireEvent.change(screen.getByLabelText(/^Slug/), { target: { value: 'welcome' } })
-  fireEvent.click(screen.getByRole('button', { name: /^Publish nowMake/ }))
+  fireEvent.click(screen.getByRole('button', { name: /^Immediate publication/ }))
   expect(screen.queryByText(/Publishing changes the public URL/)).toBeNull()
   fireEvent.change(screen.getByLabelText('kind'), { target: { value: 'page' } })
   expect(screen.getByText(/Publishing changes the public URL/).textContent).toContain('from / to /welcome')

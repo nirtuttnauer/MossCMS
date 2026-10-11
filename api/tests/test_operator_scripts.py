@@ -20,7 +20,7 @@ def load_script(name):
     return module
 
 
-@pytest.mark.parametrize("name", ["backup", "restore", "restore_media", "configure"])
+@pytest.mark.parametrize("name", ["backup", "restore", "restore_media", "configure", "start"])
 def test_import_does_not_run_operator_commands(name, monkeypatch):
     def unexpected(*args, **kwargs):
         pytest.fail("Import must not parse CLI arguments or execute operator commands")
@@ -70,6 +70,66 @@ def test_configure_sqlite_production_preserves_secrets_and_boolean(tmp_path, mon
     monkeypatch.setattr(sys, "argv", ["configure", "--production", "--public-url", "https://cms.invalid"])
     script.main()
     assert file.read_text() == configured
+
+
+@pytest.mark.parametrize(
+    "arguments,port,origin",
+    [
+        (["--port", "18090"], "18090", "http://localhost:18090"),
+        (["--public-url", "http://localhost:18091"], "18091", "http://localhost:18091"),
+        (["--production", "--public-url", "https://cms.invalid", "--port", "18092"], "18092", "https://cms.invalid"),
+    ],
+)
+def test_configure_port_and_origin_agree_without_changing_secrets(tmp_path, monkeypatch, arguments, port, origin):
+    script = load_script("configure")
+    monkeypatch.setattr(script, "__file__", str(tmp_path / "scripts/configure.py"))
+    monkeypatch.setattr(sys, "argv", ["configure", *arguments])
+    script.main()
+    first = (tmp_path / ".env").read_text()
+    values = dict(line.split("=", 1) for line in first.splitlines())
+    assert values["MOSS_PORT"] == port
+    assert values["MOSS_PUBLIC_URL"] == origin
+    monkeypatch.setattr(sys, "argv", ["configure"])
+    script.main()
+    assert (tmp_path / ".env").read_text() == first
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["--port", "0"],
+        ["--port", "65536"],
+        ["--public-url", "http://localhost:18090", "--port", "18091"],
+        ["--public-url", "http://user:password@localhost:8001"],
+        ["--public-url", "http://localhost:8001/path"],
+    ],
+)
+def test_configure_rejects_conflicting_or_invalid_origins_before_writing(tmp_path, monkeypatch, arguments):
+    script = load_script("configure")
+    monkeypatch.setattr(script, "__file__", str(tmp_path / "scripts/configure.py"))
+    monkeypatch.setattr(sys, "argv", ["configure", *arguments])
+    with pytest.raises(SystemExit):
+        script.main()
+    assert not (tmp_path / ".env").exists()
+
+
+def test_start_requires_ready_compose_and_only_hands_setup_token_to_first_operator(tmp_path, monkeypatch, capsys):
+    script = load_script("start")
+    monkeypatch.setattr(script, "__file__", str(tmp_path / "scripts/start.py"))
+    (tmp_path / ".env").write_text(
+        "MOSS_PORT=18090\nMOSS_PUBLIC_URL=http://localhost:18090\nMOSS_SETUP_TOKEN=private-operator-token\n"
+    )
+    monkeypatch.setattr(script.shutil, "which", lambda name: "/usr/bin/docker")
+    calls = []
+    monkeypatch.setattr(script.subprocess, "run", lambda command, **kwargs: calls.append(command))
+    monkeypatch.setattr(sys, "argv", ["start"])
+    monkeypatch.setattr(script.urllib.request, "urlopen", lambda *args, **kwargs: io.BytesIO(b'{"initialized":false}'))
+    script.main()
+    assert "--wait" in calls[-1]
+    assert "private-operator-token" in capsys.readouterr().out
+    monkeypatch.setattr(script.urllib.request, "urlopen", lambda *args, **kwargs: io.BytesIO(b'{"initialized":true}'))
+    script.main()
+    assert "private-operator-token" not in capsys.readouterr().out
 
 
 @pytest.mark.parametrize("confirmation,count", [("other", "0"), ("target", "1")])

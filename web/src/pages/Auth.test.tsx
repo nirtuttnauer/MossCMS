@@ -3,6 +3,13 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { Auth } from './Auth'
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); location.hash = '' })
+it('distinguishes personal and workspace names and explains the password rule before submission', () => {
+  render(<Auth initialized={false} providers={[]} me={null} onSuccess={vi.fn()} />)
+  expect(screen.getByLabelText('Your name')).toBeDefined()
+  expect(screen.getByLabelText('Workspace name')).toBeDefined()
+  expect(screen.getByLabelText('Password').getAttribute('aria-describedby')).toBe('password-help')
+  expect(screen.getByText('Use at least 12 characters.')).toBeDefined()
+})
 it('shows configured OAuth providers without exposing provider credentials', () => {
   render(<Auth initialized providers={[{ id: 'oidc', name: 'Company SSO' }]} me={null} onSuccess={vi.fn()} />)
   expect(screen.getByRole('link', { name: 'Continue with Company SSO' }).getAttribute('href')).toBe('/auth/oauth/oidc/start')

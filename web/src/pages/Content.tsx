@@ -13,7 +13,7 @@ import { EntryEditor } from './EntryEditor'
 type Group = { key: string; name: string; count: number }
 const typeIcons = { siteProject: Folder, sitePost: NotebookPen, sitePage: FileText, siteSlide: Image, siteProfile: Settings2 }
 
-export function Content({ types, role, onChanged, projectId, defaultLocale = 'en', locales = ['en'] }: { types: ContentType[]; role: string; onChanged: () => void; projectId?: string; defaultLocale?: string; locales?: string[] }) {
+export function Content({ types, role, onChanged, projectId, defaultLocale = 'en', locales = ['en'], previewOrigin }: { types: ContentType[]; role: string; onChanged: () => void; projectId?: string; defaultLocale?: string; locales?: string[]; previewOrigin?: string | null }) {
   const initialRoute = readContentRoute(types)
   const acceptedHash = useRef(location.hash)
   const loadId = useRef(0)
@@ -217,7 +217,7 @@ export function Content({ types, role, onChanged, projectId, defaultLocale = 'en
     }
     setTrashBusy(false); setRefresh(old => old + 1)
   }
-  if (editor !== undefined && types.length > 0) return <>{notice && <p className="notice" role="status">{notice}</p>}<EntryEditor key={editor?.id || (seed ? `copy-${seed.id}` : 'new')} entry={editor} seed={seed} initialType={type} types={types} projectId={projectId} defaultLocale={defaultLocale} locales={locales} editable={editable} role={role} onClose={closeEditor} onSaved={text => { setNotice(text); setSeed(null); closeEditor(); setRefresh(old => old + 1); onChanged() }} onCopyLink={copyEntryLink} onDuplicate={duplicateEntry} /></>
+  if (editor !== undefined && types.length > 0) return <>{notice && <p className="notice" role="status">{notice}</p>}<EntryEditor key={editor?.id || (seed ? `copy-${seed.id}` : 'new')} entry={editor} seed={seed} initialType={type} types={types} projectId={projectId} previewOrigin={previewOrigin} defaultLocale={defaultLocale} locales={locales} editable={editable} role={role} onClose={closeEditor} onSaved={(text, draft) => { setNotice(text); setSeed(null); if (draft) { setEditor(draft); setHashParams(p => p.set('entry', draft.id)) } else closeEditor(); setRefresh(old => old + 1); onChanged() }} onCopyLink={copyEntryLink} onDuplicate={duplicateEntry} /></>
   return <>
     <div className="page-heading"><div><div className="eyebrow">CONTENT LIBRARY</div><h1 ref={listHeading} tabIndex={-1}>{selectedType?.name || 'Content'}</h1><p className="subtitle">Organize content by type. Publish now or plan ahead.</p></div>{editable && <Button disabled={!types.length} onClick={() => openEntry(null)}><Plus size={16} />{creationLabels[type] || 'New entry'}</Button>}</div>
     {!types.length && <p className="notice">Create a content type first in <a href="#types">Content types</a>.</p>}

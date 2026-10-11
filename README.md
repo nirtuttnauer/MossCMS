@@ -40,11 +40,10 @@ Clone, generate configuration, and start:
 ```sh
 git clone https://github.com/nirtuttnauer/MossCMS.git
 cd MossCMS
-python3 scripts/configure.py
-docker compose up --build -d
+python3 scripts/start.py
 ```
 
-Open [localhost:8001](http://localhost:8001). Create your first administrator using `MOSS_SETUP_TOKEN` from `.env`. Choose your own email and a password of at least 12 characters. Configuration is generated locally with random secrets; `.env` is excluded from builds and source control.
+The command checks Docker, creates private configuration, waits for readiness, and prints the URL and a private setup token for the local operator. Open [localhost:8001](http://localhost:8001), enter your name, workspace name, email, and a password of at least 12 characters. After setup, repeated startup keeps the existing account and does not print the token. Configuration is generated locally with random secrets; `.env` is excluded from builds and source control.
 
 > **Keep your data:** PostgreSQL and local uploads live in named Docker volumes. Recreating containers retains them; `docker compose down -v` deletes them. [Back up before upgrading](#backup-restore-and-upgrades).
 
@@ -63,6 +62,8 @@ For production, use `python3 scripts/configure.py --sqlite --production --public
 
 <details>
 <summary>Existing starter database or optional sample content</summary>
+
+To choose another local port, use `python3 scripts/start.py --port 8002`. Configuration aligns the public URL, trusted browser origins and host port. `--public-url http://localhost:8002` also aligns a local bind; production reverse-proxy origins remain independent.
 
 For an existing starter database, use `python3 scripts/configure.py --existing-db` before upgrading. This preserves its development password. The migration imports existing Articles and revisions into a workspace assigned to the first administrator, retaining the original table. Do not use starter database credentials in production.
 
@@ -116,8 +117,8 @@ flowchart LR
 2. **Define a content type.** Open **Content types** and create an `article` type. Add a required text field named `title` and a rich text field named `body`. Save the schema. The [field definition example](#define-data) shows nested objects, lists, locales, references, and assets.
 3. **Write an entry.** Open **Content**, select your Article group, and choose **New entry**. Enter a slug such as `hello-world`, fill in the title, and write the body. **Save draft** keeps the entry private; the editor also autosaves changes.
 4. **Add media.** Upload an image in **Assets**, then insert it through the Markdown editor's image picker or an asset field. Markdown stores durable asset IDs, so expiring download links are refreshed when content is read.
-5. **Publish.** Choose **Publish now** to make the entry live. To publish later, use **Schedule publication** and select a date in your browser's timezone. Later draft edits preserve the live version and captured schedule. **Publications** shows the queue and failed publications.
-6. **Connect a frontend.** In **Settings**, create a delivery token scoped to `article`. Copy it once, keep it on your server, and query published content:
+5. **Publish.** Choose **Immediate publication**, then confirm with **Publish now** to make the entry live. To publish later, use **Schedule publication** and select a date in your browser's timezone. Later draft edits preserve the live version and captured schedule. **Publications** shows the queue and failed publications.
+6. **Connect a frontend.** Use **Create token & verify delivery** in the getting-started guide to create a 90-day token scoped to `article`, or create a token in **Settings**. Copy it once, keep it on your server, and query published content:
 
 ```sh
 export MOSS_DELIVERY_TOKEN='YOUR_DELIVERY_TOKEN'
@@ -374,7 +375,7 @@ npm ci
 npm run dev
 ```
 
-Open the admin at [localhost:5173](http://localhost:5173). Local API development defaults to SQLite; set `DATABASE_URL` to use PostgreSQL. Vite proxies API/auth/media endpoints to port 8001. Ensure `http://localhost:5173` is in development `MOSS_ORIGINS`.
+Open the admin at [localhost:5173](http://localhost:5173). Local API development defaults to SQLite; set `DATABASE_URL` to use PostgreSQL. Vite proxies API/auth/media endpoints to port 8001. Ensure `http://localhost:5173` is in development `MOSS_ORIGINS`. For a different API port, pass that port to Uvicorn and set `VITE_BACKEND_URL=http://localhost:YOUR_PORT` before `npm run dev`.
 
 ```sh
 cd api
@@ -383,13 +384,13 @@ uv run ruff format --check app tests migrations
 uv run ruff check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
 uv run ruff format --check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
 uv run mypy app
-uv run pytest
+MOSS_USE_SQLITE=false uv run pytest
 ```
 
-The API suite defaults to SQLite. To run it against PostgreSQL (which exercises JSON path casts, `SKIP LOCKED`, and advisory locks that SQLite silently no-ops), point it at an admin connection; each test uses its own throwaway database and is cleaned up afterward:
+The API suite uses isolated temporary databases. `MOSS_USE_SQLITE=false` keeps the application’s local `.env` backend selection from overriding those test databases; SQLite-specific tests enable their own configuration. To run it against PostgreSQL (which exercises JSON path casts, `SKIP LOCKED`, and advisory locks that SQLite silently no-ops), point it at an admin connection; each test uses its own throwaway database and is cleaned up afterward:
 
 ```sh
-MOSS_TEST_DATABASE_URL='postgresql+psycopg://USER:***@HOST:5432/DB' uv run pytest
+MOSS_USE_SQLITE=false MOSS_TEST_DATABASE_URL='postgresql+psycopg://USER:***@HOST:5432/DB' uv run pytest
 ```
 
 ```sh
@@ -414,17 +415,18 @@ CI runs the same checks. Tests cover authorization and workspace boundaries, tok
 
 [example-site/](example-site/README.md) is a standalone Vite + React frontend with generic starter content. It demonstrates projects, blog posts, editable pages, Markdown, media, draft previews, and a configurable home showcase. A Node server keeps the delivery token private and reads published content through `/delivery/graphql`.
 
-For local development, temporarily set `MOSS_SKIP_AUTH=true` in the root `.env`, then run from the repository root:
+With the CMS running and normal sign-in enabled, run from the repository root. The setup command prompts for your administrator email and password:
 
 ```sh
-docker compose up -d app
 python3 example-site/scripts/setup_moss.py
 docker compose --profile website up --build -d example-site
 ```
 
 Open [localhost:5174](http://localhost:5174). Select **Example website** in the CMS workspace menu to edit its content. The setup script creates five content types, sample entries, and a scoped server-only delivery token in the ignored `example-site/.env`; rerunning it preserves edits.
 
-Restore `MOSS_SKIP_AUTH=false` in the root `.env` and run `docker compose up -d app` when setup is complete. The delivery token continues working. For authenticated manual setup, local Vite development, deployment to your own domain, and signed publication events, follow the [example site guide](example-site/README.md).
+The workspace belongs to the administrator who ran setup; no authentication bypass is needed. For local Vite development, deployment to your own domain, and signed publication events, follow the [example site guide](example-site/README.md).
+
+If an older bypass setup left the workspace without members, recover only that workspace with `docker compose exec app python -m app.cli claim-workspace --project WORKSPACE_ID --email ADMIN_EMAIL`. The operator command refuses any workspace that already has members.
 
 ## Documentation
 

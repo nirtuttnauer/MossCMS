@@ -11,14 +11,15 @@ from sqlalchemy import select
 from .config import Settings
 from .content import save_entry, save_type
 from .migrate import migrate
-from .models import Membership, Token, User, database
+from .models import Membership, Project, Token, User, database
+from .development import DEVELOPMENT_USER_ID
 from .security import audit, issue_token
 
 
 def main():
     load_dotenv()
     parser = argparse.ArgumentParser(description="MossCMS operator tools")
-    parser.add_argument("command", choices=["serve", "migrate", "reset-password", "seed"])
+    parser.add_argument("command", choices=["serve", "migrate", "reset-password", "claim-workspace", "seed"])
     parser.add_argument("--email")
     parser.add_argument("--project")
     args = parser.parse_args()
@@ -49,6 +50,21 @@ def main():
                 raw, _ = issue_token(session, "reset", days=1, user_id=user.id, email=user.email)
                 audit(session, None, "operator", "account.recovery.issue", userId=user.id)
                 print(settings.public_url + "/#reset/" + raw)
+        elif args.command == "claim-workspace":
+            if not args.email or not args.project:
+                parser.error("--email and --project are required; recovery is limited to one unowned workspace")
+            with factory.begin() as session:
+                project = session.scalar(select(Project).where(Project.id == args.project).with_for_update())
+                if not project:
+                    parser.error("Workspace not found")
+                if session.scalar(select(Membership.user_id).where(Membership.project_id == project.id).limit(1)):
+                    parser.error("Workspace already has members; ask its administrator for an invitation")
+                user = session.scalar(select(User).where(User.email == args.email.strip().lower()))
+                if not user or user.id == DEVELOPMENT_USER_ID:
+                    parser.error("Real administrator account not found")
+                session.add(Membership(project_id=project.id, user_id=user.id, role="admin"))
+                audit(session, project.id, "operator", "project.claim", userId=user.id)
+                print(json.dumps({"claimed": project.id, "administrator": user.email}))
         elif args.command == "seed":
             if not args.project:
                 parser.error("--project is required; seeding is always explicit")

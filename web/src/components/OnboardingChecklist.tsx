@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef, type FormEvent } from 'react'
+import { useState, useEffect, useId, useRef, type FormEvent } from 'react'
 import { Check, CheckCircle2, ArrowRight, ShieldAlert, Sparkles, X } from 'lucide-react'
 import { Button } from './ui/button'
-import { getContext, gql, message, REQUEST_TIMEOUT_MS, saveContentTypeMutation, type ContentType, type Project } from '../lib/api'
+import { getContext, gql, rest, message, REQUEST_TIMEOUT_MS, saveContentTypeMutation, type ContentType, type Project } from '../lib/api'
 import { toSchema, TYPE_TEMPLATES } from '../lib/fields'
+import { contentHash, readContentRoute } from '../lib/navigation'
+import { Dialog } from './ui/dialog'
+import { DeliveryHandoff } from './DeliveryHandoff'
 
 type Overview = { total: number; published: number; drafts: number; scheduled: number; types: number; assets: number; members: number }
 
@@ -30,6 +33,7 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
   const dismissKey = `moss-onboarding-dismissed-${userId}-${project.id}`
   const verifyKey = `moss-onboarding-verified-${userId}-${project.id}`
   const generation = useRef(0)
+  const summaryId = useId()
 
   const [dismissed, setDismissed] = useState<boolean>(() => getStorage(dismissKey) === 'true')
   const [verified, setVerified] = useState<boolean>(() => getStorage(verifyKey) === 'true')
@@ -37,6 +41,13 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
   const [testStatus, setTestStatus] = useState<{ loading: boolean; error?: string; success?: string }>({ loading: false })
   const [creatingTemplate, setCreatingTemplate] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [starterType, setStarterType] = useState(() => getStorage(verifyKey + '-type') || '')
+  const [openingDraft, setOpeningDraft] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [newToken, setNewToken] = useState('')
+  const [tokenNotice, setTokenNotice] = useState('')
+  const nextType = types.find(type => type.key === starterType) || types[0]
+  const newEntryHref = contentHash({ ...readContentRoute(), workspace: project.id, type: nextType?.key || '', entry: 'new', field: '', seoSnapshot: '' })
 
   // Re-sync dismissal and verified status when project changes
   useEffect(() => {
@@ -46,6 +57,11 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
     setTokenInput('')
     setTestStatus({ loading: false })
     setError('')
+    setStarterType(getStorage(verifyKey + '-type') || '')
+    setOpeningDraft(false)
+    setExpanded(false)
+    setNewToken('')
+    setTokenNotice('')
     return () => { generation.current += 1 }
   }, [dismissKey, verifyKey])
 
@@ -57,6 +73,7 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
 
   const completedCount = (step1Done ? 1 : 0) + (step2Done ? 1 : 0) + (step3Done ? 1 : 0) + (step4Done ? 1 : 0)
   const allDone = completedCount === 4
+  useEffect(() => { if (allDone && !expanded && !newToken) document.getElementById(summaryId)?.focus() }, [allDone, expanded, newToken, summaryId])
 
   // Single actionable next step
   const activeStep = !step1Done ? 1 : !step2Done ? 2 : !step3Done ? 3 : !step4Done ? 4 : 5
@@ -69,6 +86,7 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
   const handleResume = () => {
     removeStorage(dismissKey)
     setDismissed(false)
+    setExpanded(true)
   }
 
   const handleCreateTemplate = async (templateName: string) => {
@@ -89,7 +107,7 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
           migration: {},
         }
       )
-      if (generation.current === current) onChanged()
+      if (generation.current === current) { setStarterType(templateName.toLowerCase()); onChanged() }
     } catch (reason) {
       if (generation.current === current) setError(message(reason))
     } finally {
@@ -97,11 +115,25 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
     }
   }
 
-  const handleTestDelivery = async (e: FormEvent) => {
-    e.preventDefault()
+  const openDraft = async () => {
     const current = generation.current
+    setOpeningDraft(true)
+    setError('')
+    try {
+      const result = await gql<{ entries: { nodes: { id: string; typeKey: string }[] } }>('{entries(status:"draft",first:2){nodes{id typeKey}}}')
+      if (generation.current !== current) return
+      const drafts = result.entries.nodes
+      if (!drafts.length) throw new Error('No unpublished draft is available. Open Content to choose an entry.')
+      location.hash = contentHash({ ...readContentRoute(), workspace: project.id, type: drafts.length === 1 ? drafts[0].typeKey : '', entry: drafts.length === 1 ? drafts[0].id : '', status: drafts.length === 1 ? '' : 'draft', search: '', field: '', seoSnapshot: '' })
+    } catch (reason) {
+      if (generation.current === current) setError(message(reason))
+    } finally {
+      if (generation.current === current) setOpeningDraft(false)
+    }
+  }
+
+  const verifyDelivery = async (cleanToken: string, current: number) => {
     const context = getContext()
-    const cleanToken = tokenInput.trim()
     if (!cleanToken) {
       setTestStatus({ loading: false, error: 'Enter a delivery token to test.' })
       return
@@ -148,11 +180,12 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
         })
         return
       }
-      const editorial = await gql<{ entry: { id: string; isLive: boolean } | null }>(
-        'query($id:ID!){entry(id:$id){id isLive}}', { id: delivered.id }, context
+      const editorial = await gql<{ entry: { id: string; isLive: boolean; typeKey?: string } | null }>(
+        'query($id:ID!){entry(id:$id){id isLive typeKey}}', { id: delivered.id }, context
       )
       if (generation.current !== current) return
       if (!editorial.entry?.isLive) throw new Error('Use a delivery token for this workspace and a currently published entry.')
+      if (editorial.entry.typeKey) { setStarterType(editorial.entry.typeKey); setStorage(verifyKey + '-type', editorial.entry.typeKey) }
 
       // Successful verification
       setStorage(verifyKey, 'true')
@@ -172,18 +205,43 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
     }
   }
 
-  if (dismissed) {
+  const handleTestDelivery = (e: FormEvent) => {
+    e.preventDefault()
+    return verifyDelivery(tokenInput.trim(), generation.current)
+  }
+
+  const createAndVerify = async () => {
+    if (role !== 'admin' || !nextType || testStatus.loading) return
+    const current = generation.current
+    setTestStatus({ loading: true })
+    try {
+      const result = await rest<{ token: string }>('/api/tokens', 'POST', { name: `${nextType.name} frontend`, days: 90, scopes: [nextType.key] })
+      if (generation.current !== current) return
+      setNewToken(result.token)
+      setTokenNotice('')
+      await verifyDelivery(result.token, current)
+    } catch (reason) {
+      if (generation.current === current) setTestStatus({ loading: false, error: message(reason) })
+    }
+  }
+
+  const tokenDialog = newToken && <Dialog title="Save your delivery token" open onClose={() => setNewToken('')}><p>This token reads only {nextType?.name} content and expires in 90 days. Copy it to your frontend server’s private environment before closing; it will not be shown again.</p><label>New delivery token<input type="password" readOnly value={newToken} autoComplete="off" /></label><Button type="button" onClick={async () => { try { await navigator.clipboard.writeText(newToken); setTokenNotice('Token copied.') } catch { setTokenNotice('Select and copy the token above.') } }}>Copy token</Button>{tokenNotice && <p role="status">{tokenNotice}</p>}{testStatus.error && <p role="alert">{testStatus.error}</p>}<Button type="button" variant="outline" onClick={() => setNewToken('')}>I saved this token</Button></Dialog>
+
+  if (dismissed || allDone && !expanded) {
     return (
       <div className="onboarding-resumer" aria-label="Onboarding checklist">
         <Button
+          id={summaryId}
           type="button"
           variant="outline"
           onClick={handleResume}
           aria-label="Resume getting started guide"
         >
           <Sparkles size={14} className="mr-1" />
-          Setup checklist ({completedCount}/4)
+          {allDone ? 'Workspace ready! — Connection details' : `Setup checklist (${completedCount}/4)`}
         </Button>
+        {allDone && <><p className="notice" role="status">Delivery verified: published content is available through the API. <span>Verified securely</span></p><Button type="button" variant="ghost" onClick={() => { removeStorage(verifyKey); removeStorage(dismissKey); setVerified(false); setDismissed(false) }}>Test another token</Button></>}
+        {tokenDialog}
       </div>
     )
   }
@@ -301,9 +359,10 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
                     <ShieldAlert size={14} /> Readers cannot create entries.
                   </p>
                 ) : (
-                  <a href="#content" className="button button-sm">
-                    Go to Content to draft an entry <ArrowRight size={14} />
-                  </a>
+                  <>
+                    {types.length > 1 && <label>Content type<select value={nextType?.key || ''} onChange={event => setStarterType(event.target.value)}>{types.map(type => <option key={type.key} value={type.key}>{type.name}</option>)}</select></label>}
+                    <a href={newEntryHref} className="button button-sm">Create your first {nextType?.name || 'entry'} <ArrowRight size={14} /></a>
+                  </>
                 )}
               </div>
             )}
@@ -334,9 +393,7 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
                   </p>
                 ) : (
                   <div>
-                    <a href="#content" className="button button-sm">
-                      Open Content and publish <ArrowRight size={14} />
-                    </a>
+                    <Button type="button" disabled={openingDraft} onClick={openDraft}>{openingDraft ? 'Opening…' : 'Open a draft to publish'} <ArrowRight size={14} /></Button>
                     {overview?.drafts ? (
                       <small className="block mt-1 muted">
                         You have {overview.drafts} unpublished draft(s). Draft saves do not satisfy publication.
@@ -369,9 +426,7 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
             {!step4Done && activeStep === 4 && (
               <div className="step-actions">
                 {role === 'admin' && (
-                  <p className="step-help">
-                    Create or manage delivery tokens in <a href="#settings">Settings &rarr; Delivery tokens</a>, then paste a token below to verify.
-                  </p>
+                  <div className="step-help">{types.length > 1 && <label>Frontend content type<select value={nextType?.key || ''} onChange={event => setStarterType(event.target.value)}>{types.map(type => <option key={type.key} value={type.key}>{type.name}</option>)}</select></label>}<p>Create a token for {nextType?.name} and verify delivery here. It expires in 90 days.</p><Button type="button" disabled={testStatus.loading || !nextType} onClick={createAndVerify}>{testStatus.loading ? 'Verifying…' : 'Create token & verify delivery'}</Button><p>Already have a token? Paste it below. Manage tokens in <a href={`#settings?workspace=${encodeURIComponent(project.id)}&section=delivery-tokens`}>Settings &rarr; Delivery tokens</a>.</p></div>
                 )}
                 {role !== 'admin' && (
                   <p className="step-role-note">
@@ -427,11 +482,13 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
                     Test another token
                   </Button>
                 </div>
+                <DeliveryHandoff typeKey={nextType?.key || ''} />
               </div>
             )}
           </div>
         </li>
       </ol>
+      {tokenDialog}
     </section>
   )
 }

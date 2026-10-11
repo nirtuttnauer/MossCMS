@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '../components/ui/button'
 import { gql, message, type ContentType } from '../lib/api'
+import { DeliveryHandoff } from '../components/DeliveryHandoff'
 
 export function Explorer({ types }: { types: ContentType[] }) {
   const [query, setQuery] = useState('{ entries(first: 5) { nodes { id slug status data } total endCursor hasNextPage } }')
@@ -8,6 +9,8 @@ export function Explorer({ types }: { types: ContentType[] }) {
   const [token, setToken] = useState('')
   const [output, setOutput] = useState('Run a query to see its result.')
   const [busy, setBusy] = useState(false)
+  const [handoffType, setHandoffType] = useState('')
+  const selectedType = types.find(type => type.key === handoffType) || types[0]
 
   async function run(event: FormEvent) {
     event.preventDefault()
@@ -83,6 +86,7 @@ export function Explorer({ types }: { types: ContentType[] }) {
         <h2>Result</h2>
         <pre role="status">{output}</pre>
       </section>
+      {selectedType && <section className="plain-card">{types.length > 1 && <label>Integration content type<select value={selectedType.key} onChange={event => setHandoffType(event.target.value)}>{types.map(type => <option key={type.key} value={type.key}>{type.name}</option>)}</select></label>}<DeliveryHandoff typeKey={selectedType.key} /></section>}
     </>
   )
 }

@@ -41,9 +41,11 @@ export function Auth({ initialized, providers, onSuccess, me }: { initialized: b
           <h1 id="auth-title">{title}</h1>
           <p>{!initialized ? 'Set up the first administrator account.' : reset ? 'Use the email associated with this recovery link.' : invite && !signingIn ? 'Accept your invitation using the invited email address.' : 'Sign in to manage content and your team.'}</p>
         </div>
-        {(!initialized || (invite && !signingIn && !me)) && <label>Name<input name="name" required maxLength={100} autoComplete="name" /></label>}
+        {(!initialized || (invite && !signingIn && !me)) && <label>Your name<input name="name" required maxLength={100} autoComplete="name" /></label>}
+        {!initialized && <label>Workspace name<input name="workspaceName" required maxLength={100} placeholder="My website" /></label>}
         <label>Email<input name="email" type="email" required defaultValue={me?.user.email} autoComplete="email" placeholder="you@example.com" /></label>
-        {!(invite && me && !signingIn) && <label>{reset ? 'New password' : 'Password'}<input name="password" type="password" required minLength={!initialized || reset || (invite && !signingIn) ? 12 : 1} maxLength={128} autoComplete={reset || !initialized || invite ? 'new-password' : 'current-password'} /></label>}
+        {!(invite && me && !signingIn) && <label>{reset ? 'New password' : 'Password'}<input name="password" type="password" required minLength={!initialized || reset || (invite && !signingIn) ? 12 : 1} maxLength={128} aria-describedby={!initialized || reset || (invite && !signingIn) ? 'password-help' : undefined} autoComplete={reset || !initialized || invite ? 'new-password' : 'current-password'} /></label>}
+        {(!initialized || reset || (invite && !signingIn)) && <small id="password-help">Use at least 12 characters.</small>}
         {!initialized && <label>Setup token<input name="token" type="password" required /><small>Find MOSS_SETUP_TOKEN in the server’s .env configuration.</small></label>}
         {error && <p className="form-error" role="alert">{error}</p>}
         <Button disabled={busy} type="submit">{busy ? 'Please wait…' : title === 'Welcome back' ? 'Sign in' : invite ? 'Accept invitation' : reset ? 'Set password' : 'Create administrator'}{!busy && <ArrowRight size={17} aria-hidden="true" />}</Button>
