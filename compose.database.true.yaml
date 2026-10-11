@@ -1,0 +1,15 @@
+# Replacing db stops an existing Postgres container without deleting its volume.
+services:
+  app:
+    environment:
+      MOSS_USE_SQLITE: "true"
+    depends_on:
+      db:
+        condition: service_completed_successfully
+  db:
+    image: ${MOSS_IMAGE:-nirtuttnauer/mosscms:latest}
+    entrypoint: [/bin/true]
+    restart: "no"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]

@@ -14,6 +14,7 @@ def main():
         help="Preserve the original starter database password for development.",
     )
     parser.add_argument("--production", action="store_true")
+    parser.add_argument("--sqlite", action="store_true", help="Use persistent SQLite instead of PostgreSQL.")
     parser.add_argument("--public-url", default="http://localhost:8001")
     args = parser.parse_args()
     if args.production and not args.public_url.startswith("https://"):
@@ -34,6 +35,7 @@ def main():
         "MOSS_SETUP_TOKEN": secrets.token_urlsafe(32),
         "MOSS_ENV": "production" if args.production else "development",
         "MOSS_SKIP_AUTH": "false",
+        "MOSS_USE_SQLITE": "false",
         "MOSS_PUBLIC_URL": args.public_url,
         "MOSS_ORIGINS": args.public_url
         if args.production
@@ -41,12 +43,18 @@ def main():
         "MOSS_PORT": "8001",
     }.items():
         values.setdefault(key, value)
+    if args.sqlite:
+        values["MOSS_USE_SQLITE"] = "true"
     if args.production:
         values["MOSS_ENV"] = "production"
         values["MOSS_SKIP_AUTH"] = "false"
         values["MOSS_PUBLIC_URL"] = args.public_url
         values["MOSS_ORIGINS"] = args.public_url
-    if args.production and values["POSTGRES_PASSWORD"] == "change-me":
+    if (
+        args.production
+        and values["MOSS_USE_SQLITE"].lower() not in {"true", "1", "yes"}
+        and values["POSTGRES_PASSWORD"] == "change-me"
+    ):
         parser.error(
             "Existing development credentials cannot be used in production; rotate the database password first."
         )

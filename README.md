@@ -48,6 +48,19 @@ Open [localhost:8001](http://localhost:8001). Create your first administrator us
 
 > **Keep your data:** PostgreSQL and local uploads live in named Docker volumes. Recreating containers retains them; `docker compose down -v` deletes them. [Back up before upgrading](#backup-restore-and-upgrades).
 
+### Run with SQLite
+
+Set the boolean `MOSS_USE_SQLITE=true` in `.env` to use SQLite without a separate database service. The configuration script can set it for you:
+
+```sh
+python3 scripts/configure.py --sqlite
+docker compose up --build -d
+```
+
+SQLite stores the database at `/data/mosscms.db` in the persistent `moss_assets` volume, alongside local uploads. The flag overrides `DATABASE_URL` and PostgreSQL settings. Normal starts and upgrades need no additional flags. Compose replaces any existing Postgres container with a container that exits immediately, preserving its database volume. No Postgres process runs in SQLite mode.
+
+For production, use `python3 scripts/configure.py --sqlite --production --public-url https://cms.example.com`. Use one app instance with SQLite; choose PostgreSQL for multiple app instances or heavy concurrent writes. Switching backends selects a separate database; it does not transfer existing content. See [SQLite backup and recovery](docs/deployment-recovery.md#sqlite-backup-and-recovery).
+
 <details>
 <summary>Existing starter database or optional sample content</summary>
 
@@ -293,7 +306,7 @@ python3 scripts/configure.py --production --public-url https://cms.example.com
 docker compose up --build -d
 ```
 
-Terminate TLS at a reverse proxy and proxy to the default `127.0.0.1:8001` binding. Set `MOSS_PUBLIC_URL` to the canonical HTTPS origin and `MOSS_ORIGINS` to an explicit comma-separated list of trusted HTTPS browser origins. Avoid wildcard CORS. PostgreSQL has no published host port. The app runs without root, with a read-only root filesystem and separate writable media/temp volumes. Production rejects missing secrets, SQLite, default PostgreSQL passwords, and HTTP origins.
+Terminate TLS at a reverse proxy and proxy to the default `127.0.0.1:8001` binding. Set `MOSS_PUBLIC_URL` to the canonical HTTPS origin and `MOSS_ORIGINS` to an explicit comma-separated list of trusted HTTPS browser origins. Avoid wildcard CORS. PostgreSQL has no published host port. The app runs without root, with a read-only root filesystem and separate writable media/temp volumes. Production rejects missing secrets, SQLite without `MOSS_USE_SQLITE=true`, default PostgreSQL passwords, and HTTP origins.
 
 For an existing database, changing `.env` alone does not rotate its password: change the PostgreSQL role password through an operator connection and update `.env` together. Preserve secret values for upgrades. Changing `MOSS_SECRET_KEY` invalidates pending OAuth state and signed media links. Protect database backups because they include account/session data.
 
@@ -308,6 +321,8 @@ docker compose up -d --no-build app
 ```
 
 Creates timestamped PostgreSQL custom-format dumps and local media archives under `backups/`, with restrictive permissions. Stopping the app pauses editorial writes, scheduling and webhook workers. Media backup uses a temporary container without application startup; stop the website too if it is in use. For S3, separately enable object versioning and back up the bucket; the local archive does not contain S3 objects.
+
+For SQLite, use the [SQLite backup and recovery procedure](docs/deployment-recovery.md#sqlite-backup-and-recovery) instead of the PostgreSQL dump tools. The database and local media form one archive of `/data`.
 
 Restore into an **existing empty database** on the Compose database service:
 

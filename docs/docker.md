@@ -1,6 +1,6 @@
 # Docker images and Compose
 
-MossCMS uses one multistage image for the Python API and compiled React admin. The runtime runs as UID 10001, listens on port 8001, stores local media in `/data`, and checks database readiness at `/ready`. Startup applies database migrations before serving. PostgreSQL is required; `compose.yaml` provides it along with persistent database and media volumes.
+MossCMS uses one multistage image for the Python API and compiled React admin. The runtime runs as UID 10001, listens on port 8001, stores local media in `/data`, and checks database readiness at `/ready`. Startup applies database migrations before serving. By default, `compose.yaml` provides PostgreSQL with persistent database and media volumes. Set `MOSS_USE_SQLITE=true` to use SQLite in the media volume instead.
 
 ## Run from Docker Hub
 
@@ -21,6 +21,18 @@ Open http://localhost:8001 and create your first administrator using `MOSS_SETUP
 For a fresh production instance, generate configuration with `python3 scripts/configure.py --production --public-url https://cms.example.com` instead. Terminate TLS at a reverse proxy forwarding to the default loopback binding. Follow [deployment and recovery](deployment-recovery.md) for authentication, proxy, storage and backup configuration.
 
 `MOSS_PORT` changes only the host port. Keep the default `MOSS_BIND_HOST=127.0.0.1` when using a host reverse proxy. The container's port and health check remain on 8001.
+
+## Run without PostgreSQL
+
+```sh
+python3 scripts/configure.py --sqlite
+docker compose pull app
+docker compose up --no-build -d --wait
+```
+
+`--sqlite` sets the boolean `MOSS_USE_SQLITE=true` in `.env`. For a local build, replace `--no-build` with `--build`. Production also supports SQLite: add `--production --public-url https://cms.example.com` to the configuration command. The SQLite database persists at `/data/mosscms.db`, including when S3 stores uploads.
+
+With `MOSS_USE_SQLITE=true`, ordinary `docker compose up` stops any existing Postgres container and starts the app without PostgreSQL credentials; `false` or an unset flag keeps the PostgreSQL dependency. SQLite mode replaces `db` with the app image running `/bin/true`, which exits immediately without mounting or changing the Postgres data volume. After the app is ready, the optional website can start with `docker compose --profile website up --build -d example-site`. Use one app instance and preserve the data volume. Switching backends does not migrate content. Follow [SQLite backup and recovery](deployment-recovery.md#sqlite-backup-and-recovery).
 
 ## Build locally
 
