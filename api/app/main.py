@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import mimetypes
 import secrets
 import time
 from contextlib import asynccontextmanager, suppress
@@ -297,6 +298,8 @@ def create_app(settings=None):
         return JSONResponse(payload, headers=headers)
 
     static = Path(__file__).resolve().parents[1] / "static"
+    # Slim runtimes may not have a system WebP MIME mapping.
+    mimetypes.add_type("image/webp", ".webp")
     if (static / "assets").exists():
         app.mount("/assets", StaticFiles(directory=static / "assets"), name="assets")
     if (static / "brand").exists():
