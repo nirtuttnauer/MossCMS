@@ -1,6 +1,6 @@
 {
   "project": "MossCMS",
-  "checked_at": "2026-10-11T17:45:37.300973+00:00",
+  "checked_at": "2026-10-11T18:14:14.405713+00:00",
   "goal_chat": "01a12bd6-1673-77a1-8ad9-b1a70e4a893c",
   "automation": {
     "id": "mosscms-ticket-swarm-loop",
@@ -11,7 +11,7 @@
   "mcp": {
     "helper": "/Users/nirtuttnauer/Documents/Code/Aftur/Scripts/aftur_mcp.py",
     "project_path": "/Users/nirtuttnauer/Documents/Code/MossCMS/ProjectMemory/MossCMS",
-    "revision": 527,
+    "revision": 533,
     "direct_connector_selects": "Aftur app project; do not use for MossCMS"
   },
   "audited_tickets": [
@@ -50,7 +50,7 @@
     33,
     34
   ],
-  "audit_result": "TASK-1 through TASK-34 audited, explicitly human-accepted and verified Done through fresh scoped MCP. TASK-36 through TASK-44 implementation reviewed and human-accepted with recorded verification limits; fresh MCP verifies Done.",
+  "audit_result": "TASK-1 through TASK-44 are explicitly human-accepted and verified Done through fresh scoped MCP. TASK-45 remains Review and partial; no outcome acceptance exists.",
   "acceptance_roots": [
     "TASK-1",
     "TASK-7",
@@ -59,12 +59,15 @@
     "TASK-28",
     "TASK-30"
   ],
-  "next_action": "TASK-45 remains Review and partial. Complete owner-deferred versioned Chromium and spoken VoiceOver evidence when the owner supplies it or authorizes the needed review environment. Retest canceled dirty navigation and pointer locale-group summary targeting. Do not repeatedly rerun proven flows or ask the same deferred questions.",
+  "next_action": "Owner-deferred versioned standalone Chromium and human spoken VoiceOver checks remain unverified. Resume them only when the owner supplies evidence or authorizes an available review environment, then obtain human outcome acceptance. Do not repeat completed Safari checks or deferred questions.",
   "other_active_chat": {
     "id": "01a12b05-f979-7d71-a8db-0c4db599ac55",
     "title": "Add MossCMS improvement tickets",
     "owned_tickets": "TASK-35 through TASK-45",
-    "latest_observation": "Add MossCMS improvement tickets completed at wait cursor7534d012-cd4f-4181-a86b-fff4c935b210:26; owner final report integrated. Root supplementary Safari first-use and IAB validation/default-locale checks completed afterward. Temporary root browser/window/viewport cleaned and fixture services stopped."
+    "latest_observation": "Owning improvement chat authoritatively completed its Safari continuation and cleanup at cursor103. ATTEMPT-121 records native keyboard/pointer validation, cancellation, comparison, images and upload evidence; root may reconcile and commit the saved results.",
+    "status": "completed",
+    "turn_id": "01a12c04-c95b-7533-8bf6-327af71e4ff4",
+    "terminal_cursor": "7534d012-cd4f-4181-a86b-fff4c935b210:103"
   },
   "source_changes_this_swarm": [
     "web/src/lib/revisions.ts",
@@ -88,14 +91,15 @@
     },
     "api_mypy": "passed: 19 source files",
     "ruff_lint": "passed",
-    "ruff_format": "scripts/editor_acceptance_fixture.py needs formatting; owned by currently active acceptance chat, deferred to avoid overlapping writes"
+    "ruff_format": "Earlier observation only; not a current formatting verification.",
+    "source": "Earlier root baseline audit; latest integration results are separately attributed in reported_integration_verification."
   },
   "limits": [
-    "TASK-45 remains partial; no outcome acceptance",
+    "TASK-45 remains partial; no human outcome acceptance",
     "Standalone Chromium and spoken VoiceOver remain owner-deferred manual checks",
-    "Canceled dirty navigation and pointer locale-group summary focus are unverified; missing-object group browser variant rejected by validated API",
+    "Artificial null required-object browser state remains automated-only; exact browser history-index preservation is not established",
     "No production deployment/live S3/external OAuth or production-data restore",
-    "Implementation remains in existing working tree; narrow evidence commit only; no push"
+    "Implementation remains in existing working tree; narrow evidence commits only; no push"
   ],
   "tasks": [
     {
@@ -470,12 +474,12 @@
     "onboarding_source": "Direct human answer in current chat on 11 October 2026 after review of three agent-operated first-use walkthroughs; proposed human activation metric remains unmeasured."
   },
   "remaining_acceptance": {
-    "TASK-45": "TASK-45 remains Review and partial. Complete owner-deferred versioned Chromium and spoken VoiceOver evidence when the owner supplies it or authorizes the needed review environment. Retest canceled dirty navigation and pointer locale-group summary targeting. Do not repeatedly rerun proven flows or ask the same deferred questions."
+    "TASK-45": "Owner-deferred versioned standalone Chromium and human spoken VoiceOver checks remain unverified. Resume them only when the owner supplies evidence or authorizes an available review environment, then obtain human outcome acceptance. Do not repeat completed Safari checks or deferred questions."
   },
   "reported_integration_verification": {
-    "source": "docs/editor-acceptance-2026-10-11.md and owning improvement chat; not a repeated root test run",
-    "web_passed": 178,
-    "web_test_files": 26,
+    "source": "Final owning improvement chat and docs/editor-acceptance-2026-10-11.md; latest web suite/typecheck/build rerun by that chat, earlier API/PostgreSQL/site results not repeated by root",
+    "web_passed": 271,
+    "web_test_files": 28,
     "api_passed": 123,
     "api_skipped": 2,
     "website_passed": 42,
@@ -506,8 +510,22 @@
     "safari": "27.0.1 build22625.1.29.11.28; fresh emptyworkspace 4/4, exactdeliverybody, dismissal/reload/resume, actualBack/Forward filterrestoration",
     "elapsed_seconds_including_native_interruption": 461,
     "iab": "Engineversionunexposed;390x844 list/locale/group keyboardsummaryfocus,zero recovery,hedefaultnewentry",
-    "cleanup": "Agentwindow/tabclosed;viewportreset;owned18114/15114servicesstopped;private token removed;fixturesretained"
+    "cleanup": "Agentwindow/tabclosed;viewportreset;owned18114/15114servicesstopped;private token removed;fixturesretained",
+    "keyboard_source": "docs/acceptance-2026-10-11/safari-keyboard.md",
+    "safari_keyboard": "Safari27.0.1 actual200% list/locale group and pointer/Enter recovery; comparison tab keys/trap and Restore Cancel focus; saved-entry/duplicate dirty navigation retention and explicit discard; library image alt/insertion/preview; oldest of160 reference selection; native upload at100%; exact final draftv5, no live/schedule/persisted duplicate; identical saved-value recovery remainsv4.",
+    "keyboard_cleanup": "Owned native/IAB tabs closed, Safari100% and prior Audit tab restored; API/UI sessions terminal and no18115/15115 listeners. Temporary fixture/config retained for reproduction."
   },
   "evidence_commit": "adba95b",
-  "evidence_commit_scope": "20 acceptance evidence/helper/PostgreSQL-test files; existing implementation changes excluded; no push"
+  "evidence_commit_scope": "20 acceptance evidence/helper/PostgreSQL-test files; existing implementation changes excluded; no push",
+  "evidence_commits": [
+    "adba95b",
+    "9fc4a31"
+  ],
+  "pending_evidence_commit": "Latest Safari keyboard note and six screenshots, updated main report, historical first-use limitation correction and this ledger; implementation excluded.",
+  "latest_owner_attempt": "ATTEMPT-121",
+  "impasse_audit": {
+    "condition": "Only owner-deferred Chromium/spoken VoiceOver evidence and subsequent human TASK-45 outcome acceptance remain; no ready tasks or live swarm job.",
+    "consecutive_turns_without_safe_progress": 0,
+    "reason": "This turn makes concrete progress reconciling, committing and checkpointing the final Safari evidence. Start counting only future turns where this condition prevents safe progress."
+  }
 }
