@@ -51,6 +51,27 @@ def test_configure_preserves_existing_secrets_and_refuses_unsafe_production(tmp_
         assert file.read_text() == configured
 
 
+def test_configure_sqlite_production_preserves_secrets_and_boolean(tmp_path, monkeypatch):
+    script = load_script("configure")
+    monkeypatch.setattr(script, "__file__", str(tmp_path / "scripts/configure.py"))
+    file = tmp_path / ".env"
+    original = "POSTGRES_PASSWORD=change-me\nMOSS_SECRET_KEY=kept-secret\nMOSS_SETUP_TOKEN=kept-token\n"
+    file.write_text(original)
+    monkeypatch.setattr(sys, "argv", ["configure", "--sqlite", "--production", "--public-url", "https://cms.invalid"])
+
+    script.main()
+
+    configured = file.read_text()
+    assert "MOSS_USE_SQLITE=true\n" in configured
+    assert "MOSS_ENV=production\n" in configured
+    assert "MOSS_SKIP_AUTH=false\n" in configured
+    assert all(line in configured for line in original.splitlines())
+    assert file.stat().st_mode & 0o777 == 0o600
+    monkeypatch.setattr(sys, "argv", ["configure", "--production", "--public-url", "https://cms.invalid"])
+    script.main()
+    assert file.read_text() == configured
+
+
 @pytest.mark.parametrize("confirmation,count", [("other", "0"), ("target", "1")])
 def test_restore_rejects_mismatched_confirmation_or_nonempty_database(confirmation, count, monkeypatch):
     script = load_script("restore")

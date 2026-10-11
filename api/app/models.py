@@ -1,7 +1,9 @@
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, create_engine, event
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 
@@ -149,6 +151,10 @@ class Audit(Base):
 
 
 def database(url):
+    if url.startswith("sqlite"):
+        filename = make_url(url).database
+        if filename and filename != ":memory:":
+            Path(filename).parent.mkdir(parents=True, exist_ok=True)
     engine = create_engine(
         url, pool_pre_ping=True, connect_args={"check_same_thread": False} if url.startswith("sqlite") else {}
     )

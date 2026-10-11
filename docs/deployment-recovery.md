@@ -4,7 +4,9 @@ Run commands from the repository root. [Release evidence](release-acceptance-202
 
 ## Configuration and first deployment
 
-For a fresh instance, run `python3 scripts/configure.py --production --public-url https://cms.example.com`, review `.env`, then `docker compose up --build -d`. Preserve generated secrets and keep `.env` private. Existing development databases require an operator password rotation before production; changing `.env` alone does not change a PostgreSQL role password. Production rejects development auth bypass, SQLite, default database credentials and HTTP browser origins.
+For a fresh instance, run `python3 scripts/configure.py --production --public-url https://cms.example.com`, review `.env`, then `docker compose up --build -d`. Preserve generated secrets and keep `.env` private. Existing development databases require an operator password rotation before production; changing `.env` alone does not change a PostgreSQL role password. Production rejects development auth bypass, SQLite without an explicit opt-in, default database credentials and HTTP browser origins.
+
+To use SQLite without a separate database service, add `--sqlite` to the configuration command, which sets `MOSS_USE_SQLITE=true`, and start with `docker compose up --build -d`. Compose selects the active services from the boolean, so no additional startup flags are needed. SQLite persists at `/data/mosscms.db` in `moss_assets`, even with S3 uploads. Run one app instance; switching backends does not migrate content. Compose replaces any existing Postgres container with one that exits immediately, so no Postgres process keeps running; its database volume is preserved.
 
 For a published Docker Hub image, set `MOSS_IMAGE` in `.env` to a published `nirtuttnauer/mosscms` version or digest, run `docker compose pull app db`, then `docker compose up --no-build -d --wait app`. The same configuration, volumes and recovery tools apply. See [Docker publishing and upgrades](docker.md).
 
@@ -59,9 +61,11 @@ docker compose stop app
 python3 scripts/backup.py
 ```
 
-The backup tool uses a temporary container for the media archive and bypasses application startup, so the app may remain stopped. It creates restrictive timestamped `.dump` and `.media.tar.gz` files under `backups/`. Restart with `docker compose up -d --no-build app` when backup completes; recreate/start the website if it was stopped. `--database-only` omits media and is appropriate only when you have a separate matching media backup. Copy backups off-host and validate recovery regularly. S3 objects require their own backup/versioning procedure.
+The backup tool uses a temporary container for the media archive and bypasses application startup, so the app may remain stopped. It creates restrictive timestamped `.dump` and `.media.tar.gz` files under `backups/`. Restart with `docker compose up -d --no-build` when backup completes; recreate/start the website if it was stopped. `--database-only` omits media and is appropriate only when you have a separate matching media backup. Copy backups off-host and validate recovery regularly. S3 objects require their own backup/versioning procedure.
 
 ## Restore a matched backup/image pair
+
+The PostgreSQL procedure below uses `.dump` files. For SQLite, use [SQLite backup and recovery](#sqlite-backup-and-recovery).
 
 Use a separate empty database and a **new** media volume. Keep the original database/media untouched until checks pass. For rollback use the old application image and its pre-upgrade database/media/configuration together. Do not run `alembic downgrade` or point an old image at the upgraded database: independent live/working/scheduled snapshots cannot be represented safely in older schemas.
 
@@ -98,6 +102,20 @@ Use a separate empty database and a **new** media volume. Keep the original data
 4. Set root `.env` `POSTGRES_DB=mosscms_recovery`, preserving the matching credentials/secrets and storage configuration. Start the selected retained image with `docker compose up -d --no-deps --no-build app`. `--no-deps` keeps the running database service untouched; `--no-build` prevents replacing the retained image. Wait for `/ready`, verify sign-in, workspace/type/entry counts, known IDs/slugs/history, representative public/private delivery and original/variant media. Start the matching website image and check public paths, metadata/feeds, preview and publication propagation before reopening access.
 
 The restore script refuses non-empty databases and uses a single restore transaction. Retain original volumes and the recovery override while using them; subsequent commands must select the same Compose files. Never use `docker compose down -v` on an instance whose data you intend to keep.
+
+## SQLite backup and recovery
+
+Stop the app and optional website before archiving `/data`; this captures the SQLite database and local uploads together. Keep the matching image and private `.env`, and back up S3 objects separately if used. The PostgreSQL `backup.py` and `restore.py` commands do not handle SQLite.
+
+```sh
+docker compose stop app
+umask 077
+mkdir -p backups
+docker compose run --rm --no-deps -T --entrypoint tar app -C /data -czf - . > "backups/$(date -u +%Y%m%dT%H%M%SZ).sqlite-data.tar.gz"
+docker compose up -d --no-build
+```
+
+Check that the archive command succeeds before retaining the backup; discard an incomplete archive. To recover, stop writers and select the retained image plus a **new empty** assets volume using the recovery override above. Restore the archive with `python3 scripts/restore_media.py backups/TIMESTAMP.sqlite-data.tar.gz --confirm-empty-volume`; this restores the SQLite file and media together without starting the app. Keep `MOSS_USE_SQLITE=true` and the matching secrets, then start with `docker compose up -d --no-build`. Verify readiness, sign-in, content and media before reopening access. Keep the original volume until recovery is confirmed.
 
 ## Forward upgrade
 

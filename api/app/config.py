@@ -36,7 +36,7 @@ def normalized_origins(origins: list[str], environment: str) -> list[str]:
 
 @dataclass
 class Settings:
-    database_url: str = field(default_factory=configured_database)
+    database_url: str = ""
     environment: str = field(default_factory=lambda: os.getenv("MOSS_ENV", "development"))
     skip_auth: bool = field(
         default_factory=lambda: os.getenv("MOSS_SKIP_AUTH", "false").lower() in {"true", "1", "yes"}
@@ -57,6 +57,15 @@ class Settings:
         default_factory=lambda: [x.rstrip("/") for x in os.getenv("MOSS_WEBHOOK_ORIGINS", "").split(",") if x]
     )
     max_upload: int = 20 * 1024 * 1024
+    use_sqlite: bool = field(
+        default_factory=lambda: os.getenv("MOSS_USE_SQLITE", "false").lower() in {"true", "1", "yes"}
+    )
+
+    def __post_init__(self):
+        if self.use_sqlite:
+            self.database_url = f"sqlite:///{self.storage_dir / 'mosscms.db'}"
+        elif not self.database_url:
+            self.database_url = configured_database()
 
     def validate(self):
         if self.skip_auth and self.environment != "development":
@@ -72,6 +81,9 @@ class Settings:
             from sqlalchemy.engine import make_url
 
             url = make_url(self.database_url)
-            if url.drivername.startswith("sqlite") or url.password in {None, "", "change-me", "mosscms"}:
+            if url.drivername.startswith("sqlite"):
+                if not self.use_sqlite:
+                    raise RuntimeError("Production SQLite requires MOSS_USE_SQLITE=true.")
+            elif url.password in {None, "", "change-me", "mosscms"}:
                 raise RuntimeError("Production requires PostgreSQL and a non-default database password.")
         return self

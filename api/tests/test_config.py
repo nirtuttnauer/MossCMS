@@ -124,19 +124,84 @@ def test_slash_only_origin_keeps_existing_validation_behavior(settings):
 
 
 @pytest.mark.parametrize(
-    "database_url",
+    "database_url,message",
     [
-        "sqlite:///fake.db",
-        "postgresql://fake-user:change-me@db.invalid/fake-db",
-        "postgresql://fake-user@db.invalid/fake-db",
+        ("sqlite:///fake.db", "Production SQLite requires MOSS_USE_SQLITE=true."),
+        (
+            "postgresql://fake-user:change-me@db.invalid/fake-db",
+            "Production requires PostgreSQL and a non-default database password.",
+        ),
+        (
+            "postgresql://fake-user@db.invalid/fake-db",
+            "Production requires PostgreSQL and a non-default database password.",
+        ),
     ],
 )
-def test_production_database_guard_still_runs_after_normalization(settings, database_url):
+def test_production_database_guard_still_runs_after_normalization(settings, database_url, message):
     settings.environment = "production"
     settings.database_url = database_url
 
     with pytest.raises(RuntimeError) as error:
         settings.validate()
 
-    assert str(error.value) == "Production requires PostgreSQL and a non-default database password."
+    assert str(error.value) == message
     assert settings.origins == ["https://cms.invalid"]
+
+
+@pytest.mark.parametrize("flag", ["true", "TRUE", "1", "yes"])
+def test_sqlite_flag_overrides_postgres_and_database_url(flag, tmp_path, monkeypatch):
+    monkeypatch.setenv("MOSS_USE_SQLITE", flag)
+    monkeypatch.setenv("MOSS_STORAGE_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("DATABASE_URL", "postgresql://unused.invalid/db")
+    monkeypatch.setenv("POSTGRES_HOST", "unused.invalid")
+    monkeypatch.delenv("POSTGRES_PASSWORD", raising=False)
+
+    settings = Settings()
+
+    assert settings.use_sqlite is True
+    assert settings.database_url == f"sqlite:///{tmp_path / 'data' / 'mosscms.db'}"
+
+
+@pytest.mark.parametrize("flag", [None, "false", "0", "no"])
+def test_disabled_sqlite_flag_preserves_database_url(flag, monkeypatch):
+    if flag is None:
+        monkeypatch.delenv("MOSS_USE_SQLITE", raising=False)
+    else:
+        monkeypatch.setenv("MOSS_USE_SQLITE", flag)
+    url = "postgresql+psycopg://user:password@db.invalid/db"
+    monkeypatch.setenv("DATABASE_URL", url)
+
+    settings = Settings()
+
+    assert settings.use_sqlite is False
+    assert settings.database_url == url
+
+
+def test_explicit_sqlite_setting_runs_in_production_and_retains_data(tmp_path):
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    settings = Settings(
+        use_sqlite=True,
+        environment="production",
+        skip_auth=False,
+        secret="s" * 32,
+        setup_token="t" * 24,
+        storage_dir=tmp_path / "persistent" / "data",
+        public_url="https://cms.invalid",
+        origins=["https://cms.invalid"],
+    )
+    with TestClient(create_app(settings), base_url="https://cms.invalid") as client:
+        assert client.get("/ready").status_code == 200
+        response = client.post(
+            "/auth/setup",
+            json={"token": "t" * 24, "email": "admin@example.com", "password": "secure-test-password", "name": "Admin"},
+        )
+        assert response.status_code == 200, response.text
+        assert client.get("/auth/me").status_code == 200
+    assert (settings.storage_dir / "mosscms.db").is_file()
+    with TestClient(create_app(settings), base_url="https://cms.invalid") as client:
+        response = client.post("/auth/login", json={"email": "admin@example.com", "password": "secure-test-password"})
+        assert response.status_code == 200, response.text
+        assert client.get("/auth/me").status_code == 200

@@ -1,17 +1,17 @@
 services:
   app:
+    extends:
+      file: compose.database.${MOSS_USE_SQLITE:-false}.yaml
+      service: app
     image: ${MOSS_IMAGE:-nirtuttnauer/mosscms:latest}
     build:
       context: .
       args:
         VITE_GRAPHQL_URL: /graphql
     environment:
-      POSTGRES_HOST: db
-      POSTGRES_DB: ${POSTGRES_DB:?Run python3 scripts/configure.py}
-      POSTGRES_USER: ${POSTGRES_USER:?Run python3 scripts/configure.py}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run python3 scripts/configure.py}
       PORT: 8001
       MOSS_ENV: ${MOSS_ENV:-development}
+      MOSS_USE_SQLITE: ${MOSS_USE_SQLITE:-false}
       MOSS_SKIP_AUTH: ${MOSS_SKIP_AUTH:-false}
       MOSS_SECRET_KEY: ${MOSS_SECRET_KEY:?Run python3 scripts/configure.py}
       MOSS_SETUP_TOKEN: ${MOSS_SETUP_TOKEN:?Run python3 scripts/configure.py}
@@ -38,9 +38,6 @@ services:
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
-    depends_on:
-      db:
-        condition: service_healthy
     restart: unless-stopped
   example-site:
     profiles: [website]
@@ -62,19 +59,9 @@ services:
     security_opt: [no-new-privileges:true]
     restart: unless-stopped
   db:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:?Run python3 scripts/configure.py}
-      POSTGRES_USER: ${POSTGRES_USER:?Run python3 scripts/configure.py}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run python3 scripts/configure.py}
-    volumes:
-      - moss_data:/var/lib/postgresql/data
-    healthcheck:
-      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    restart: unless-stopped
+    extends:
+      file: compose.database.${MOSS_USE_SQLITE:-false}.yaml
+      service: db
 volumes:
   moss_data:
   moss_assets:
