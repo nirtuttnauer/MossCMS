@@ -85,6 +85,12 @@ class Named(BaseModel):
 class Setup(Login, Named):
     name: str = Field(min_length=1, max_length=100)
     token: str = Field(max_length=256)
+    workspace_name: str = Field(default="My workspace", min_length=1, max_length=100, alias="workspaceName")
+
+    @field_validator("workspace_name")
+    @classmethod
+    def clean_workspace_name(cls, value: str) -> str:
+        return cls.clean_name(value)
 
 
 class Invitation(BaseModel):
@@ -138,7 +144,7 @@ def setup(body: Setup, request: Request, response: Response):
         session.add(user)
         project = session.scalar(select(Project).order_by(Project.created_at).limit(1))
         if not project:
-            project = Project(name="My workspace")
+            project = Project(name=body.workspace_name)
             session.add(project)
         session.flush()
         session.add(Membership(project_id=project.id, user_id=user.id, role="admin"))

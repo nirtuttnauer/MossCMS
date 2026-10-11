@@ -32,6 +32,29 @@ All twelve actionable hurdles are saved as **TASK-46–TASK-57** in the existing
 
 The proposed streamlined path is: ready local startup → named workspace → starter type → first draft → clear publish action → inline token verification → frontend handoff and preview → compact completed guide. No application code was changed by this audit. Cold installation, external hosting/TLS, OAuth, S3, Safari and screen-reader checks remain unverified.
 
+## Implemented fixes
+
+The owner subsequently authorized all twelve fixes, with P1 work first. The changes are implemented in the working tree and verified in a separate PostgreSQL/Docker review instance. [Implementation and check results](../onboarding-fixes-2026-10-12/results.json) retain the details for each ticket.
+
+| Ticket | Result |
+| --- | --- |
+| TASK-46 | Example setup authenticates as its administrator; access survives sign-out/sign-in. An operator can recover only an explicitly selected workspace with no members. |
+| TASK-47 | Development API and Vite proxy both use port 8001; prerequisites and custom ports are documented. |
+| TASK-51 | Checklist actions open the selected type's new editor or the actual first draft. Multiple drafts open an explicit filtered choice. |
+| TASK-52 | Publishing modes have distinct labels; one Publish now action performs publication. |
+| TASK-48 | Local ports, public URL and origins align, conflicting flags are rejected, and existing secrets are preserved. |
+| TASK-49 | `python3 scripts/start.py` checks Docker, waits for readiness, prints the actual URL and gives the first local operator a private setup-token handoff. |
+| TASK-50 | Setup separates personal/workspace names and displays the password requirement. Old API clients retain the default workspace name. |
+| TASK-53 | Token creation and delivery verification happen inside the guide, using a 90-day type scope and a one-time secret dialog. Settings links focus the relevant section. |
+| TASK-54 | Explicit draft saves keep the author in the editor and update a new draft's durable URL. |
+| TASK-55 | Completed onboarding folds into a resumable summary; content creation stays visible on mobile. |
+| TASK-56 | Example setup configures the trusted preview origin and preserves existing configuration; an unconnected editor offers the connection step. |
+| TASK-57 | The guide and explorer provide a copyable server-side integration example for the actual endpoint/type and explain how to initialize the example website. |
+
+Validation: **274 API tests passed** with the test backend explicitly isolated from the local `.env`; two optional checks were skipped. **292 frontend tests passed**, along with TypeScript, the frontend build, Ruff checks/formatting and the API's configured mypy check. Chromium verified setup, in-place saving, direct guide actions, publication, inline token verification, 375px/390px and landscape layouts, normal-auth example setup and rerun, a saved-draft preview and published website rendering. The copied curl example returned the intended published Article. The operator recovery command was also exercised against PostgreSQL and refused a second claim of an owned fixture workspace.
+
+The [final mobile screen](../onboarding-fixes-2026-10-12/07-final-mobile.png), [saved preview](../onboarding-fixes-2026-10-12/05-authenticated-preview.png) and [published website](../onboarding-fixes-2026-10-12/06-public-website.png) show the result. Eleven tickets are in **Review**. TASK-56's implementation is recorded and verified, while its Aftur claim remains gated on human acceptance of TASK-46; the dependency and approval rules were retained. No ticket was self-accepted as Done. The fixes are now deployed to the primary local CMS at http://localhost:8001. Its existing SQLite database passed integrity checks; all 13 entries, 29 revisions, schemas, tokens and local files were preserved. Private backups and a rollback image are retained. First administrator setup remains pending, matching the state before deployment; normal authentication remains enabled. The personal website at port 5174 still responds successfully.
+
 ## Review against the completed README
 
 The audit reproduced an older working-tree snapshot based on `a47713d`. While it was running, the separate README chat committed and pushed [`9321596`](https://github.com/nirtuttnauer/MossCMS/commit/9321596), adding `--port 8001` to the local Uvicorn command. That addresses the primary mismatch reported in ONB-02 / TASK-47. Custom-port guidance and the intended API/proxy isolation checks remain unevaluated in this integration review, so TASK-47 remains proposed. An attributed review note is saved in Aftur at revision 567.

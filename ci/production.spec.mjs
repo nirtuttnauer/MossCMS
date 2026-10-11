@@ -70,7 +70,8 @@ test('production setup, login and branding on desktop and mobile', async ({ page
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Create your workspace' })).toBeVisible();
   await loginLayout('setup-desktop', true);
-  await page.getByLabel('Name', { exact: true }).fill('Docker Smoke Test');
+  await page.getByLabel('Your name', { exact: true }).fill('Docker Smoke Test');
+  await page.getByLabel('Workspace name', { exact: true }).fill('Docker Smoke Workspace');
   await page.getByLabel('Email', { exact: true }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByLabel(/^Setup token/).fill('ci-only-setup-token-not-for-production');

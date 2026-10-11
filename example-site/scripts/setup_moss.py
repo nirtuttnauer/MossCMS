@@ -3,7 +3,10 @@
 
 import argparse
 import copy
+import getpass
+import http.cookiejar
 import json
+import os
 import re
 import urllib.error
 import urllib.request
@@ -35,12 +38,22 @@ def merge_fields(existing, desired):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--cms-url", default="http://localhost:8001")
+    parser.add_argument(
+        "--email",
+        default=os.getenv("MOSS_ADMIN_EMAIL"),
+        help="Administrator email; prompted if omitted.",
+    )
     parser.add_argument("--name", default="Moss Example")
     parser.add_argument("--headline", default="A working example of a website powered by MossCMS.")
+    parser.add_argument(
+        "--website-url",
+        help="Trusted website origin for the public site and saved-draft previews.",
+    )
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     defaults = json.loads((root / "src/content-defaults.json").read_text())
     headers = {"Content-Type": "application/json"}
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 
     def request(path, body=None, method=None):
         req = urllib.request.Request(
@@ -50,7 +63,7 @@ def main():
             method=method,
         )
         try:
-            with urllib.request.urlopen(req, timeout=20) as response:
+            with opener.open(req, timeout=20) as response:
                 return json.load(response)
         except urllib.error.HTTPError as error:
             detail = json.loads(error.read()).get("detail", f"HTTP {error.code}")
@@ -88,16 +101,35 @@ def main():
             },
         )["saveEntry"]
 
-    if not request("/auth/status").get("authSkipped"):
-        raise SystemExit(
-            "Automatic setup needs MOSS_SKIP_AUTH=true in the local CMS. See README.md for authenticated setup."
-        )
+    status = request("/auth/status")
+    if status.get("authSkipped"):
+        raise SystemExit("Disable MOSS_SKIP_AUTH before setup so the website belongs to your administrator account.")
+    if not status.get("initialized"):
+        raise SystemExit("Create your first administrator in the CMS before initializing the website.")
+    try:
+        email = args.email or input("Administrator email: ").strip()
+        password = os.getenv("MOSS_ADMIN_PASSWORD") or getpass.getpass("Administrator password: ")
+    except (EOFError, KeyboardInterrupt):
+        raise SystemExit("Provide --email and enter your administrator password to continue.") from None
+    request("/auth/login", {"email": email, "password": password})
     account = request("/auth/me")
     headers["X-Moss-CSRF"] = account["csrf"]
     project = next((p for p in account["projects"] if p["name"] == "Example website"), None)
     if not project:
         project = request("/api/projects", {"name": "Example website"})
+    elif project.get("role") != "admin":
+        raise SystemExit("An administrator of Example website must run setup.")
     headers["X-Moss-Project"] = project["id"]
+    env_file = root / ".env"
+    values = {}
+    if env_file.exists():
+        for line in env_file.read_text().splitlines():
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                values[key] = value
+    website_url = args.website_url or values.get("SITE_PUBLIC_URL", "http://localhost:5174")
+    if not project.get("previewOrigin"):
+        request("/api/project/preview", {"origin": website_url}, "PATCH")
 
     profile_fields = [
         text_field("name", required=True),
@@ -167,12 +199,20 @@ def main():
         text_field("focalY", "number"),
         {"name": "fit", "type": "enum", "options": ["cover", "contain"]},
     ]
-    cover_field = {"name": "cover", "label": "Cover image", "type": "object", "fields": image_fields}
+    cover_field = {
+        "name": "cover",
+        "label": "Cover image",
+        "type": "object",
+        "fields": image_fields,
+    }
     gallery_field = {
         "name": "gallery",
         "label": "Project gallery",
         "type": "list",
-        "item": {"type": "object", "fields": image_fields + [text_field("caption", "richText")]},
+        "item": {
+            "type": "object",
+            "fields": image_fields + [text_field("caption", "richText")],
+        },
     }
     slide_fields = [
         text_field("title", required=True),
@@ -422,13 +462,6 @@ def main():
                 {**data, "textColor": "#F2F4F6", "enabled": True, "speed": 1},
             )
 
-    env_file = root / ".env"
-    values = {}
-    if env_file.exists():
-        for line in env_file.read_text().splitlines():
-            if line and not line.startswith("#") and "=" in line:
-                key, value = line.split("=", 1)
-                values[key] = value
     scopes = {"siteProfile", "sitePage", "siteSlide", "siteProject", "sitePost"}
     token = values.get("MOSS_DELIVERY_TOKEN", "") if values.get("MOSS_PROJECT_ID") == project["id"] else ""
     if token:
@@ -458,7 +491,7 @@ def main():
         MOSS_DELIVERY_TOKEN=token,
     )
     values.setdefault("PORT", "5174")
-    values.setdefault("SITE_PUBLIC_URL", "http://localhost:5174")
+    values["SITE_PUBLIC_URL"] = website_url
     env_file.write_text("\n".join(f"{key}={value}" for key, value in values.items()) + "\n")
     env_file.chmod(0o600)
     print("Example website workspace: " + project["id"])

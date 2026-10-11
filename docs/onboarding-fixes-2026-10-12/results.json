@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-12",
+  "browser": "Chromium 156.0.8078.4",
+  "environment": "Separate empty PostgreSQL/media volumes; Compose project mosscms-onboarding-fixes; CMS 18086 and website 18087. Current working tree includes existing unrelated SQLite/Compose changes, which were retained.",
+  "records": {
+    "TASK-46": {
+      "priority": "P1",
+      "change": "Authenticated bootstrap uses a cookie-retaining session; one-workspace operator recovery refuses existing members.",
+      "verification": "Real API bootstrap/rerun/content preservation tests; real PostgreSQL recovery scoped to one fixture; browser logout/login retains Example website access."
+    },
+    "TASK-47": {
+      "priority": "P1",
+      "change": "README API command explicitly uses port 8001 and documents uv/Python/Node and custom Vite backend configuration.",
+      "verification": "README and Vite target both use 8001, with a consistent custom-port example."
+    },
+    "TASK-51": {
+      "priority": "P1",
+      "change": "Creation links carry workspace/type and open the editor; publication guide opens the single draft or an explicit filtered choice.",
+      "verification": "Unit tests cover route parameters and multiple drafts; actual browser caught and verified correction of the programmatic navigation event. A delayed-search regression reproduced an old-workspace URL overwrite without the guard and passed after preventing route writes to another workspace."
+    },
+    "TASK-52": {
+      "priority": "P1",
+      "change": "Publishing mode labels are Draft, Immediate publication and Scheduled publication; only the actual submission says Publish now.",
+      "verification": "Existing uncertain-response, duplicate and URL-change tests pass; browser confirms one Publish now action and public output."
+    },
+    "TASK-48": {
+      "priority": "P2",
+      "change": "Explicit local --port and --public-url configure matching bind/public URL/origins, reject conflicting options, preserve secrets and allow independent production proxy origins.",
+      "verification": "Operator tests cover valid/invalid/conflicting ports, production proxy mapping and repeat preservation; Docker uses port 18086."
+    },
+    "TASK-49": {
+      "priority": "P2",
+      "change": "python3 scripts/start.py checks Docker/Compose, configures, waits for readiness and hands the first operator a private setup token in their terminal.",
+      "verification": "Operator tests confirm readiness flags and token suppression after setup; actual startup finishes with the correct ready URL and retained account."
+    },
+    "TASK-50": {
+      "priority": "P2",
+      "change": "First setup distinguishes Your name and Workspace name, displays a connected password-length hint, and keeps the old API default.",
+      "verification": "Auth unit test, all API setup/invitation tests and a browser-created My first website workspace."
+    },
+    "TASK-53": {
+      "priority": "P2",
+      "change": "The checklist creates a 90-day type-scoped delivery token, verifies it inline and shows its secret once; Settings deep links scroll and focus the token section.",
+      "verification": "Unit test checks scopes, expiry, verification and no token in storage/URL; browser completes inline verification."
+    },
+    "TASK-54": {
+      "priority": "P2",
+      "change": "Explicit draft save keeps Content and Publications editors open; a new draft gains its durable entry URL.",
+      "verification": "Browser confirms the editor stays open and entry=new becomes the persisted ID; existing autosave/conflict/duplicate tests pass."
+    },
+    "TASK-55": {
+      "priority": "P2",
+      "change": "Completed onboarding folds into a resumable connection summary and returns focus to its action; inactive steps use compact explanations.",
+      "verification": "At 390x844 the content heading is at y=639 and creation button at y=721 in the initial review build; final 375px/landscape checks show no overflow."
+    },
+    "TASK-56": {
+      "priority": "P2",
+      "change": "Website setup configures the trusted preview origin using --website-url or the retained site URL; an unconfigured editor offers a connection step.",
+      "verification": "Authenticated API bootstrap configures preview and preserves a custom existing origin; browser opens a saved preview without manual origin changes.",
+      "workflow_note": "Implementation verified under the human authorization for all twelve tickets. Aftur cannot claim this ticket until TASK-46 is accepted; its approved state and dependency are retained."
+    },
+    "TASK-57": {
+      "priority": "P2",
+      "change": "A shared frontend handoff supplies the actual endpoint and type, a server-side curl example, copy action and an explained example-site path.",
+      "verification": "Actual copied curl returns the intended published Article; explorer allows type choice; browser confirms a draft stays private until its new body renders publicly."
+    }
+  },
+  "checks": {
+    "web": "292 tests pass; TypeScript and build pass",
+    "api": "274 tests pass, 2 optional checks skipped, with MOSS_USE_SQLITE=false isolating local .env backend selection; 44 operator/bootstrap/CLI tests also pass.",
+    "python": "Ruff lint and formatting pass using api/pyproject.toml; mypy passes from api/",
+    "browser": "Setup, direct creation/draft navigation, in-place save, publication, inline token, mobile completion, authenticated bootstrap/rerun, saved preview and live website publication verified; no page errors.",
+    "pr": "Clean worktree based on main 737d9ec: 274 API tests pass with 2 optional checks skipped, 292 frontend tests pass, Ruff lint/format, mypy, TypeScript and frontend build pass."
+  },
+  "unverified": [
+    "Cold-machine dependency download/install time",
+    "External hosting/TLS, OAuth and S3",
+    "Safari and spoken screen-reader interaction"
+  ],
+  "deployment": {
+    "image": "mosscms:local-onboarding-20261012",
+    "image_id": "sha256:20e359ba869a576cfab9cc3e6a137e50ec43406732731939ff5ef315b411e2f4",
+    "rollback_image": "mosscms:rollback-before-onboarding-20261012",
+    "sqlite_integrity": "ok",
+    "database_and_uploads_unchanged": true,
+    "counts": {
+      "assets": 0,
+      "content_types": 6,
+      "entries": 13,
+      "memberships": 0,
+      "projects": 2,
+      "revisions": 29,
+      "schema_revisions": 8,
+      "tokens": 3,
+      "users": 1
+    },
+    "upload_files": 0,
+    "auth_initialized": false,
+    "auth_bypass": false,
+    "ready_and_cms_and_personal_website": "HTTP 200",
+    "backup_note": "A private database/uploads archive and previous runtime configuration are retained in the ignored local backups directory; a rollback image is also retained.",
+    "browser": "Chromium confirms the deployed Your name and Workspace name fields, 12-character password hint, and no page errors. No primary accounts or content were created during deployment verification.",
+    "setup_state": "Existing state preserved: first administrator setup is pending; the sole stored user is the pre-existing development identity."
+  },
+  "integration_note": "The first GitHub run exposed a workspace URL race in one frontend job; route writes now preserve a newly selected workspace, with a regression that fails before the fix and passes afterward. Initial GitHub API, PostgreSQL, example website and production Docker checks passed; final CI is being rerun."
+}

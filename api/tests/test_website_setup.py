@@ -5,6 +5,8 @@ import io
 import json
 import sys
 import urllib.request
+import urllib.error
+from types import SimpleNamespace
 from pathlib import Path
 
 import pytest
@@ -87,8 +89,8 @@ def test_schema_merge_rejects_incompatible_types_without_changing_input(nested):
     assert existing == original
 
 
-@pytest.mark.parametrize("status", [{}, {"authSkipped": False}])
-def test_main_requires_development_auth_before_accessing_account_or_writing(status, monkeypatch):
+@pytest.mark.parametrize("status", [{"authSkipped": True}])
+def test_main_rejects_bypass_before_accessing_account_or_writing(status, monkeypatch):
     script = load_script()
     calls = []
 
@@ -104,8 +106,8 @@ def test_main_requires_development_auth_before_accessing_account_or_writing(stat
     monkeypatch.setattr(Path, "read_text", lambda self: "{}")
     monkeypatch.setattr(Path, "write_text", unexpected)
     monkeypatch.setattr(Path, "chmod", unexpected)
-    monkeypatch.setattr(urllib.request, "urlopen", urlopen)
-    with pytest.raises(SystemExit, match="MOSS_SKIP_AUTH=true"):
+    monkeypatch.setattr(urllib.request, "build_opener", lambda *a: SimpleNamespace(open=urlopen))
+    with pytest.raises(SystemExit, match="Disable MOSS_SKIP_AUTH"):
         script.main()
     assert calls == ["http://cms.test/auth/status"]
 
@@ -156,9 +158,22 @@ def test_main_preserves_existing_schema_entry_identity_and_server_credentials(mo
         path = request.full_url.removeprefix("http://cms.test")
         payload = json.loads(request.data) if request.data else {}
         if path == "/auth/status":
-            result = {"authSkipped": True}
+            result = {"authSkipped": False, "initialized": True}
+        elif path == "/auth/login":
+            assert payload == {"email": "admin@example.test", "password": "test-password"}
+            result = {}
         elif path == "/auth/me":
-            result = {"csrf": "csrf-token", "projects": [{"name": "Example website", "id": "project-id"}]}
+            result = {
+                "csrf": "csrf-token",
+                "projects": [
+                    {
+                        "name": "Example website",
+                        "id": "project-id",
+                        "role": "admin",
+                        "previewOrigin": "https://kept.example",
+                    }
+                ],
+            }
         elif path == "/delivery/graphql":
             result = {"data": {"contentTypes": [{"key": key} for key in TYPE_KEYS]}}
         else:
@@ -200,6 +215,9 @@ def test_main_preserves_existing_schema_entry_identity_and_server_credentials(mo
     monkeypatch.setattr(Path, "read_text", lambda self: env if self.name == ".env" else json.dumps(defaults))
     monkeypatch.setattr(Path, "write_text", lambda self, text: writes.update({self: text}))
     monkeypatch.setattr(Path, "chmod", lambda self, mode: modes.append((self, mode)))
+    monkeypatch.setattr(urllib.request, "build_opener", lambda *a: SimpleNamespace(open=urlopen))
+    monkeypatch.setenv("MOSS_ADMIN_EMAIL", "admin@example.test")
+    monkeypatch.setenv("MOSS_ADMIN_PASSWORD", "test-password")
     monkeypatch.setattr(urllib.request, "urlopen", urlopen)
     script.main()
 
@@ -235,3 +253,62 @@ def test_main_preserves_existing_schema_entry_identity_and_server_credentials(mo
     delivery = next(request for request in calls if request.full_url.endswith("/delivery/graphql"))
     assert delivery.get_header("Authorization") == "Bearer kept-token"
     assert delivery.get_header("X-moss-csrf") is None
+
+
+def test_authenticated_bootstrap_retains_membership_content_and_token(client, admin, tmp_path, monkeypatch):
+    script = load_script()
+    root = tmp_path / "example-site"
+    (root / "scripts").mkdir(parents=True)
+    (root / "src").mkdir()
+    (root / "src/content-defaults.json").write_text((SCRIPT.parents[1] / "src/content-defaults.json").read_text())
+    monkeypatch.setattr(script, "__file__", str(root / "scripts/setup_moss.py"))
+    monkeypatch.setattr(sys, "argv", ["setup_moss", "--cms-url", "http://cms.test", "--email", "admin@example.com"])
+    monkeypatch.setattr(script.getpass, "getpass", lambda prompt: "secure-test-password")
+    monkeypatch.delenv("MOSS_ADMIN_PASSWORD", raising=False)
+
+    def open_request(req, **kwargs):
+        path = req.full_url.removeprefix("http://cms.test")
+        response = client.request(req.get_method(), path, content=req.data, headers=dict(req.header_items()))
+        if response.status_code >= 400:
+            raise urllib.error.HTTPError(
+                req.full_url, response.status_code, "rejected", {}, io.BytesIO(response.content)
+            )
+        return io.BytesIO(response.content)
+
+    monkeypatch.setattr(urllib.request, "build_opener", lambda *args: SimpleNamespace(open=open_request))
+    monkeypatch.setattr(urllib.request, "urlopen", open_request)
+    script.main()
+    values = dict(line.split("=", 1) for line in (root / ".env").read_text().splitlines())
+    project_id = values["MOSS_PROJECT_ID"]
+    account = client.get("/auth/me").json()
+    assert next(p for p in account["projects"] if p["id"] == project_id)["role"] == "admin"
+    assert next(p for p in account["projects"] if p["id"] == project_id)["previewOrigin"] == "http://localhost:5174"
+    headers = {"x-moss-project": project_id, "x-moss-csrf": account["csrf"]}
+    entries = client.post(
+        "/graphql", headers=headers, json={"query": '{entries(typeKey:"siteProfile"){nodes{id slug data version}}}'}
+    ).json()["data"]["entries"]["nodes"]
+    profile = entries[0]
+    profile["data"]["name"] = "My retained website"
+    from conftest import gql
+
+    saved = gql(
+        client,
+        headers,
+        'mutation($id:ID!,$version:Int!,$data:JSON!){saveEntry(id:$id,version:$version,typeKey:"siteProfile",slug:"profile",data:$data,status:"draft"){id}}',
+        {"id": profile["id"], "version": profile["version"], "data": profile["data"]},
+    )
+    assert "errors" not in saved
+    script.main()
+    assert (root / ".env").read_text().split("MOSS_DELIVERY_TOKEN=")[1].splitlines()[0] == values["MOSS_DELIVERY_TOKEN"]
+    client.post("/auth/logout", headers={"x-moss-csrf": client.get("/auth/me").json()["csrf"]})
+    client.post("/auth/login", json={"email": "admin@example.com", "password": "secure-test-password"})
+    assert project_id in [p["id"] for p in client.get("/auth/me").json()["projects"]]
+    result = gql(client, {"x-moss-project": project_id}, '{entries(typeKey:"siteProfile"){nodes{data}}}')
+    assert result["data"]["entries"]["nodes"][0]["data"]["name"] == "My retained website"
+    delivery = gql(
+        client,
+        {"Authorization": "Bearer " + values["MOSS_DELIVERY_TOKEN"]},
+        "{entries(first:1){nodes{id}}}",
+        delivery=True,
+    )
+    assert delivery["data"]["entries"]["nodes"]

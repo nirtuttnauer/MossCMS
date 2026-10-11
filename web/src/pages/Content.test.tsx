@@ -40,7 +40,7 @@ test('lost publication response remains checkable without blind repeated publish
     return {entries:{nodes:[]},assets:[]}
   })
   render(<EntryEditor entry={entry} initialType="article" types={types} editable onClose={vi.fn()} onSaved={saved} />)
-  fireEvent.click(screen.getByRole('button',{name:/^Publish nowMake/}))
+  fireEvent.click(screen.getByRole('button',{name:/^Immediate publication/}))
   fireEvent.submit(screen.getByRole('button',{name:'Publish now'}).closest('form')!)
   await screen.findByText(/Publication outcome is unconfirmed/)
   expect(saved).not.toHaveBeenCalled()
@@ -198,7 +198,7 @@ test('server field errors populate inline field errors and error summary', async
   })
 
   render(<EntryEditor entry={entryItem} initialType="post" types={postTypes} editable onClose={vi.fn()} onSaved={vi.fn()} />)
-  fireEvent.click(screen.getByRole('button', { name: /^Publish now/ }))
+  fireEvent.click(screen.getByRole('button', { name: /^Immediate publication/ }))
   const form = screen.getByRole('button', { name: /^Publish now$/ }).closest('form')!
   fireEvent.submit(form)
 
@@ -342,7 +342,7 @@ test('publishing URL impact follows homepage canonical paths', async () => {
   const home = { ...entry, typeKey: 'sitePage', slug: 'home', data: { title: 'Home', kind: 'home' }, publishedSlug: 'home', publishedData: { title: 'Home', kind: 'home' } }
   render(<EntryEditor entry={home} types={[pageType]} initialType="sitePage" editable onSaved={vi.fn()} onClose={vi.fn()} />)
   fireEvent.change(screen.getByLabelText(/^Slug/), { target: { value: 'welcome' } })
-  fireEvent.click(screen.getByRole('button', { name: /^Publish nowMake/ }))
+  fireEvent.click(screen.getByRole('button', { name: /^Immediate publication/ }))
   expect(screen.queryByText(/Publishing changes the public URL/)).toBeNull()
   fireEvent.change(screen.getByLabelText('kind'), { target: { value: 'page' } })
   expect(screen.getByText(/Publishing changes the public URL/).textContent).toContain('from / to /welcome')
@@ -392,4 +392,18 @@ test.each(['partial', 'complete'])('recovers bulk-trash keyboard focus after a %
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Content', level: 1 })))
     expect(opener.isConnected).toBe(false)
   }
+})
+
+
+test('a delayed search preserves navigation to another workspace before the old content unmounts', async () => {
+  history.replaceState(null, '', '/#content?workspace=a&type=article')
+  vi.mocked(gql).mockResolvedValue({ entries: { nodes: [entry], total: 1, hasNextPage: false, endCursor: null }, contentGroups: [] })
+  render(<Content projectId="a" types={types} role="editor" onChanged={vi.fn()} />)
+  await screen.findByRole('button', { name: 'Edit' })
+  fireEvent.change(screen.getByLabelText('Search entries'), { target: { value: 'pending search' } })
+  const destination = '#content?workspace=b&type=beta'
+  history.replaceState(null, '', destination)
+  fireEvent(window, new Event('hashchange'))
+  await waitFor(() => expect(vi.mocked(gql).mock.calls.some(([, variables]) => variables?.search === 'pending search')).toBe(true))
+  expect(location.hash).toBe(destination)
 })

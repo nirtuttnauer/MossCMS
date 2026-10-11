@@ -4,10 +4,7 @@ A standalone **Vite + React + TypeScript** frontend for MossCMS. Desktop layout 
 
 ## Start locally
 
-From this directory, with MossCMS running on port 8001, temporarily set
-`MOSS_SKIP_AUTH=true` in the root `.env` and recreate the local app with
-`docker compose up -d app` from the repository root. This setup shortcut is
-available only in development. Then run:
+From this directory, with MossCMS running on port 8001 and a real administrator already created, run the setup command below. It prompts for the administrator email and password and retains that account’s workspace membership. Keep `MOSS_SKIP_AUTH=false`.
 
 ```sh
 python3 scripts/setup_moss.py --name "Moss Example"
@@ -15,7 +12,9 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:5174. The setup command creates a dedicated **Example website** workspace with five content types: **Projects**, **Blog posts**, **Website page**, **Homepage slide**, and **Website profile**. It supplies Home/Projects/Blog/About navigation pages, two sample projects (MossCMS and the example frontend), a starter blog post, and four showcase templates. Rerunning upgrades schemas and retains edits; older project/post pages are moved into their own types while preserving IDs, content, schedules and revision history. The earlier Notes/Contact navigation pages are renamed by ID. Automatic setup uses the CMS's temporary `MOSS_SKIP_AUTH=true` mode. After setup, restore `MOSS_SKIP_AUTH=false` in the root `.env` and run `docker compose up -d app` again. The resulting delivery token continues to work with normal authentication.
+Open http://localhost:5174. For a different CMS URL, use `--cms-url http://localhost:YOUR_PORT`. Use `--website-url https://your-website.example` to configure a different trusted website origin. The script configures saved-draft preview for a new connection and preserves an existing preview origin when repeated.
+
+The setup command creates a dedicated **Example website** workspace with five content types: **Projects**, **Blog posts**, **Website page**, **Homepage slide**, and **Website profile**. It supplies Home/Projects/Blog/About navigation pages, two sample projects (MossCMS and the example frontend), a starter blog post, and four showcase templates. Rerunning upgrades schemas and retains edits; older project/post pages are moved into their own types while preserving IDs, content, schedules and revision history. The earlier Notes/Contact navigation pages are renamed by ID. Setup uses the administrator’s authenticated session. For unattended setup, provide `MOSS_ADMIN_EMAIL` and `MOSS_ADMIN_PASSWORD` in the process environment; do not pass the password on the command line or save it in source control. If an older bypass setup left a workspace without members, the server operator can run `python -m app.cli claim-workspace --project WORKSPACE_ID --email ADMIN_EMAIL` inside the app container. It only recovers the explicitly selected workspace and refuses workspaces with members.
 
 ## Edit content
 
@@ -57,7 +56,7 @@ The profile's rotation interval defaults to 12 seconds (5–120 seconds); a slid
 
 `.env` holds `MOSS_API_URL`, `MOSS_PROJECT_ID`, and **server-only** `MOSS_DELIVERY_TOKEN`. The token is scoped to the five website content types. No `VITE_` variables contain credentials. The browser reads `/api/site`; a server adapter makes one paginated, authenticated, published-only GraphQL request for the website content. This also avoids cross-origin browser configuration.
 
-If authentication is enabled during initial setup, create the workspace/types/entries through MossCMS and create a delivery token in Settings with `siteProfile`, `sitePage`, `siteSlide`, `siteProject`, and `sitePost` scopes. The schema definitions are in `scripts/setup_moss.py`. Save the token to `.env` using `.env.example` as a guide. Expired or revoked tokens can be replaced there; restart the website after changing environment variables.
+For an entirely manual setup, create the workspace/types/entries through MossCMS and create a delivery token in Settings with `siteProfile`, `sitePage`, `siteSlide`, `siteProject`, and `sitePost` scopes. The schema definitions are in `scripts/setup_moss.py`. Save the token to `.env` using `.env.example` as a guide. Expired or revoked tokens can be replaced there; restart the website after changing environment variables.
 
 ## Docker
 

@@ -132,7 +132,7 @@ test('generated typed query labels capitalize only the first character and prese
   ]
   const { container } = render(<Explorer types={types} />)
 
-  expect(Array.from(container.querySelectorAll('code'), code => code.textContent)).toEqual(['allCmsPost ', 'allCmsLandingPage '])
+  expect(Array.from(container.querySelectorAll('.plain-card:first-of-type > p code'), code => code.textContent)).toEqual(['allCmsPost ', 'allCmsLandingPage '])
   expect(container.querySelector('.plain-card p')?.textContent).toBe('Generated typed queries: allCmsPost allCmsLandingPage ')
   expect(gql).not.toHaveBeenCalled()
   expect(fetch).not.toHaveBeenCalled()

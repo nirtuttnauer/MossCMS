@@ -144,3 +144,26 @@ def test_seed_keeps_existing_content_and_disposes(operator, monkeypatch, capsys)
     operator.transaction.__exit__.assert_called_once_with(None, None, None)
     operator.engine.dispose.assert_called_once_with()
     assert capsys.readouterr().out == '{"seeded": "workspace"}\n'
+
+
+def test_claim_workspace_is_scoped_and_refuses_existing_members(client, admin, app, monkeypatch):
+    from sqlalchemy import select
+    from app.models import Membership, Project, User
+
+    with app.state.db.begin() as session:
+        unowned = Project(name="Old example")
+        other = Project(name="Other unowned")
+        session.add_all([unowned, other])
+        session.flush()
+        target, other_id = unowned.id, other.id
+        user_id = session.scalar(select(User.id).where(User.email == "admin@example.com"))
+    monkeypatch.setattr(cli, "load_dotenv", lambda: None)
+    monkeypatch.setattr(cli, "Settings", lambda: SimpleNamespace(validate=lambda: SimpleNamespace(database_url="test")))
+    monkeypatch.setattr(cli, "database", lambda url: (MagicMock(), app.state.db))
+    monkeypatch.setattr(sys, "argv", ["moss", "claim-workspace", "--project", target, "--email", "admin@example.com"])
+    cli.main()
+    with app.state.db() as session:
+        assert session.get(Membership, (target, user_id)).role == "admin"
+        assert session.scalar(select(Membership.user_id).where(Membership.project_id == other_id)) is None
+    with pytest.raises(SystemExit):
+        cli.main()
