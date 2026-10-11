@@ -299,6 +299,8 @@ def create_app(settings=None):
     static = Path(__file__).resolve().parents[1] / "static"
     if (static / "assets").exists():
         app.mount("/assets", StaticFiles(directory=static / "assets"), name="assets")
+    if (static / "brand").exists():
+        app.mount("/brand", StaticFiles(directory=static / "brand"), name="brand")
 
     @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
     def admin():
