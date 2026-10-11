@@ -1,6 +1,6 @@
 # Editing improvements acceptance — 11 October 2026
 
-Product changes for MC-35–MC-44 / TASK-35–TASK-44 are implemented in the working tree. The owner authorized implementation and parallel subagents in this Codex chat. Aftur now records TASK-35–TASK-44 as Done following owner acceptance. MC-45 has **partial browser verification**, not release approval.
+Product changes for MC-35–MC-44 / TASK-35–TASK-44 are implemented in the working tree. The owner authorized implementation and parallel subagents in this Codex chat. Aftur now records TASK-35–TASK-44 as Done following owner acceptance. On 12 October 2026 the owner explicitly accepted TASK-45 with standalone Chromium and spoken VoiceOver checks skipped and **unverified**. Aftur records all 45 tickets as Done. This outcome acceptance does not establish a pass for those checks or production deployment approval.
 
 ## Automated evidence
 
@@ -149,12 +149,12 @@ For the PostgreSQL rehearsal, set `MOSS_TEST_DATABASE_URL` to a separate disposa
 
 The integration fixture recreates its test schema. Never point this variable at a development workspace or production database.
 
-## Remaining acceptance work
+## Recorded limits at accepted closure
 
-- **Owner-deferred:** versioned standalone Chromium repetition and a human VoiceOver listening walkthrough for spoken labels/status/recovery announcements. Accessible trees do not prove speech behavior or accessibility conformance.
-- Empty-workspace Safari first-use, canceled dirty navigation, pointer locale-group targeting and the remaining keyboard journeys are verified in the supplements. Full standalone Chromium and spoken assistive-technology repetition remain owner-deferred.
+- **Owner-skipped and unverified:** versioned standalone Chromium repetition and spoken VoiceOver labels/status/recovery announcements. The owner accepted TASK-45 with these limits on 12 October 2026. Accessible trees do not prove speech behavior or accessibility conformance.
+- Empty-workspace Safari first-use, canceled dirty navigation, pointer locale-group targeting and the remaining keyboard journeys are verified in the supplements. Standalone Chromium and spoken assistive-technology repetition were skipped at the owner’s request and remain unverified.
 - TASK-35’s three first-use walkthroughs are now recorded: this report plus [walkthrough two](acceptance-2026-10-11/first-use-two.md) and [walkthrough three](acceptance-2026-10-11/first-use-three.md), produced concurrently in separate fixtures. Aftur records owner acceptance. They are agent-operated; the proposed human activation metric remains unmeasured and is not a claim of usability improvement.
 - List-item and required localized-group recovery now have Safari keyboard evidence; new defaults and required nested children have browser evidence. A null required object cannot arise through normal new-entry controls or validated schema migration, so that artificial state remains automated-only. Media and revision keyboard interactions are documented; spoken announcements remain unverified.
 - Deployment acceptance and a rehearsal on a separately restored production-like PostgreSQL database/media pair remain outside this synthetic run. Deploy the API and example-site together as described in [deployment recovery](deployment-recovery.md).
 
-TASK-45 remains partial for manual acceptance in Aftur. Its dependencies are now owner-accepted; this agent did not change their completion states. No production deployment or universal accessibility claim was performed. The root swarm records the owner’s explicit acceptance for TASK-1–44; TASK-45 has no outcome acceptance. Reproducible steps/results and fixture helpers were saved in local evidence commit `adba95b`; implementation remains in the existing working tree. Existing unrelated changes are preserved. Temporary browser overrides and services are restored/stopped after verification.
+The owner instructed, “accept TASK-45 with the skipped checks recorded as unverified and finish the loop.” The root applied Aftur’s native Accept outcome control and saved an attributed note with those limits. Fresh repository-scoped MCP readback at revision 540 verifies all 45 tickets Done and no ready tasks. The scheduled swarm heartbeat is disabled. No production deployment, measured human activation improvement or universal accessibility conformance is claimed. Reproducible results and helpers are retained in evidence commits `adba95b`, `9fc4a31` and `38ff7bd`; historical partial checkpoints remain intact. Temporary browser overrides and services were restored/stopped after verification.

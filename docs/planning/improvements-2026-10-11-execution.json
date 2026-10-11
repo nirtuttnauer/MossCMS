@@ -1,7 +1,7 @@
 {
   "date": "2026-10-11",
   "authorization": "Human continued work and explicitly requested parallel subagents in this Codex chat.",
-  "implementation": "Existing working tree; prior browser evidence commits adba95b and 9fc4a31; latest keyboard fixes/evidence not committed by this chat",
+  "implementation": "Recorded implementation and evidence retained in repository; root evidence commits adba95b,9fc4a31,38ff7bd; closure does not claim new tests or deployment.",
   "verification": "docs/editor-acceptance-2026-10-11.md",
   "tests": {
     "web": 271,
@@ -97,17 +97,26 @@
     {
       "id": "TASK-45",
       "title": "MC-45 · Verify the next editing release in real browsers and assistive technology",
-      "status": "review",
+      "status": "done",
       "blocked": false,
-      "checkpoint_id": "ATTEMPT-121",
-      "attempt_count": 6
+      "checkpoint_id": "ATTEMPT-123",
+      "attempt_count": 8
     }
   ],
-  "owner_deferred": [
+  "verification_supplement": "docs/acceptance-2026-10-11/safari-keyboard.md",
+  "aftur_revision": 540,
+  "fixture_cleanup": "Created Safari/IAB tabs closed; Safari zoom100 and prior tab restored; owning services stopped; no listeners15115/18115",
+  "accepted_at": "2026-10-12",
+  "outcome_acceptance": {
+    "scope": "TASK-45",
+    "statement": "accept TASK-45 with the skipped checks recorded as unverified and finish the loop",
+    "source": "Direct human instruction in root chat on12October2026",
+    "application": "Native Aftur Accept outcome and fresh scoped MCP readback",
+    "skipped_checks": "Standalone Chromium and spoken VoiceOver remain UNVERIFIED"
+  },
+  "owner_skipped_unverified": [
     "Standalone versioned Chromium browser checks; no Chrome installation",
     "Spoken VoiceOver verification with a human listener"
   ],
-  "verification_supplement": "docs/acceptance-2026-10-11/safari-keyboard.md",
-  "aftur_revision": 533,
-  "fixture_cleanup": "Created Safari/IAB tabs closed; Safari zoom100 and prior tab restored; owning services stopped; no listeners15115/18115"
+  "swarm_loop": "Finished; heartbeat PAUSED; all45scoped tickets Done; no ready tasks"
 }

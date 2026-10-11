@@ -2,7 +2,7 @@
 
 Help self-hosting owners and small editorial teams reach their first published entry, complete daily editing without losing context, and recover confidently from errors. Extend the shipped MC-01–MC-34 baseline rather than repeat it.
 
-These began as assistant product-management proposals requested by the owner. The owner subsequently authorized implementation with “continue” and “use subagents to do these in parralel.” TASK-35–TASK-44 are implemented and awaiting human acceptance; TASK-45 has partial browser evidence and remaining manual checks documented in [the acceptance report](../editor-acceptance-2026-10-11.md). Priorities, effort and success targets remain estimates rather than measured outcomes. The shipped MC-01–MC-34 work was checked against implementation/release documentation rather than treating stale proposed statuses as unfinished scope.
+These began as assistant product-management proposals requested by the owner. The owner subsequently authorized implementation with “continue” and “use subagents to do these in parralel.” TASK-35–TASK-45 are implemented and human-accepted in Aftur. TASK-45 was accepted on 12 October 2026 with standalone Chromium and spoken VoiceOver checks skipped and recorded unverified in [the acceptance report](../editor-acceptance-2026-10-11.md). Priorities, effort and success targets remain estimates rather than measured outcomes. The shipped MC-01–MC-34 work was checked against implementation/release documentation rather than treating stale proposed statuses as unfinished scope.
 
 ## Recommended sequence
 
