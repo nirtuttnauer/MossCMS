@@ -15,7 +15,6 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from graphql import FragmentSpreadNode, FragmentDefinitionNode, OperationDefinitionNode, parse
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
@@ -24,13 +23,14 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from .accounts import context, router as account_router
 from .config import Settings
-from .content import publish_due, scoped
+from .content import publish_due, scoped, website_path_conflict
 from .development import initialize_development
 from .graphql import generated_schema
 from .migrate import migrate
 from .models import ContentType, database
 from .oauth import configure_oauth, router as oauth_router
 from .preview import router as preview_router
+from .query_limits import bounded_query
 from .security import CmsError, identify, require
 from .storage import router as storage_router
 
@@ -42,35 +42,6 @@ class GraphQLRequest(BaseModel):
     query: str = Field(min_length=1, max_length=30000)
     variables: dict | None = None
     operationName: str | None = None
-
-
-def bounded_query(query):
-    document = parse(query)
-    fragments = {d.name.value: d for d in document.definitions if isinstance(d, FragmentDefinitionNode)}
-    count = 0
-
-    def walk(selection_set, depth=0, seen=frozenset()):
-        nonlocal count
-        if not selection_set:
-            return
-        if depth > 12:
-            raise CmsError("Query depth limit exceeded.", "QUERY_LIMIT")
-        for node in selection_set.selections:
-            count += 1
-            if count > 200:
-                raise CmsError("Query complexity limit exceeded.", "QUERY_LIMIT")
-            if isinstance(node, FragmentSpreadNode):
-                name = node.name.value
-                if name in seen:
-                    raise CmsError("Recursive fragment.", "QUERY_LIMIT")
-                if name in fragments:
-                    walk(fragments[name].selection_set, depth, seen | {name})
-            else:
-                walk(getattr(node, "selection_set", None), depth + 1, seen)
-
-    for definition in document.definitions:
-        if isinstance(definition, OperationDefinitionNode):
-            walk(definition.selection_set)
 
 
 def create_app(settings=None):
@@ -187,7 +158,7 @@ def create_app(settings=None):
     @app.exception_handler(CmsError)
     async def content_error(request, exc):
         return JSONResponse(
-            {"detail": str(exc), "code": exc.code},
+            {"detail": str(exc), **exc.extensions()},
             status_code={"FORBIDDEN": 403, "NOT_FOUND": 404, "CONFLICT": 409}.get(exc.code, 422),
         )
 
@@ -250,7 +221,7 @@ def create_app(settings=None):
                 )
                 errors = []
                 for error in result.errors or []:
-                    original = error.original_error
+                    original = website_path_conflict(error.original_error)
                     if isinstance(original, CmsError):
                         message, code = str(original), original.code
                     elif original is None:
@@ -259,7 +230,8 @@ def create_app(settings=None):
                         message, code = "This record conflicts with an existing or newer record.", "CONFLICT"
                     else:
                         message, code = "The operation could not be completed.", "INTERNAL"
-                    errors.append({"message": message, "path": error.path, "extensions": {"code": code}})
+                    extensions = original.extensions() if isinstance(original, CmsError) else {"code": code}
+                    errors.append({"message": message, "path": error.path, "extensions": extensions})
                 if errors:
                     session.rollback()
                     payload = {"data": None, "errors": errors}
@@ -268,15 +240,21 @@ def create_app(settings=None):
                     payload = {"data": result.data}
             except CmsError as exc:
                 session.rollback()
-                payload = {"data": None, "errors": [{"message": str(exc), "extensions": {"code": exc.code}}]}
-            except (IntegrityError, StaleDataError):
+                extensions = exc.extensions()
+                payload = {"data": None, "errors": [{"message": str(exc), "extensions": extensions}]}
+            except (IntegrityError, StaleDataError) as exc:
                 session.rollback()
+                conflict = website_path_conflict(exc)
                 payload = {
                     "data": None,
                     "errors": [
                         {
-                            "message": "This record conflicts with an existing or newer record.",
-                            "extensions": {"code": "CONFLICT"},
+                            "message": str(conflict)
+                            if isinstance(conflict, CmsError)
+                            else "This record conflicts with an existing or newer record.",
+                            "extensions": conflict.extensions()
+                            if isinstance(conflict, CmsError)
+                            else {"code": "CONFLICT"},
                         }
                     ],
                 }

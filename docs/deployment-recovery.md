@@ -6,7 +6,7 @@ Run commands from the repository root. [Release evidence](release-acceptance-202
 
 For a fresh instance, run `python3 scripts/configure.py --production --public-url https://cms.example.com`, review `.env`, then `docker compose up --build -d`. Preserve generated secrets and keep `.env` private. Existing development databases require an operator password rotation before production; changing `.env` alone does not change a PostgreSQL role password. Production rejects development auth bypass, SQLite, default database credentials and HTTP browser origins.
 
-Terminate TLS at a reverse proxy. Keep the default loopback bindings (CMS 8000, website 5174); PostgreSQL has no published host port. Allow required request/upload sizes and timeouts. Proxy website `/api/events` with streaming enabled and buffering disabled; polling remains a recovery path. Do not cache preview pages or `/api/preview`, and do not log preview bodies, cookies, bearer tokens or authorization headers. Keep the website's server routes available; uploading only its static build is insufficient.
+Terminate TLS at a reverse proxy. Keep the default loopback bindings (CMS 8001, website 5174); PostgreSQL has no published host port. Allow required request/upload sizes and timeouts. Proxy website `/api/events` with streaming enabled and buffering disabled; polling remains a recovery path. Do not cache preview pages or `/api/preview`, and do not log preview bodies, cookies, bearer tokens or authorization headers. Keep the website's server routes available; uploading only its static build is insufficient.
 
 | Location | Setting | Purpose |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ Terminate TLS at a reverse proxy. Keep the default loopback bindings (CMS 8000, 
 | Root `.env` | `MOSS_PUBLIC_URL`, `MOSS_ORIGINS` | Canonical CMS HTTPS origin and explicit trusted browser origins |
 | Root `.env` | `MOSS_SECRET_KEY`, `MOSS_SETUP_TOKEN`, PostgreSQL credentials | Stable secrets and protected setup/database access |
 | Root `.env` | `MOSS_WEBHOOK_ORIGINS` | Optional exact private callback origins; Compose website uses `http://personal-site:5174` |
-| Website `.env` | `MOSS_API_URL`, `MOSS_DELIVERY_TOKEN` | Server-only CMS connection; Compose overrides the URL to `http://app:8000` |
+| Website `.env` | `MOSS_API_URL`, `MOSS_DELIVERY_TOKEN` | Server-only CMS connection; Compose overrides the URL to `http://app:8001` |
 | Website `.env` | `MOSS_PROJECT_ID` | Setup script's workspace identity; distinct from event validation below |
 | Website `.env` | `SITE_PUBLIC_URL` | Canonical HTTPS site origin, normally `https://example.com`; local HTTP testing can use `http://localhost:5174` |
 | Website `.env` | `SITE_SOCIAL_IMAGE` | Optional permanent static HTTPS URL/path, without query/fragment; omit to omit image cards |
@@ -102,3 +102,13 @@ The restore script refuses non-empty databases and uses a single restore transac
 Rehearse on a separately restored database/media pair first. Save the current image/configuration, stop writers, back up, then build the new source and start the new image. Forward migrations run before serving; advisory locks serialize PostgreSQL migrations. Verify readiness and the same content/access checks above, plus captured schedules and webhook delivery, before exposing it. Upgrades can keep the current data volumes; do not delete them. Major PostgreSQL upgrades require a separate `pg_upgrade` or dump/restore procedure.
 
 The 8 October acceptance run upgraded schema `0001` to `0008` on a separate 1,004-entry restore. The stopped-app backup/restore path was separately exercised with an isolated Compose database, new media volume, retained image and original/variant fixtures; the restored app became ready and a second media restore correctly refused the populated volume. These are synthetic local rehearsals. External provider/bucket/TLS checks, full Compose load measurements, browser/assistive-technology review and public deployment remain owner-specific work; see the evidence report for exact limits.
+
+### Migration 0009: locales and published website URL history
+
+Migration `0009` adds workspace authoring locale settings with `en` as the default and sole suggestion for existing workspaces. It preserves stored translation maps and delivery locale behavior. It also adds reservations for known published website paths. Deploy the API and `personal-site` together: the website loader now queries `websiteRedirects` and `websiteReservedPaths`, which older APIs do not provide. Keep both stopped during the matched upgrade and verify current routes, historical redirects and publication propagation before reopening access.
+
+A website path recorded during publication stays owned by its original entry. Publishing A → B → C redirects A and B directly to the current live C with HTTP 308; conflicting canonical or recorded paths are rejected. Draft saves and scheduling alone create no public paths or redirects. A scheduled capture records its path only when publication succeeds. Unpublish and trash remove public destinations, while reservations remain; the original entry can recover valid mappings when republished. Unavailable reserved paths return the normal public unavailable response rather than another entry's legacy alias. Sitemap, RSS and canonical metadata retain current live paths only.
+
+The upgrade starts with no reconstructed history. On a later rename it records the entry's known currently published path, but it cannot recover URLs changed before path recording was introduced. Include the new reservation table in matched database backups and preserve it during recovery.
+
+The SQLite forward upgrade and concurrent publication checks passed. A synthetic **PostgreSQL 17.11** rehearsal also passed: populated `0008` → `0009` preservation, concurrent publication rollback, scheduler locking and outbox claims (22 focused tests, no skips). See [editing acceptance evidence](editor-acceptance-2026-10-11.md) and `api/tests/test_postgres_product_migration.py` for scope and reproduction. The disposable container was removed afterward. Rehearse again against a separately restored production-like PostgreSQL database/media pair before rollout; this synthetic test does not establish production readiness.

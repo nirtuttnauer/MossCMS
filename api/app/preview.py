@@ -10,8 +10,9 @@ from sqlalchemy import select
 
 from . import content
 from .development import DEVELOPMENT_USER_ID
-from .graphql import asset_node
-from .models import Asset, Membership, PreviewGrant, Project, Revision, now
+from .graphql import resolved_image_assets
+from .models import Membership, PreviewGrant, Project, Revision, now
+from .schema import public_data, validate_data
 from .security import CmsError, audit, digest, identify, require
 
 router = APIRouter()
@@ -89,18 +90,17 @@ def redeem(body: Redemption, request: Request):
         if not saved:
             raise CmsError("Preview revision is unavailable.", "NOT_FOUND")
         data = saved.snapshot["data"]
-        content.validate_data(definition.fields, data, session, grant.project_id)
-        data = content.public_data(definition.fields, data)
-        ids = content.image_asset_ids(definition.fields, data)
-        assets = session.scalars(content.scoped(session, Asset, identity).where(Asset.id.in_(ids))).all()
+        validate_data(definition.fields, data, session, grant.project_id)
+        data = public_data(definition.fields, data)
         settings = request.app.state.settings
+        assets = resolved_image_assets(session, identity, definition.fields, data, settings)
         payload = {
             "entry": {
                 "id": grant.entry_id,
                 "typeKey": grant.type_key,
                 "slug": saved.snapshot["slug"],
                 "data": data,
-                "resolvedAssets": [asset_node(a, settings).__dict__ for a in assets if a.mime.startswith("image/")],
+                "resolvedAssets": [asset.__dict__ for asset in assets],
             },
             "revision": grant.revision,
             "expiresAt": grant.expires_at.isoformat() + "Z",

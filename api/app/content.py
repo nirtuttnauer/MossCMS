@@ -1,169 +1,31 @@
-"""Project-scoped content operations, schema validation and publishing."""
+"""Project-scoped content queries, revisions, schema migrations and publishing."""
 
 import hashlib
 import base64
 import json
 import re
 from copy import deepcopy
-from datetime import date, datetime
+from datetime import datetime
 
 from sqlalchemy import case, and_, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import StaleDataError
 
-from .models import Asset, ContentType, DraftReceipt, Entry, Revision, SchemaRevision, now
+from .models import ContentType, DraftReceipt, Entry, Project, Revision, SchemaRevision, WebsitePath, now, uid
 from .outbox import emit
+from .schema import NAME, public_data, reference_targets, validate_data, validate_fields
 from .security import CmsError, audit, require
-
-KINDS = {"text", "richText", "number", "boolean", "date", "enum", "object", "list", "reference", "asset"}
-NAME = re.compile(r"^[a-z][a-zA-Z0-9_]{0,59}$")
-LOCALE = re.compile(r"^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$")
 
 
 def slugify(value):
     result = re.sub(r"[^a-z0-9]+", "-", value.strip().lower()).strip("-")
     if not result or len(result) > 220:
-        raise CmsError("Slug must contain letters or numbers and be at most 220 characters.")
+        raise CmsError(
+            "Slug must contain letters or numbers and be at most 220 characters.",
+            field_path="slug",
+            reason="invalid_slug",
+        )
     return result
-
-
-def validate_fields(fields, depth=0, named=True):
-    if depth > 5 or not isinstance(fields, list) or not 1 <= len(fields) <= 40:
-        raise CmsError("Use 1–40 fields per object and at most five nesting levels.")
-    names = set()
-    for f in fields:
-        if not isinstance(f, dict) or not isinstance(f.get("type"), str) or f.get("type") not in KINDS:
-            raise CmsError("Each field must specify a supported type.")
-        if named:
-            name = f.get("name", "")
-            if (
-                not isinstance(name, str)
-                or not NAME.fullmatch(name)
-                or name in names
-                or name in {"id", "slug", "status", "version", "updatedAt", "_data"}
-            ):
-                raise CmsError(f"Invalid, reserved, or duplicate field name: {name}")
-            names.add(name)
-        for flag in ("required", "localized", "private", "imageOnly"):
-            if flag in f and not isinstance(f[flag], bool):
-                raise CmsError(f"{flag} must be a boolean.")
-        if f["type"] == "object":
-            validate_fields(f.get("fields"), depth + 1)
-        if f["type"] == "list":
-            validate_fields([f.get("item")], depth + 1, named=False)
-        if f["type"] == "enum":
-            options = f.get("options")
-            if (
-                not isinstance(options, list)
-                or not options
-                or len(options) > 40
-                or any(not isinstance(x, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,50}", x) for x in options)
-                or len(set(options)) != len(options)
-            ):
-                raise CmsError("Enum options must be unique GraphQL identifiers.")
-
-
-def validate_value(f, value, session, project_id, path):
-    if value is None:
-        if f.get("required"):
-            raise CmsError(f"{path} is required.")
-        return
-    if f.get("localized"):
-        if not isinstance(value, dict) or not value or any(not LOCALE.fullmatch(k) for k in value):
-            raise CmsError(f"{path} must be a map of locale codes to values.")
-        for locale, translated in value.items():
-            validate_value({**f, "localized": False}, translated, session, project_id, f"{path}.{locale}")
-        return
-    kind = f["type"]
-    good = True
-    if kind in {"text", "richText"}:
-        good = isinstance(value, str) and len(value) <= 100000
-    elif kind == "number":
-        import math
-
-        good = isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
-    elif kind == "boolean":
-        good = isinstance(value, bool)
-    elif kind == "date":
-        try:
-            date.fromisoformat(value)
-        except (ValueError, TypeError):
-            good = False
-    elif kind == "enum":
-        good = value in f["options"]
-    elif kind == "object":
-        validate_data(f["fields"], value, session, project_id, path)
-    elif kind == "list":
-        good = isinstance(value, list) and len(value) <= 1000
-        if good:
-            for i, item in enumerate(value):
-                validate_value(f["item"], item, session, project_id, f"{path}[{i}]")
-    elif kind in {"reference", "asset"}:
-        model = Entry if kind == "reference" else Asset
-        record = session.get(model, value) if isinstance(value, str) else None
-        good = record is not None and record.project_id == project_id
-        if good and record is not None and kind == "asset" and f.get("imageOnly"):
-            good = record.mime in {"image/png", "image/jpeg", "image/webp"}
-        if good and record is not None and kind == "reference":
-            good = record.status != "deleted"
-            if f.get("target"):
-                good = good and session.get(ContentType, record.type_id).key == f["target"]
-    if not good:
-        raise CmsError(f"{path} is not a valid {kind} value.")
-
-
-def validate_data(fields, data, session, project_id, path="data"):
-    if not isinstance(data, dict):
-        raise CmsError(f"{path} must be an object.")
-    if len(json.dumps(data)) > 1024 * 1024:
-        raise CmsError("An entry may not exceed 1 MiB.")
-    known = {f["name"] for f in fields}
-    unknown = set(data) - known
-    if unknown:
-        raise CmsError(f"Unknown fields: {', '.join(sorted(unknown))}")
-    for f in fields:
-        validate_value(f, data.get(f["name"]), session, project_id, f"{path}.{f['name']}")
-
-
-def public_value(f, value):
-    if f.get("private") or value is None:
-        return None
-    if f.get("localized"):
-        return {locale: public_value({**f, "localized": False}, v) for locale, v in value.items()}
-    if f["type"] == "object":
-        return public_data(f["fields"], value)
-    if f["type"] == "list":
-        return [public_value(f["item"], item) for item in value]
-    return value
-
-
-def public_data(fields, data):
-    return {f["name"]: public_value(f, data.get(f["name"])) for f in fields if not f.get("private")}
-
-
-def image_asset_ids(fields, data):
-    ids = set()
-
-    def walk(field, value):
-        if field.get("private") or value is None:
-            return
-        if field.get("localized") and isinstance(value, dict):
-            for translated in value.values():
-                walk({**field, "localized": False}, translated)
-        elif field["type"] == "richText" and isinstance(value, str):
-            ids.update(re.findall(r"asset:([A-Za-z0-9_-]{1,100})", value))
-        elif field["type"] == "asset" and isinstance(value, str):
-            ids.add(value)
-        elif field["type"] == "object" and isinstance(value, dict):
-            for child in field.get("fields", []):
-                walk(child, value.get(child["name"]))
-        elif field["type"] == "list" and isinstance(value, list):
-            for item in value:
-                walk(field["item"], item)
-
-    for field in fields:
-        walk(field, data.get(field["name"]))
-    return sorted(ids)[:50]
 
 
 def scoped(session, model, identity):
@@ -224,6 +86,19 @@ def entry_dict(session, identity, record):
         "publishedRevision": record.published_revision,
         "scheduledRevision": None if delivery else record.scheduled_revision,
         "scheduleError": None if delivery else record.schedule_error,
+        "publishedData": None if delivery else record.published_data,
+        "publishedSlug": None if delivery else record.published_slug,
+        "publishedTitle": None if delivery else record.published_title,
+        "publishedSnapshot": None
+        if delivery or record.published_slug is None
+        else {
+            "slug": record.published_slug,
+            "title": record.published_title,
+            "data": record.published_data,
+            "revision": record.published_revision,
+            "schemaVersion": record.published_schema_version,
+            "publishedAt": record.published_at.isoformat() + "Z" if record.published_at else None,
+        },
     }
 
 
@@ -401,6 +276,116 @@ def clear_schedule(record):
     record.scheduled_revision = record.scheduled_schema_version = record.schedule_error = None
 
 
+def website_path(definition, slug, data, fields=None):
+    """Only current public values determine the website canonical route."""
+    if not slug:
+        return None
+    if definition.key == "sitePost":
+        return "/blog/" + slug
+    if definition.key == "siteProject":
+        return "/projects/" + slug
+    if definition.key == "sitePage":
+        visible = public_data(definition.fields if fields is None else fields, data or {})
+        return "/" if slug == "home" or visible.get("kind") == "home" else "/" + slug
+    return None
+
+
+def reserve_website_paths(session, record, definition, slug, data, previous_definition=None, fields=None):
+    target = website_path(definition, slug, data, fields)
+    previous = website_path(previous_definition or definition, record.published_slug, record.published_data)
+    paths = {path for path in (target, previous) if path}
+    if not paths:
+        return
+    if not record.id:
+        record.id = uid()
+    with session.no_autoflush:
+        # The unique path claim arbitrates concurrent publications without reversing scheduler lock order.
+        known = session.scalars(select(WebsitePath).where(WebsitePath.project_id == record.project_id)).all()
+        for claim in known:
+            if claim.path in paths and claim.entry_id != record.id:
+                raise CmsError(
+                    "This website URL belongs to another entry's publication history. Choose a different slug.",
+                    "CONFLICT",
+                    field_path="slug",
+                    reason="website_path_conflict",
+                )
+        live = session.scalars(
+            select(Entry).where(
+                Entry.project_id == record.project_id,
+                Entry.id != record.id,
+                Entry.published_slug.is_not(None),
+                Entry.status != "deleted",
+            )
+        ).all()
+        for entry in live:
+            other = session.get(ContentType, entry.type_id)
+            if website_path(other, entry.published_slug, entry.published_data) in paths:
+                raise CmsError(
+                    "This website URL is already live on another entry. Choose a different slug.",
+                    "CONFLICT",
+                    field_path="slug",
+                    reason="website_path_conflict",
+                )
+        owned = {claim.path for claim in known if claim.entry_id == record.id}
+        for path in paths - owned:
+            session.add(WebsitePath(project_id=record.project_id, entry_id=record.id, path=path))
+
+
+def website_path_conflict(error):
+    """Report a raced unique-path claim as the same actionable editorial conflict."""
+    if not isinstance(error, IntegrityError):
+        return error
+    constraint = getattr(getattr(error.orig, "diag", None), "constraint_name", None)
+    if constraint == "website_paths_project_id_path_key" or (
+        "UNIQUE constraint failed: website_paths.project_id, website_paths.path" in str(error.orig)
+    ):
+        return CmsError(
+            "This website URL belongs to another entry's publication history. Choose a different slug.",
+            "CONFLICT",
+            field_path="slug",
+            reason="website_path_conflict",
+        )
+    return error
+
+
+def website_reserved_paths(session, identity):
+    """Formerly public paths remain reserved without disclosing unpublished destinations."""
+    require(identity)
+    query = (
+        select(WebsitePath.path)
+        .join(Entry, WebsitePath.entry_id == Entry.id)
+        .join(ContentType, Entry.type_id == ContentType.id)
+        .where(WebsitePath.project_id == identity["project_id"])
+        .order_by(WebsitePath.path)
+    )
+    if identity.get("delivery") and identity["scopes"]:
+        query = query.where(ContentType.key.in_(identity["scopes"]))
+    return list(session.scalars(query).all())
+
+
+def website_redirects(session, identity):
+    require(identity)
+    rows = session.execute(
+        select(WebsitePath, Entry, ContentType)
+        .join(Entry, WebsitePath.entry_id == Entry.id)
+        .join(ContentType, Entry.type_id == ContentType.id)
+        .where(
+            WebsitePath.project_id == identity["project_id"],
+            Entry.published_slug.is_not(None),
+            Entry.status != "deleted",
+        )
+        .order_by(WebsitePath.path)
+    ).all()
+    mappings = []
+    for claim, entry, definition in rows:
+        if identity.get("delivery") and identity["scopes"] and definition.key not in identity["scopes"]:
+            continue
+        target = website_path(definition, entry.published_slug, entry.published_data)
+        if target and target != claim.path:
+            mappings.append({"from": claim.path, "to": target, "entryId": entry.id})
+    return mappings
+
+
 def publish_snapshot(record, definition, data, slug, title, number):
     record.published_data = deepcopy(data)
     record.published_slug, record.published_title = slug, title
@@ -436,12 +421,29 @@ def save_entry(
         raise CmsError("This entry changed. Reload before saving.", "CONFLICT")
     if record.status == "deleted" and not restoring:
         raise CmsError("Restore a revision to recover a trashed entry.")
+    collision = session.scalar(
+        select(Entry.id).where(
+            Entry.project_id == identity["project_id"],
+            Entry.type_id == definition.id,
+            Entry.slug == slug,
+            Entry.id != id,
+        )
+    )
+    if collision:
+        raise CmsError(
+            "This slug is already used by another entry. Choose a different slug.",
+            "CONFLICT",
+            field_path="slug",
+            reason="slug_conflict",
+        )
     if not id:
         session.add(record)
     record.slug = slug
     title = data.get("title", slug)
     if isinstance(title, dict):
-        title = title.get("en") or next(iter(title.values()), slug)
+        with session.no_autoflush:
+            project = session.get(Project, identity["project_id"])
+        title = title.get(project.default_locale) or title.get("en") or next(iter(title.values()), slug)
     record.title = str(title)[:200]
     record.data = deepcopy(data)
     record.status = "draft" if restoring else status
@@ -457,6 +459,7 @@ def save_entry(
     next_version = record.version + 1 if id else 1
     previous_slug = record.published_slug
     if status == "published":
+        reserve_website_paths(session, record, definition, slug, data)
         publish_snapshot(record, definition, data, slug, record.title, next_version)
     elif status == "scheduled":
         record.scheduled_revision = next_version
@@ -561,6 +564,8 @@ def move_entry(session, identity, id, type_key, version):
         record.published_schema_version = target.version
     if record.scheduled_data is not None:
         record.scheduled_schema_version = target.version
+    if record.published_slug:
+        reserve_website_paths(session, record, target, record.published_slug, record.published_data, source)
     record.type_id = target.id
     record.updated_at = now()
     revision(session, identity, record)
@@ -674,20 +679,6 @@ def restore_entry(session, identity, id, number, version):
     )
 
 
-def reference_targets(fields):
-    targets = set()
-    for field in fields:
-        if field["type"] == "reference" and field.get("target"):
-            if not isinstance(field["target"], str):
-                raise CmsError("Reference targets must be content type keys.")
-            targets.add(field["target"])
-        if field["type"] == "object":
-            targets.update(reference_targets(field["fields"]))
-        if field["type"] == "list":
-            targets.update(reference_targets([field["item"]]))
-    return targets
-
-
 def save_type(session, identity, key, name, fields, version=None, migration=None):
     require(identity, "admin", write=True)
     if not NAME.fullmatch(key) or not name.strip() or len(name) > 100:
@@ -734,7 +725,9 @@ def save_type(session, identity, key, name, fields, version=None, migration=None
         for entry in session.scalars(scoped(session, Entry, identity).where(Entry.type_id == record.id)).all():
             entry.data = transform(entry.data)
             if entry.published_data is not None:
-                entry.published_data = transform(entry.published_data)
+                published = transform(entry.published_data)
+                reserve_website_paths(session, entry, record, entry.published_slug, published, fields=fields)
+                entry.published_data = published
                 entry.published_schema_version = record.version + 1
             if entry.scheduled_data is not None:
                 entry.scheduled_data = transform(entry.scheduled_data)
@@ -767,6 +760,7 @@ def publish_due(factory):
                         raise CmsError("Scheduled snapshot is missing; save a new schedule.")
                     validate_data(definition.fields, record.scheduled_data, session, record.project_id)
                     previous_slug = record.published_slug
+                    reserve_website_paths(session, record, definition, record.scheduled_slug, record.scheduled_data)
                     publish_snapshot(
                         record,
                         definition,

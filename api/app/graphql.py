@@ -1,8 +1,5 @@
 """Editorial GraphQL and dynamically generated, project-specific delivery types."""
 
-import hashlib
-import hmac
-import time
 from datetime import date
 from enum import Enum
 from typing import Any, cast
@@ -12,7 +9,10 @@ from sqlalchemy import and_, func, or_, select
 from strawberry.scalars import JSON
 
 from . import content
+from .images import RASTER_MIMES
+from .media_links import media_url
 from .models import Asset, Audit, ContentType, Entry, Membership, Revision, SchemaRevision
+from .schema import image_asset_ids, public_fields, reference_targets
 from .security import CmsError, audit, require
 
 
@@ -41,6 +41,10 @@ class EntryNode:
     published_revision: int | None
     scheduled_revision: int | None
     schedule_error: JSON | None
+    published_data: JSON | None = None
+    published_slug: str | None = None
+    published_title: str | None = None
+    published_snapshot: JSON | None = None
 
     @strawberry.field
     def resolved_assets(self, info: strawberry.Info) -> list["AssetNode"]:
@@ -48,9 +52,7 @@ class EntryNode:
         record = content.get_entry(c["session"], c, str(self.id))
         definition = c["session"].get(ContentType, record.type_id)
         data = record.published_data if c.get("delivery") else record.data
-        ids = content.image_asset_ids(definition.fields, data or {})
-        rows = c["session"].scalars(content.scoped(c["session"], Asset, c).where(Asset.id.in_(ids))).all()
-        return [asset_node(a, c["settings"]) for a in rows if a.mime.startswith("image/")]
+        return resolved_image_assets(c["session"], c, definition.fields, data or {}, c["settings"])
 
     @classmethod
     def from_dict(cls, d):
@@ -70,6 +72,10 @@ class EntryNode:
             published_revision=d["publishedRevision"],
             scheduled_revision=d["scheduledRevision"],
             schedule_error=d["scheduleError"],
+            published_data=d.get("publishedData"),
+            published_slug=d.get("publishedSlug"),
+            published_title=d.get("publishedTitle"),
+            published_snapshot=d.get("publishedSnapshot"),
         )
 
 
@@ -99,28 +105,11 @@ class TypeNode:
 
 
 def type_node(record, delivery=False):
-    def visible(fields):
-        result = []
-        for f in fields:
-            if not f.get("private"):
-                f = dict(f)
-
-                def project_field(field):
-                    field = dict(field)
-                    if field["type"] == "object":
-                        field["fields"] = visible(field["fields"])
-                    if field["type"] == "list":
-                        field["item"] = project_field(field["item"])
-                    return field
-
-                result.append(project_field(f))
-        return result
-
     return TypeNode(
         id=strawberry.ID(record.id),
         key=record.key,
         name=record.name,
-        fields=visible(record.fields) if delivery else record.fields,
+        fields=public_fields(record.fields) if delivery else record.fields,
         version=record.version,
     )
 
@@ -154,8 +143,6 @@ class AssetNode:
 def asset_node(record, settings):
     from .images import variant_metadata
 
-    expiry = int(time.time()) + 900
-    signature = hmac.new(settings.secret.encode(), f"{record.id}:{expiry}".encode(), hashlib.sha256).hexdigest()
     return AssetNode(
         id=strawberry.ID(record.id),
         name=record.name,
@@ -164,12 +151,28 @@ def asset_node(record, settings):
         width=record.width,
         height=record.height,
         variants=variant_metadata(record, settings),
-        url=f"{settings.public_url}/media/{record.id}?expires={expiry}&signature={signature}",
+        url=media_url(settings, record.id),
     )
+
+
+def resolved_image_assets(session, identity, fields, data, settings) -> list[AssetNode]:
+    ids = image_asset_ids(fields, data)
+    rows = session.scalars(content.scoped(session, Asset, identity).where(Asset.id.in_(ids))).all()
+    return [asset_node(asset, settings) for asset in rows if asset.mime.startswith("image/")]
 
 
 @strawberry.type
 class Query:
+    @strawberry.field
+    def website_reserved_paths(self, info: strawberry.Info) -> list[str]:
+        c = info.context
+        return content.website_reserved_paths(c["session"], c)
+
+    @strawberry.field
+    def website_redirects(self, info: strawberry.Info) -> JSON:
+        c = info.context
+        return cast(JSON, content.website_redirects(c["session"], c))
+
     @strawberry.field
     def draft_receipt(self, info: strawberry.Info, key: str) -> EntryNode | None:
         c = info.context
@@ -300,7 +303,7 @@ class Query:
                 Asset.name.ilike("%" + search.replace("%", "\\%").replace("_", "\\_") + "%", escape="\\")
             )
         if images_only:
-            query = query.where(Asset.mime.in_(["image/png", "image/jpeg", "image/webp"]))
+            query = query.where(Asset.mime.in_(RASTER_MIMES))
         if id:
             query = query.where(Asset.id == str(id))
         if after:
@@ -481,7 +484,7 @@ class Mutation:
         if session.scalar(select(Entry.id).where(Entry.type_id == definition.id).limit(1)):
             raise CmsError("This content type has entries or history and cannot be deleted.")
         for other in session.scalars(content.scoped(session, ContentType, c)).all():
-            if other.id != definition.id and key in content.reference_targets(other.fields):
+            if other.id != definition.id and key in reference_targets(other.fields):
                 raise CmsError("Another schema references this type. Update that reference first.")
         for revision in session.scalars(select(SchemaRevision).where(SchemaRevision.type_id == definition.id)):
             session.delete(revision)
@@ -601,11 +604,9 @@ def generated_schema(definitions, delivery=False, scopes=None):
     def object_type(fields, name, root=False):
         attrs: dict[str, Any] = {"__annotations__": {"_data": strawberry.Private[dict]}, "__module__": __name__}
         for f in fields:
-            if delivery and f.get("private"):
-                continue
             typ = field_type(f, name + f["name"][0].upper() + f["name"][1:])
             attrs[f["name"]] = make_field(f, typ)
-        if not any(not f.get("private") or not delivery for f in fields):
+        if not fields:
             # GraphQL requires an object type to have at least one visible field.
             def empty(self) -> bool:
                 return True
@@ -638,7 +639,8 @@ def generated_schema(definitions, delivery=False, scopes=None):
         if delivery and scopes and definition.key not in scopes:
             continue
         name = "Cms" + definition.key[0].upper() + definition.key[1:]
-        typ = object_type(definition.fields, name, root=True)
+        fields = public_fields(definition.fields) if delivery else definition.fields
+        typ = object_type(fields, name, root=True)
         attributes["all" + name] = make_list(definition.key, typ)
     query = strawberry.type(type("ProjectQuery", (Query,), attributes))
     return SafeSchema(query=query, mutation=None if delivery else Mutation)

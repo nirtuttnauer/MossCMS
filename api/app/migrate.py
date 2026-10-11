@@ -4,6 +4,8 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import text
 
+MIGRATION_LOCK_ID = 741582901
+
 
 def migrate(engine, revision="head"):
     root = Path(__file__).resolve().parents[1]
@@ -13,10 +15,10 @@ def migrate(engine, revision="head"):
     # Serialize schema upgrades for containers sharing a PostgreSQL database.
     if engine.dialect.name == "postgresql":
         with engine.connect() as lock:
-            lock.execute(text("SELECT pg_advisory_lock(741582901)"))
+            lock.execute(text(f"SELECT pg_advisory_lock({MIGRATION_LOCK_ID})"))
             try:
                 command.upgrade(config, revision)
             finally:
-                lock.execute(text("SELECT pg_advisory_unlock(741582901)"))
+                lock.execute(text(f"SELECT pg_advisory_unlock({MIGRATION_LOCK_ID})"))
     else:
         command.upgrade(config, revision)

@@ -21,6 +21,19 @@ def configured_database():
     return "sqlite:///./mosscms.db"
 
 
+def normalized_origins(origins: list[str], environment: str) -> list[str]:
+    origins = [origin.rstrip("/") for origin in origins if origin]
+    if environment == "development":
+        expanded = list(origins)
+        for o in origins:
+            if "://localhost" in o:
+                expanded.append(o.replace("://localhost", "://127.0.0.1"))
+            elif "://127.0.0.1" in o:
+                expanded.append(o.replace("://127.0.0.1", "://localhost"))
+        origins = list(dict.fromkeys(expanded))
+    return origins
+
+
 @dataclass
 class Settings:
     database_url: str = field(default_factory=configured_database)
@@ -31,10 +44,13 @@ class Settings:
     secret: str = field(default_factory=lambda: os.getenv("MOSS_SECRET_KEY", ""))
     setup_token: str = field(default_factory=lambda: os.getenv("MOSS_SETUP_TOKEN", ""))
     origins: list[str] = field(
-        default_factory=lambda: os.getenv("MOSS_ORIGINS", "http://localhost:8000,http://localhost:5173").split(",")
+        default_factory=lambda: os.getenv(
+            "MOSS_ORIGINS",
+            "http://localhost:8001,http://127.0.0.1:8001,http://localhost:5173,http://127.0.0.1:5173",
+        ).split(",")
     )
     storage_dir: Path = field(default_factory=lambda: Path(os.getenv("MOSS_STORAGE_DIR", "./data")))
-    public_url: str = field(default_factory=lambda: os.getenv("MOSS_PUBLIC_URL", "http://localhost:8000"))
+    public_url: str = field(default_factory=lambda: os.getenv("MOSS_PUBLIC_URL", "http://localhost:8001"))
     s3_bucket: str = field(default_factory=lambda: os.getenv("MOSS_S3_BUCKET", ""))
     s3_endpoint: str | None = field(default_factory=lambda: os.getenv("MOSS_S3_ENDPOINT") or None)
     webhook_origins: list[str] = field(
@@ -49,7 +65,7 @@ class Settings:
             raise RuntimeError(
                 "Set MOSS_SECRET_KEY (32+ characters) and MOSS_SETUP_TOKEN (24+ characters). Run scripts/configure.py."
             )
-        self.origins = [origin.rstrip("/") for origin in self.origins if origin]
+        self.origins = normalized_origins(self.origins, self.environment)
         if not self.origins or "*" in self.origins:
             raise RuntimeError("MOSS_ORIGINS must contain explicit trusted origins.")
         if self.environment == "production":
@@ -58,7 +74,4 @@ class Settings:
             url = make_url(self.database_url)
             if url.drivername.startswith("sqlite") or url.password in {None, "", "change-me", "mosscms"}:
                 raise RuntimeError("Production requires PostgreSQL and a non-default database password.")
-            if not self.public_url.startswith("https://") or any(not x.startswith("https://") for x in self.origins):
-                raise RuntimeError("Production requires HTTPS public URL and origins.")
-        self.storage_dir.mkdir(parents=True, exist_ok=True)
         return self

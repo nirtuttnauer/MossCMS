@@ -1,24 +1,27 @@
-import hashlib
-import hmac
 import mimetypes
 import time
 from pathlib import Path
 
 import boto3
-from fastapi import APIRouter, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, RedirectResponse
 
 from .accounts import context
 from .graphql import asset_node
-from .images import process_image
+from .images import RASTER_MIMES, process_image
+from .media_links import MEDIA_TTL_SECONDS, valid_media_signature
 from .models import Asset, uid
 from .security import audit, require
 
 router = APIRouter()
 
 
+def _presigned_expiry_seconds(expires: int) -> int:
+    return min(MEDIA_TTL_SECONDS, max(1, expires - int(time.time())))
+
+
 @router.post("/api/assets")
-def upload(request: Request, file: UploadFile):
+def upload(request: Request, file: UploadFile, imagesOnly: bool = Form(False)):
     settings = request.app.state.settings
     with request.app.state.db.begin() as session:
         c = context(request, session)
@@ -28,6 +31,8 @@ def upload(request: Request, file: UploadFile):
             raise HTTPException(413, "Upload a file of 1 byte to 20 MiB.")
         name = Path(file.filename or "asset").name[:254]
         mime = mimetypes.guess_type(name)[0] or "application/octet-stream"
+        if imagesOnly and mime not in RASTER_MIMES:
+            raise HTTPException(422, "Choose a PNG, JPEG or WebP image.")
         width, height, images = process_image(data, mime)
         id = uid()
         key = c["project_id"] + "/" + id
@@ -46,8 +51,11 @@ def upload(request: Request, file: UploadFile):
                     target = settings.storage_dir / object_key
                     target.parent.mkdir(parents=True, exist_ok=True)
                     temporary = target.with_suffix(target.suffix + ".upload")
-                    temporary.write_bytes(payload)
-                    temporary.replace(target)
+                    try:
+                        temporary.write_bytes(payload)
+                        temporary.replace(target)
+                    finally:
+                        temporary.unlink(missing_ok=True)
                 stored.append(object_key)
                 if variant_width is not None:
                     variants.append(
@@ -82,8 +90,7 @@ def upload(request: Request, file: UploadFile):
 @router.get("/media/{id}")
 def media(id: str, expires: int, signature: str, request: Request):
     settings = request.app.state.settings
-    expected = hmac.new(settings.secret.encode(), f"{id}:{expires}".encode(), hashlib.sha256).hexdigest()
-    if expires < time.time() or expires > time.time() + 901 or not hmac.compare_digest(expected, signature):
+    if not valid_media_signature(settings, id, expires, signature):
         raise HTTPException(403, "This asset link is expired or invalid.")
     with request.app.state.db() as session:
         asset = session.get(Asset, id)
@@ -93,7 +100,7 @@ def media(id: str, expires: int, signature: str, request: Request):
             url = boto3.client("s3", endpoint_url=settings.s3_endpoint).generate_presigned_url(
                 "get_object",
                 Params={"Bucket": settings.s3_bucket, "Key": asset.key, "ResponseContentDisposition": "attachment"},
-                ExpiresIn=min(900, max(1, expires - int(time.time()))),
+                ExpiresIn=_presigned_expiry_seconds(expires),
             )
             return RedirectResponse(url)
         if not (settings.storage_dir / asset.key).is_file():
@@ -109,8 +116,7 @@ def media(id: str, expires: int, signature: str, request: Request):
 @router.get("/media/{id}/variant/{width}")
 def variant(id: str, width: int, expires: int, signature: str, request: Request):
     settings = request.app.state.settings
-    expected = hmac.new(settings.secret.encode(), f"{id}:{width}:{expires}".encode(), hashlib.sha256).hexdigest()
-    if expires < time.time() or expires > time.time() + 901 or not hmac.compare_digest(expected, signature):
+    if not valid_media_signature(settings, id, expires, signature, width):
         raise HTTPException(403, "This variant link is expired or invalid.")
     with request.app.state.db() as session:
         asset = session.get(Asset, id)
@@ -121,7 +127,7 @@ def variant(id: str, width: int, expires: int, signature: str, request: Request)
             url = boto3.client("s3", endpoint_url=settings.s3_endpoint).generate_presigned_url(
                 "get_object",
                 Params={"Bucket": settings.s3_bucket, "Key": image["key"], "ResponseContentType": "image/webp"},
-                ExpiresIn=min(900, max(1, expires - int(time.time()))),
+                ExpiresIn=_presigned_expiry_seconds(expires),
             )
             return RedirectResponse(url)
         target = settings.storage_dir / image["key"]

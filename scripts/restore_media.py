@@ -5,12 +5,14 @@ import argparse
 import subprocess
 from pathlib import Path
 
-parser = argparse.ArgumentParser()
-parser.add_argument("backup", type=Path)
-parser.add_argument("--confirm-empty-volume", action="store_true", required=True)
-args = parser.parse_args()
-root = Path(__file__).resolve().parents[1]
-program = """
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("backup", type=Path)
+    parser.add_argument("--confirm-empty-volume", action="store_true", required=True)
+    args = parser.parse_args()
+    root = Path(__file__).resolve().parents[1]
+    program = """
 import pathlib, tarfile, sys
 root = pathlib.Path('/data')
 if any(root.iterdir()):
@@ -23,22 +25,26 @@ with tarfile.open(fileobj=sys.stdin.buffer, mode='r|gz') as archive:
         archive.extract(member, root, filter='data')
 print('Local media restored.')
 """
-with args.backup.open("rb") as source:
-    subprocess.run(
-        [
-            "docker",
-            "compose",
-            "run",
-            "--rm",
-            "--no-deps",
-            "-T",
-            "--entrypoint",
-            "python",
-            "app",
-            "-c",
-            program,
-        ],
-        cwd=root,
-        stdin=source,
-        check=True,
-    )
+    with args.backup.open("rb") as source:
+        subprocess.run(
+            [
+                "docker",
+                "compose",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "--entrypoint",
+                "python",
+                "app",
+                "-c",
+                program,
+            ],
+            cwd=root,
+            stdin=source,
+            check=True,
+        )
+
+
+if __name__ == "__main__":
+    main()

@@ -22,6 +22,8 @@ class Project(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     name: Mapped[str] = mapped_column(String(100))
     preview_origin: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    default_locale: Mapped[str] = mapped_column(String(20), default="en", server_default="en")
+    locales: Mapped[list] = mapped_column(JSON, default=lambda: ["en"], server_default='["en"]')
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
 
 
@@ -224,3 +226,12 @@ class WebhookDelivery(Base):
     claim: Mapped[str | None] = mapped_column(String(36), nullable=True)
     error: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class WebsitePath(Base):
+    __tablename__ = "website_paths"
+    __table_args__ = (UniqueConstraint("project_id", "path"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
+    entry_id: Mapped[str] = mapped_column(ForeignKey("entries.id"), index=True)
+    path: Mapped[str] = mapped_column(String(300))

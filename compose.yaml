@@ -9,12 +9,13 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:?Run python3 scripts/configure.py}
       POSTGRES_USER: ${POSTGRES_USER:?Run python3 scripts/configure.py}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run python3 scripts/configure.py}
+      PORT: ${MOSS_PORT:-8001}
       MOSS_ENV: ${MOSS_ENV:-development}
       MOSS_SKIP_AUTH: ${MOSS_SKIP_AUTH:-false}
       MOSS_SECRET_KEY: ${MOSS_SECRET_KEY:?Run python3 scripts/configure.py}
       MOSS_SETUP_TOKEN: ${MOSS_SETUP_TOKEN:?Run python3 scripts/configure.py}
-      MOSS_PUBLIC_URL: ${MOSS_PUBLIC_URL:-http://localhost:8000}
-      MOSS_ORIGINS: ${MOSS_ORIGINS:-http://localhost:8000,http://localhost:5173}
+      MOSS_PUBLIC_URL: ${MOSS_PUBLIC_URL:-http://localhost:8001}
+      MOSS_ORIGINS: ${MOSS_ORIGINS:-http://localhost:8001,http://127.0.0.1:8001,http://localhost:5173,http://127.0.0.1:5173}
       MOSS_WEBHOOK_ORIGINS: ${MOSS_WEBHOOK_ORIGINS:-}
       MOSS_OIDC_NAME: ${MOSS_OIDC_NAME:-Single sign-on}
       MOSS_OIDC_DISCOVERY_URL: ${MOSS_OIDC_DISCOVERY_URL:-}
@@ -28,7 +29,7 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
       AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
     ports:
-      - "${MOSS_BIND_HOST:-127.0.0.1}:${MOSS_PORT:-8000}:8000"
+      - "${MOSS_BIND_HOST:-127.0.0.1}:${MOSS_PORT:-8001}:8001"
     volumes:
       - moss_assets:/data
     tmpfs:
@@ -48,7 +49,7 @@ services:
     env_file:
       - ./personal-site/.env
     environment:
-      MOSS_API_URL: http://app:8000
+      MOSS_API_URL: http://app:8001
       PORT: 5174
     ports:
       - "127.0.0.1:5174:5174"

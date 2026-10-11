@@ -2,14 +2,23 @@
 
 A self-hosted content service with a GraphQL API and a React admin. Define your data, publish entries, and consume them from any frontend. Python dependencies use **uv**; the admin uses **Vite, React, TypeScript, Tailwind, and Radix/shadcn-style components**. The multistage Docker image serves both from one origin, backed by PostgreSQL.
 
+[MIT licensed](LICENSE). Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Start
+
+Install Docker with Compose and Python 3, then clone the repository:
+
+```sh
+git clone https://github.com/nirtuttnauer/MossCMS.git
+cd MossCMS
+```
 
 ```sh
 python3 scripts/configure.py
 docker compose up --build -d
 ```
 
-Open [localhost:8000](http://localhost:8000). Create your first administrator using `MOSS_SETUP_TOKEN` from `.env`. Choose your own email and a password of at least 12 characters. Configuration is generated locally with random secrets; `.env` is excluded from builds and source control.
+Open [localhost:8001](http://localhost:8001). Create your first administrator using `MOSS_SETUP_TOKEN` from `.env`. Choose your own email and a password of at least 12 characters. Configuration is generated locally with random secrets; `.env` is excluded from builds and source control.
 
 For an existing starter database, use `python3 scripts/configure.py --existing-db` before upgrading. This preserves its development password. The migration imports existing Articles and revisions into a workspace assigned to the first administrator, retaining the original table. Do not use starter database credentials in production.
 
@@ -141,7 +150,7 @@ python3 scripts/configure.py --production --public-url https://cms.example.com
 docker compose up --build -d
 ```
 
-Terminate TLS at a reverse proxy and proxy to the default `127.0.0.1:8000` binding. Set `MOSS_PUBLIC_URL` to the canonical HTTPS origin and `MOSS_ORIGINS` to an explicit comma-separated list of trusted HTTPS browser origins. Avoid wildcard CORS. PostgreSQL has no published host port. The app runs without root, with a read-only root filesystem and separate writable media/temp volumes. Production rejects missing secrets, SQLite, default PostgreSQL passwords, and HTTP origins.
+Terminate TLS at a reverse proxy and proxy to the default `127.0.0.1:8001` binding. Set `MOSS_PUBLIC_URL` to the canonical HTTPS origin and `MOSS_ORIGINS` to an explicit comma-separated list of trusted HTTPS browser origins. Avoid wildcard CORS. PostgreSQL has no published host port. The app runs without root, with a read-only root filesystem and separate writable media/temp volumes. Production rejects missing secrets, SQLite, default PostgreSQL passwords, and HTTP origins.
 
 For an existing database, changing `.env` alone does not rotate its password: change the PostgreSQL role password through an operator connection and update `.env` together. Preserve secret values for upgrades. Changing `MOSS_SECRET_KEY` invalidates pending OAuth state and signed media links. Protect database backups because they include account/session data.
 
@@ -170,6 +179,21 @@ Upgrade procedure: save a working source/image version, stop writers and back up
 
 Node/Python image digests and Python/npm lockfiles pin builds. To update, deliberately change image digests and dependency ranges, regenerate both locks, run the checks below, review advisories, and rehearse the upgrade on a restored database. PostgreSQL remains pinned to major 17; update its image within that major deliberately. A major PostgreSQL upgrade requires `pg_upgrade` or dump/restore into a new volume.
 
+## Code layout
+
+- `api/app/schema.py`: field definitions, value validation, private-field filtering, and referenced asset IDs. `content.py` handles workspace-scoped queries, revisions, schema migrations, and publication transitions; `graphql.py` exposes them through editorial and delivery schemas.
+- `api/app/query_limits.py`: GraphQL depth, selection count, and fragment traversal checks. `main.py` applies them before executing editorial or delivery requests.
+- `api/app/accounts.py` and `security.py`: accounts, workspace permissions, sessions, and tokens. Database models live in `models.py`; database migrations live in `api/migrations/`.
+- `api/app/media_links.py`: original/variant media signing and expiry policy. `storage.py` handles upload/download operations; `images.py` handles bounded image decoding and variants.
+- `web/src/pages/` and `web/src/components/`: admin screens and form controls. `web/src/lib/` contains API requests, schema helpers, shared locale/entry validation, and autosave recovery.
+- `web/src/pages/Content.tsx` owns the content library; `EntryEditor.tsx` is shared by the content and publication screens. `web/src/lib/revisions.ts` builds field differences for the revision comparison component.
+- `personal-site/src/`: public website components. `personal-site/server/`: delivery loading, cache, preview sessions, publication events, routes, and metadata.
+- `shared/`: Markdown rendering policy and website routes shared across consumers. `scripts/`: operator configuration, backup/restore, and release acceptance tools.
+
+API tests live in `api/tests/`; admin and website server tests sit beside the code they exercise. Keep schema validation and public-data filtering shared between editorial saves, scheduled publication, delivery, and preview.
+
+The [maintainability review](docs/maintainability-review.md) records refactors, retained boundaries, checks, and untested integrations. Operator and release-script safeguard tests also run with the API suite.
+
 ## Local development and checks
 
 Generate `.env` first. In separate terminals:
@@ -186,12 +210,14 @@ npm ci
 npm run dev
 ```
 
-Local API development defaults to SQLite; set `DATABASE_URL` to use PostgreSQL. Vite proxies API/auth/media endpoints to port 8000. Ensure `http://localhost:5173` is in development `MOSS_ORIGINS`.
+Local API development defaults to SQLite; set `DATABASE_URL` to use PostgreSQL. Vite proxies API/auth/media endpoints to port 8001. Ensure `http://localhost:5173` is in development `MOSS_ORIGINS`.
 
 ```sh
 cd api
 uv run ruff check app tests migrations
 uv run ruff format --check app tests migrations
+uv run ruff check --config pyproject.toml ../scripts ../personal-site/scripts/setup_moss.py
+uv run ruff format --check --config pyproject.toml ../scripts ../personal-site/scripts/setup_moss.py
 uv run mypy app
 uv run pytest
 ```
@@ -204,6 +230,14 @@ MOSS_TEST_DATABASE_URL='postgresql+psycopg://USER:***@HOST:5432/DB' uv run pytes
 
 ```sh
 cd web
+npm run check
+npm test
+npm run build
+npm audit --audit-level=high
+```
+
+```sh
+cd personal-site
 npm run check
 npm test
 npm run build

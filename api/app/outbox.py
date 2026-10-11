@@ -4,6 +4,11 @@ from datetime import timedelta
 from sqlalchemy import delete, or_, select, update
 from .models import ContentType, PublicationEvent, now, uid
 
+DEFAULT_CLAIM_LIMIT = 50
+MAX_CLAIM_LIMIT = 100
+CLAIM_LEASE_DURATION = timedelta(minutes=2)
+PROCESSED_EVENT_RETENTION = timedelta(days=30)
+
 
 def emit(session, record, kind, revision, slug, previous_slug=None):
     id = uid()
@@ -26,7 +31,7 @@ def emit(session, record, kind, revision, slug, previous_slug=None):
     )
 
 
-def claim_events(factory, limit=50):
+def claim_events(factory, limit=DEFAULT_CLAIM_LIMIT):
     claimed = []
     with factory.begin() as session:
         rows = session.scalars(
@@ -38,13 +43,13 @@ def claim_events(factory, limit=50):
                 )
             )
             .order_by(PublicationEvent.created_at, PublicationEvent.id)
-            .limit(min(100, max(1, limit)))
+            .limit(min(MAX_CLAIM_LIMIT, max(1, limit)))
             .with_for_update(skip_locked=True)
         ).all()
         for row in rows:
             row.state = "processing"
             row.claim = uid()
-            row.lease_until = now() + timedelta(minutes=2)
+            row.lease_until = now() + CLAIM_LEASE_DURATION
             claimed.append({"id": row.id, "project_id": row.project_id, "claim": row.claim, "payload": row.payload})
     return claimed
 
@@ -63,6 +68,6 @@ def prune_events(factory):
     with factory.begin() as session:
         session.execute(
             delete(PublicationEvent).where(
-                PublicationEvent.state == "processed", PublicationEvent.created_at < now() - timedelta(days=30)
+                PublicationEvent.state == "processed", PublicationEvent.created_at < now() - PROCESSED_EVENT_RETENTION
             )
         )

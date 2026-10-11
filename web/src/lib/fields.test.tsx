@@ -1,7 +1,16 @@
 import {expect,test} from 'vitest'
-import {deliveryShape,hiddenFieldCount,shapeSignature} from './fields'
+import {deliveryShape,hiddenFieldCount,initialData,shapeSignature} from './fields'
 import type {Field} from './api'
 const fields:Field[]=[{name:'title',type:'text',localized:true},{name:'tags',type:'list',item:{name:'',type:'enum',options:['One','Two']}},{name:'group',type:'object',fields:[{name:'private',type:'text',private:true},{name:'image',type:'asset'}]},{name:'author',type:'reference'},{name:'when',type:'date'}]
+test('initial values preserve nested and localized defaults without sharing mutable values', () => {
+  const schema: Field[] = [...fields, { name: 'enabled', type: 'boolean' }, { name: 'translatedFlag', type: 'boolean', localized: true }, { name: 'translatedList', type: 'list', localized: true }]
+  const values = initialData(schema)
+  expect(values).toEqual({ title: { en: null }, tags: [], group: { private: null, image: null }, author: null, when: null, enabled: false, translatedFlag: { en: false }, translatedList: { en: [] } })
+  ;(values.tags as unknown[]).push('changed')
+  ;(values.group as Record<string, unknown>).image = 'changed'
+  expect(initialData(schema).tags).toEqual([])
+  expect(initialData(schema).group).toEqual({ private: null, image: null })
+})
 test('delivery signatures match nullable generated backend names and locale arguments',()=>{
  const shape=deliveryShape('Sample','sample',fields)
  expect(shape).toContain('tags(locale: String! = "en"): [CmsSampleTagsItemEnum]')
@@ -29,4 +38,8 @@ test('templates validate and field duplication creates an isolated unique schema
  const copy=duplicateField(original,[original,{...original,name:'groupCopy'}])
  expect(copy.name).toBe('groupCopy2');expect(copy.private).toBe(true)
  copy.fields![0].name='changed';expect(original.fields![0].name).toBe('title')
+})
+
+test('uses the configured locale recursively for new object and localized object fields', () => {
+  expect(initialData([{ name: 'group', type: 'object', fields: [{ name: 'title', type: 'text', localized: true }] }, { name: 'localizedGroup', type: 'object', localized: true, fields: [{ name: 'active', type: 'boolean' }] }], 'he')).toEqual({ group: { title: { he: null } }, localizedGroup: { he: { active: false } } })
 })

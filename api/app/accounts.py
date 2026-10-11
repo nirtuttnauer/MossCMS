@@ -24,18 +24,21 @@ from .security import (
 
 router = APIRouter()
 _attempt_lock = threading.Lock()
+_ATTEMPT_WINDOW_SECONDS = 60
+_MAX_ATTEMPTS = 8
+_ATTEMPT_KEY_CLEANUP_THRESHOLD = 10000
 
 
 def rate_limit(key, request):
     attempts = request.app.state.login_attempts
     with _attempt_lock:
         current = time.monotonic()
-        recent = [x for x in attempts.get(key, []) if current - x < 60]
-        if len(recent) >= 8:
+        recent = [x for x in attempts.get(key, []) if current - x < _ATTEMPT_WINDOW_SECONDS]
+        if len(recent) >= _MAX_ATTEMPTS:
             raise HTTPException(429, "Too many attempts. Try again in a minute.")
         attempts[key] = [*recent, current]
-        if len(attempts) > 10000:
-            expired = [k for k, v in attempts.items() if current - v[-1] > 60]
+        if len(attempts) > _ATTEMPT_KEY_CLEANUP_THRESHOLD:
+            expired = [k for k, v in attempts.items() if current - v[-1] > _ATTEMPT_WINDOW_SECONDS]
             for k in expired:
                 attempts.pop(k, None)
 
@@ -174,7 +177,15 @@ def me(request: Request):
             "user": {"id": c["user"].id, "email": c["user"].email, "name": c["user"].name},
             "csrf": c["token"].csrf,
             "projects": [
-                {"id": p.id, "name": p.name, "role": role, "previewOrigin": p.preview_origin} for p, role in projects
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "role": role,
+                    "previewOrigin": p.preview_origin,
+                    "defaultLocale": p.default_locale,
+                    "locales": p.locales,
+                }
+                for p, role in projects
             ],
             "providers": identities,
             "authSkipped": request.app.state.settings.skip_auth,
@@ -429,3 +440,33 @@ def configure_preview(body: PreviewOriginInput, request: Request):
         project.preview_origin = origin or None
         audit(session, project.id, c["actor"], "project.preview", origin=origin)
     return {"ok": True}
+
+
+class LocaleInput(BaseModel):
+    defaultLocale: str = Field(max_length=20)
+    locales: list[str] = Field(min_length=1, max_length=40)
+
+
+@router.patch("/api/project/locales")
+@router.patch("/api/projects/{project_id}")
+def configure_locales(body: LocaleInput, request: Request, project_id: str | None = None):
+    from .schema import LOCALE
+
+    with request.app.state.db.begin() as session:
+        c = context(request, session)
+        require(c, "admin", write=True)
+        if project_id is not None and project_id != c["project_id"]:
+            raise CmsError("Select the workspace whose locales you are changing.", "FORBIDDEN")
+        if (
+            not LOCALE.fullmatch(body.defaultLocale)
+            or any(not LOCALE.fullmatch(locale) for locale in body.locales)
+            or len({locale.lower() for locale in body.locales}) != len(body.locales)
+            or body.defaultLocale not in body.locales
+        ):
+            raise CmsError("Choose valid, unique locale codes and include the default locale in the suggestions.")
+        project = session.get(Project, c["project_id"])
+        project.default_locale, project.locales = body.defaultLocale, body.locales
+        audit(
+            session, project.id, c["actor"], "project.locales", defaultLocale=body.defaultLocale, locales=body.locales
+        )
+        return {"id": project.id, "defaultLocale": project.default_locale, "locales": project.locales}

@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import secrets
+import re
 from datetime import timedelta
 from types import SimpleNamespace
 
@@ -13,9 +14,20 @@ from .models import Audit, Membership, Project, Token, User, now
 
 
 class CmsError(Exception):
-    def __init__(self, message, code="VALIDATION"):
+    def __init__(self, message, code="VALIDATION", field_path=None, reason=None):
         super().__init__(message)
         self.code = code
+        self.field_path = field_path
+        self.reason = reason or ("invalid_value" if field_path else None)
+
+    def extensions(self):
+        result = {"code": self.code}
+        if self.field_path:
+            result["fieldPath"] = [
+                int(index) if index else name for name, index in re.findall(r"([^.[\]]+)|\[(\d+)\]", self.field_path)
+            ]
+            result["reason"] = self.reason
+        return result
 
 
 def digest(value):

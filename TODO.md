@@ -1,5 +1,7 @@
 # MossCMS implementation TODOs
 
+The [maintainability review TODO](docs/maintainability-review.md) records the completed review and follow-up batches, including files, refactors, retained boundaries, and verification. The release checklist below remains historical delivery evidence.
+
 The original starter backlog is implemented. The items below record the delivered scope; deployment-specific OAuth and S3 credentials are configured by the instance owner.
 
 ## P0 — required before exposing a real instance

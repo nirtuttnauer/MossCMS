@@ -1,16 +1,16 @@
 """Bounded raster decoding at upload time and signed variant metadata."""
 
-import hashlib
-import hmac
-import time
 import warnings
 from io import BytesIO
 
 from fastapi import HTTPException
 from PIL import Image, ImageOps, UnidentifiedImageError
 
+from .media_links import media_url
+
 RASTER_MIMES = {"image/jpeg", "image/png", "image/webp"}
-Image.MAX_IMAGE_PIXELS = 20_000_000
+MAX_DECODED_PIXELS = 20_000_000
+Image.MAX_IMAGE_PIXELS = MAX_DECODED_PIXELS
 
 
 def process_image(data, mime):
@@ -22,7 +22,7 @@ def process_image(data, mime):
             with Image.open(BytesIO(data)) as image:
                 if image.format not in {"JPEG", "PNG", "WEBP"} or getattr(image, "n_frames", 1) != 1:
                     raise ValueError("Unsupported or animated image")
-                if image.width * image.height > 20_000_000 or max(image.size) > 10_000:
+                if image.width * image.height > MAX_DECODED_PIXELS or max(image.size) > 10_000:
                     raise ValueError("Image exceeds decoded pixel limits")
                 image.load()
                 oriented = ImageOps.exif_transpose(image).convert("RGBA" if "A" in image.getbands() else "RGB")
@@ -41,19 +41,13 @@ def process_image(data, mime):
         )
 
 
-def variant_url(settings, id, width):
-    expires = int(time.time()) + 900
-    signature = hmac.new(settings.secret.encode(), f"{id}:{width}:{expires}".encode(), hashlib.sha256).hexdigest()
-    return f"{settings.public_url}/media/{id}/variant/{width}?expires={expires}&signature={signature}"
-
-
 def variant_metadata(record, settings):
     return [
         {
             "width": v["width"],
             "height": v["height"],
             "size": v["size"],
-            "url": variant_url(settings, record.id, v["width"]),
+            "url": media_url(settings, record.id, v["width"]),
         }
         for v in (record.variants or [])
     ]

@@ -68,21 +68,123 @@ describe('FieldBuilder interactions', () => {
   })
 })
 
-it('explains invalid and duplicate inline enum edits',()=>{
-  render(<FieldBuilder value={[{name:'choices',type:'enum',options:['One','One','bad choice']}]} types={[]} onChange={vi.fn()} />)
+it('explains invalid and duplicate inline enum edits', () => {
+  render(<FieldBuilder value={[{ name: 'choices', type: 'enum', options: ['One', 'One', 'bad choice'] }]} types={[]} onChange={vi.fn()} />)
   expect(screen.getAllByRole('alert')).toHaveLength(3)
   expect(screen.getByLabelText('Choice 1 for choices')).toBeTruthy()
 })
 
-it('outline opens nested cards and arrow reorder retains complete field settings',()=>{
- const change=vi.fn(),first:Field={name:'group',type:'object',fields:[{name:'child',type:'enum',options:['One'],private:true}]},second:Field={name:'title',type:'text',required:true}
- render(<FieldBuilder value={[first,second]} onChange={change} types={[]} />)
- const child=screen.getByLabelText('Field name child').closest('details')!
- child.open=false
- fireEvent.click(screen.getByText('Schema outline'))
- fireEvent.click(screen.getByRole('button',{name:'child · enum'}))
- expect(child.open).toBe(true)
- fireEvent.click(screen.getByRole('button',{name:'Move group down'}))
- expect(change).toHaveBeenLastCalledWith([second,first])
- expect(screen.getAllByRole('status')[0].textContent).toContain('position 2')
+it('outline opens nested cards and arrow reorder retains complete field settings', () => {
+  const change = vi.fn()
+  const first: Field = { name: 'group', type: 'object', fields: [{ name: 'child', type: 'enum', options: ['One'], private: true }] }
+  const second: Field = { name: 'title', type: 'text', required: true }
+  render(<FieldBuilder value={[first, second]} onChange={change} types={[]} />)
+  const child = screen.getByLabelText('Field name child').closest('details')!
+  child.open = false
+  fireEvent.click(screen.getByText('Schema outline'))
+  fireEvent.click(screen.getByRole('button', { name: 'child · enum' }))
+  expect(child.open).toBe(true)
+  fireEvent.click(screen.getByRole('button', { name: 'Move group down' }))
+  expect(change).toHaveBeenLastCalledWith([second, first])
+  expect(screen.getAllByRole('status')[0].textContent).toContain('position 2')
+})
+
+it('keeps unfinished enum choices with their fields after reorder and removal', () => {
+  const change = vi.fn()
+  const first: Field = { name: 'first', type: 'enum', options: ['One'] }
+  const second: Field = { name: 'second', type: 'enum', options: ['Two'] }
+  const { rerender } = render(<FieldBuilder value={[first, second]} onChange={change} types={noTypes} />)
+  const firstInput = screen.getByLabelText('New choice for first') as HTMLInputElement
+  const secondInput = screen.getByLabelText('New choice for second') as HTMLInputElement
+  fireEvent.change(firstInput, { target: { value: 'FirstDraft' } })
+  fireEvent.change(secondInput, { target: { value: 'SecondDraft' } })
+
+  fireEvent.click(screen.getByRole('button', { name: 'Move first down' }))
+  expect(change).toHaveBeenLastCalledWith([second, first])
+  rerender(<FieldBuilder value={[second, first]} onChange={change} types={noTypes} />)
+  expect(screen.getByLabelText('New choice for first')).toBe(firstInput)
+  expect(firstInput.value).toBe('FirstDraft')
+  expect(screen.getByLabelText('New choice for second')).toBe(secondInput)
+  expect(secondInput.value).toBe('SecondDraft')
+
+  fireEvent.click(screen.getByRole('button', { name: 'Remove second' }))
+  expect(change).toHaveBeenLastCalledWith([first])
+  rerender(<FieldBuilder value={[first]} onChange={change} types={noTypes} />)
+  expect(screen.getByLabelText('New choice for first')).toBe(firstInput)
+  expect(firstInput.value).toBe('FirstDraft')
+  fireEvent.keyDown(firstInput, { key: 'Enter' })
+  expect(change).toHaveBeenLastCalledWith([{ ...first, options: ['One', 'FirstDraft'] }])
+})
+
+it('does not reorder or announce moves beyond either end', () => {
+  const change = vi.fn()
+  render(<FieldBuilder value={[{ name: 'first', type: 'text' }, { name: 'last', type: 'text' }]} onChange={change} types={noTypes} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Move first up' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Move last down' }))
+  expect(change).not.toHaveBeenCalled()
+  expect(screen.getByRole('status').textContent).toBe('')
+})
+
+it('follows list item outline paths and opens every nested ancestor', () => {
+  const change = vi.fn()
+  const value: Field[] = [{
+    name: 'group',
+    type: 'object',
+    fields: [{
+      name: 'items',
+      type: 'list',
+      item: { name: '', type: 'object', fields: [{ name: 'choice', type: 'enum', options: ['One'] }] },
+    }],
+  }]
+  const { container } = render(<FieldBuilder value={value} onChange={change} types={noTypes} rootId="schema" />)
+  const cards = ['schema-0', 'schema-0.0', 'schema-0.0.item', 'schema-0.0.item.0'].map(id => {
+    const card = container.querySelector<HTMLDetailsElement>(`[id="${id}"]`)!
+    card.open = false
+    return card
+  })
+  const child = cards[3]
+  child.scrollIntoView = vi.fn()
+  const focus = vi.spyOn(child.querySelector('summary')!, 'focus')
+  fireEvent.click(screen.getByText('Schema outline'))
+  fireEvent.click(screen.getByRole('button', { name: 'choice · enum' }))
+  expect(cards.every(card => card.open)).toBe(true)
+  expect(child.scrollIntoView).toHaveBeenCalledWith({ block: 'center' })
+  expect(focus).toHaveBeenCalledOnce()
+  fireEvent.change(screen.getByLabelText('Choice 1 for choice'), { target: { value: 'Two' } })
+  expect(change).toHaveBeenLastCalledWith([{
+    ...value[0],
+    fields: [{ ...value[0].fields![0], item: { name: '', type: 'object', fields: [{ name: 'choice', type: 'enum', options: ['Two'] }] } }],
+  }])
+})
+
+it('allows the fortieth enum choice and then disables additions', () => {
+  const change = vi.fn()
+  const field: Field = { name: 'choices', type: 'enum', options: Array.from({ length: 39 }, (_, i) => `Option${i}`) }
+  const { rerender } = render(<FieldBuilder value={[field]} onChange={change} types={noTypes} />)
+  const input = screen.getByLabelText('New choice for choices')
+  fireEvent.change(input, { target: { value: 'Last' } })
+  fireEvent.keyDown(input, { key: 'Enter' })
+  const full: Field = { ...field, options: [...field.options!, 'Last'] }
+  expect(change).toHaveBeenLastCalledWith([full])
+  rerender(<FieldBuilder value={[full]} onChange={change} types={noTypes} />)
+  expect(screen.queryByLabelText('New choice for choices')).toBeNull()
+  expect((screen.getByRole('button', { name: 'Add' }) as HTMLButtonElement).disabled).toBe(true)
+  change.mockClear()
+  fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+  expect(change).not.toHaveBeenCalled()
+})
+
+it('allows the fortieth field and then disables adding and duplicating', () => {
+  const change = vi.fn()
+  const fields: Field[] = Array.from({ length: 39 }, (_, i) => ({ name: `field${i}`, type: 'text' }))
+  const { rerender } = render(<FieldBuilder value={fields} onChange={change} types={noTypes} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Duplicate field38' }))
+  const full: Field[] = [...fields, { name: 'field38Copy', type: 'text' }]
+  expect(change).toHaveBeenLastCalledWith(full)
+  rerender(<FieldBuilder value={full} onChange={change} types={noTypes} />)
+  expect((screen.getByRole('button', { name: 'Add field' }) as HTMLButtonElement).disabled).toBe(true)
+  expect(screen.queryByRole('button', { name: /^Duplicate / })).toBeNull()
+  change.mockClear()
+  fireEvent.click(screen.getByRole('button', { name: 'Add field' }))
+  expect(change).not.toHaveBeenCalled()
 })

@@ -17,8 +17,8 @@ export function Auth({ initialized, providers, onSuccess, me }: { initialized: b
     try {
       const path = !initialized ? '/auth/setup' : (invite && !signingIn) || reset ? '/auth/accept' : '/auth/login'
       await rest(path, 'POST', { ...form, token: token || form.token, name: form.name || me?.user.name || 'Member', password: form.password || 'existing-account' })
-      if (!invite || !signingIn) location.hash = 'content'
-      else setSigningIn(false)
+      if (invite && signingIn) setSigningIn(false)
+      else if (!['content', 'overview', 'publications', 'types', 'assets', 'team', 'explorer', 'settings'].includes(hash.split('?')[0])) location.hash = 'content'
       onSuccess()
     } catch (reason) { setError(message(reason)) }
     finally { setBusy(false) }

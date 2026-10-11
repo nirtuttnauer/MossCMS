@@ -20,6 +20,8 @@ from .outbox import claim_events, prune_events
 from .security import CmsError, audit, require
 
 router = APIRouter()
+RETRY_DELAYS_SECONDS = (5, 30, 120, 600, 3600, 3600)
+_HTTP_TIMEOUT_SECONDS = 5
 
 
 def destination(url, allowed=()):
@@ -57,12 +59,14 @@ def send(url, payload, secret, allowed):
     timestamp = str(int(time.time()))
     signature = hmac.new(secret.encode(), timestamp.encode() + b"." + body, hashlib.sha256).hexdigest()
     kind = http.client.HTTPSConnection if parsed.scheme == "https" else http.client.HTTPConnection
-    connection = kind(parsed.hostname, port, timeout=5)
+    connection = kind(parsed.hostname, port, timeout=_HTTP_TIMEOUT_SECONDS)
     # Pin the verified address, while HTTPSConnection retains original-host TLS SNI/verification.
     setattr(
         connection,
         "_create_connection",
-        lambda address, timeout=5, source_address=None: socket.create_connection((ip, port), timeout, source_address),
+        lambda address, timeout=_HTTP_TIMEOUT_SECONDS, source_address=None: socket.create_connection(
+            (ip, port), timeout, source_address
+        ),
     )
     try:
         connection.request(
@@ -175,7 +179,7 @@ def deliver(factory, settings):
             if not row:
                 break
             hook = session.get(Webhook, row.webhook_id)
-            if not hook or not hook.enabled or row.attempts >= 6:
+            if not hook or not hook.enabled or row.attempts >= len(RETRY_DELAYS_SECONDS):
                 row.state = "failed"
                 row.error = "Disabled endpoint or retry limit reached"
                 continue
@@ -195,10 +199,10 @@ def deliver(factory, settings):
             row = session.scalar(select(WebhookDelivery).where(WebhookDelivery.id == id).with_for_update())
             if row.claim != claim or row.state != "sending":
                 continue
-            row.state = "delivered" if success else "failed" if row.attempts >= 6 else "retry"
+            row.state = "delivered" if success else "failed" if row.attempts >= len(RETRY_DELAYS_SECONDS) else "retry"
             row.error = reason
             row.claim = None
-            row.next_at = now() + timedelta(seconds=[5, 30, 120, 600, 3600, 3600][row.attempts - 1])
+            row.next_at = now() + timedelta(seconds=RETRY_DELAYS_SECONDS[row.attempts - 1])
     prune_events(factory)
     with factory.begin() as session:
         session.execute(
