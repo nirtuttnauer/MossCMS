@@ -23,9 +23,10 @@ Browser version was **Safari 27.0.1, build 22625.1.29.11.28**, as previously rea
 | Create token | Opened Settings by keyboard. Created a token named `Safari first-use one-day Article`, expiry one day, scoped only to Article. Token creation alone did not complete verification. |
 | Reject invalid token | Deliberately invalid synthetic token produced `A valid delivery token is required`; progress stayed 3/4. |
 | Successful verification | The actual token successfully verified delivery, and progress reached 4/4. No credential appears in this note, screenshot or URL. |
+| Dismiss/reload/resume | After 4/4, keyboard dismissal exposed Resume getting started guide. Safari reload retained dismissal; keyboard Resume restored Workspace ready and 4/4. |
 | Back/Forward navigation | Browser Back/Forward retained search `Safari first`, sort `title_asc` and the entry route. |
 
-Product actions used Option-Tab, Shift-Option-Tab, Space, Return and paste. The browser's save-password offer was declined with a mouse click outside the product. A native connection loss once rebound another window; the root recovered its owned window `2FD7B29B-F37F-4F1F-A38A-E178FF4935F8` using the Window menu, which required mouse navigation. This interruption is included in the elapsed time. Full Tab-only navigation and first-use dismissal/reload/resume were not separately evidenced in the supplied Safari transcript.
+Product actions used Option-Tab, Shift-Option-Tab, Space, Return and paste. The browser's save-password offer was declined with a mouse click outside the product. A native connection loss once rebound another window; the root recovered its owned window `2FD7B29B-F37F-4F1F-A38A-E178FF4935F8` using the Window menu, which required mouse navigation. This interruption is included in the elapsed time. The product journey used Safari’s existing Option-Tab navigation. A run using Tab alone under changed browser settings was not performed. Dismissal, reload and Resume were separately observed by the root after delivery verification.
 
 Root also tried clearing the Article title to test dirty-navigation cancellation. Empty strings are valid under the established schema rules, so autosave completed and Settings navigation proceeded. This was **not** proof of a dirty-navigation cancellation flow; a required numeric field is prepared separately below for that check.
 
@@ -81,7 +82,7 @@ Two pointer attempts on the localized-group validation summary focused `main-con
 - API PID `56872`, exec session `10851`.
 - Frontend exec session `27402`.
 
-At root authorization, both owning sessions were stopped at 17:42:10 UTC (20:42:10 Asia/Jerusalem). API session `10851` reported orderly application shutdown and PID `56872` finished with exit 0; frontend session `27402` ended with exit 130 following Ctrl+C. Only the regular mode-0600 `/tmp/moss-safari-first-use-20261011/delivery-token` file was unlinked. SQLite fixtures, private non-secret IDs and screenshots remain as evidence. The root owns browser/window cleanup; this subagent did not operate them.
+At root authorization, both owning sessions were stopped at 17:42:10 UTC (20:42:10 Asia/Jerusalem). API session `10851` reported orderly application shutdown and PID `56872` finished with exit 0; frontend session `27402` ended with exit 130 following Ctrl+C. Only the regular mode-0600 `/tmp/moss-safari-first-use-20261011/delivery-token` file was unlinked. SQLite fixtures, private non-secret IDs and screenshots remain as evidence. The root closed its own Safari window and in-app tab and reset the temporary viewport; the user’s pre-existing Safari window was preserved. This subagent did not operate browsers.
 
 The updated acceptance report and full planning criteria were read. A read-only task-context request through this subagent's exposed Aftur tool returned `not_found`; no ticket claim, status or canonical planning file was changed. No source file was edited by this subagent. Other fixtures, notes and existing working-tree changes are preserved.
 

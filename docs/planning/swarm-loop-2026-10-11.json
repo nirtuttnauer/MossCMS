@@ -1,6 +1,6 @@
 {
   "project": "MossCMS",
-  "checked_at": "2026-10-11T17:43:39.208878+00:00",
+  "checked_at": "2026-10-11T17:45:37.300973+00:00",
   "goal_chat": "01a12bd6-1673-77a1-8ad9-b1a70e4a893c",
   "automation": {
     "id": "mosscms-ticket-swarm-loop",
@@ -11,7 +11,7 @@
   "mcp": {
     "helper": "/Users/nirtuttnauer/Documents/Code/Aftur/Scripts/aftur_mcp.py",
     "project_path": "/Users/nirtuttnauer/Documents/Code/MossCMS/ProjectMemory/MossCMS",
-    "revision": 524,
+    "revision": 527,
     "direct_connector_selects": "Aftur app project; do not use for MossCMS"
   },
   "audited_tickets": [
@@ -507,5 +507,7 @@
     "elapsed_seconds_including_native_interruption": 461,
     "iab": "Engineversionunexposed;390x844 list/locale/group keyboardsummaryfocus,zero recovery,hedefaultnewentry",
     "cleanup": "Agentwindow/tabclosed;viewportreset;owned18114/15114servicesstopped;private token removed;fixturesretained"
-  }
+  },
+  "evidence_commit": "adba95b",
+  "evidence_commit_scope": "20 acceptance evidence/helper/PostgreSQL-test files; existing implementation changes excluded; no push"
 }
