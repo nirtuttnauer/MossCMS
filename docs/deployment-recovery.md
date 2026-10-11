@@ -13,18 +13,18 @@ Terminate TLS at a reverse proxy. Keep the default loopback bindings (CMS 8001, 
 | Root `.env` | `MOSS_ENV=production`, `MOSS_SKIP_AUTH=false` | Enforce real authentication |
 | Root `.env` | `MOSS_PUBLIC_URL`, `MOSS_ORIGINS` | Canonical CMS HTTPS origin and explicit trusted browser origins |
 | Root `.env` | `MOSS_SECRET_KEY`, `MOSS_SETUP_TOKEN`, PostgreSQL credentials | Stable secrets and protected setup/database access |
-| Root `.env` | `MOSS_WEBHOOK_ORIGINS` | Optional exact private callback origins; Compose website uses `http://personal-site:5174` |
+| Root `.env` | `MOSS_WEBHOOK_ORIGINS` | Optional exact private callback origins; Compose website uses `http://example-site:5174` |
 | Website `.env` | `MOSS_API_URL`, `MOSS_DELIVERY_TOKEN` | Server-only CMS connection; Compose overrides the URL to `http://app:8001` |
 | Website `.env` | `MOSS_PROJECT_ID` | Setup script's workspace identity; distinct from event validation below |
-| Website `.env` | `SITE_PUBLIC_URL` | Canonical HTTPS site origin, normally `https://example.com`; local HTTP testing can use `http://localhost:5174` |
+| Website `.env` | `SITE_PUBLIC_URL` | Canonical HTTPS site origin, normally `http://localhost:5174`; local HTTP testing can use `http://localhost:5174` |
 | Website `.env` | `SITE_SOCIAL_IMAGE` | Optional permanent static HTTPS URL/path, without query/fragment; omit to omit image cards |
 | Website `.env` | `MOSS_WEBHOOK_SECRET`, `SITE_MOSS_WORKSPACE_ID` | One-time webhook signing secret and matching workspace UUID |
 | Website `.env` | `SITE_PREVIEW_ORIGINS` | Optional additional trusted redemption origins; the configured public origin is always included |
 | CMS workspace Settings | Website preview origin | Exact browser-facing site origin used to construct editor preview links |
 
-Create the five website types/content and a scoped delivery token using [website setup](../personal-site/README.md). The automatic setup script is for temporary **local development** bypass only. Production admins use authenticated admin/API operations; never enable bypass on an exposed instance. Repeated setup retains entries/custom compatible fields and existing environment keys, but the script updates its CMS connection values; review workspace selection before running it.
+Create the five website types/content and a scoped delivery token using [website setup](../example-site/README.md). The automatic setup script is for temporary **local development** bypass only. Production admins use authenticated admin/API operations; never enable bypass on an exposed instance. Repeated setup retains entries/custom compatible fields and existing environment keys, but the script updates its CMS connection values; review workspace selection before running it.
 
-Create a webhook in Settings for `http://personal-site:5174/api/moss-events` in Compose (or the public HTTPS receiver). For the internal address, add `http://personal-site:5174` to root `MOSS_WEBHOOK_ORIGINS` and recreate the app **before** registering the endpoint. Put the one-time secret and workspace ID into the website environment and recreate the website. Disable/recreate the endpoint to rotate the secret. Keep the delivery token scoped to `siteProfile`, `sitePage`, `siteSlide`, `sitePost`, `siteProject`; keep credentials out of `VITE_` variables. Environment changes require container recreation.
+Create a webhook in Settings for `http://example-site:5174/api/moss-events` in Compose (or the public HTTPS receiver). For the internal address, add `http://example-site:5174` to root `MOSS_WEBHOOK_ORIGINS` and recreate the app **before** registering the endpoint. Put the one-time secret and workspace ID into the website environment and recreate the website. Disable/recreate the endpoint to rotate the secret. Keep the delivery token scoped to `siteProfile`, `sitePage`, `siteSlide`, `sitePost`, `siteProject`; keep credentials out of `VITE_` variables. Environment changes require container recreation.
 
 Public caching lasts five seconds. A verified webhook clears it and signals open browsers over SSE; browsers also poll every ten seconds and on visibility changes. Stale public data may be served during an outage for at most ten minutes. Preview authorization fails closed. Multiple website processes need one callback per instance or shared invalidation infrastructure; the current cache/session/SSE state is in memory. See [webhook protocol and retries](webhooks.md).
 
@@ -82,7 +82,7 @@ Use a separate empty database and a **new** media volume. Keep the original data
      recovered_assets:
    ```
 
-   If the website is used, also set its matching retained `personal-site.image` in this override. Keep PostgreSQL at the original major version.
+   If the website is used, also set its matching retained `example-site.image` in this override. Keep PostgreSQL at the original major version.
 
 3. Select the override and restore media **before starting the app**:
 
@@ -105,7 +105,7 @@ The 8 October acceptance run upgraded schema `0001` to `0008` on a separate 1,00
 
 ### Migration 0009: locales and published website URL history
 
-Migration `0009` adds workspace authoring locale settings with `en` as the default and sole suggestion for existing workspaces. It preserves stored translation maps and delivery locale behavior. It also adds reservations for known published website paths. Deploy the API and `personal-site` together: the website loader now queries `websiteRedirects` and `websiteReservedPaths`, which older APIs do not provide. Keep both stopped during the matched upgrade and verify current routes, historical redirects and publication propagation before reopening access.
+Migration `0009` adds workspace authoring locale settings with `en` as the default and sole suggestion for existing workspaces. It preserves stored translation maps and delivery locale behavior. It also adds reservations for known published website paths. Deploy the API and `example-site` together: the website loader now queries `websiteRedirects` and `websiteReservedPaths`, which older APIs do not provide. Keep both stopped during the matched upgrade and verify current routes, historical redirects and publication propagation before reopening access.
 
 A website path recorded during publication stays owned by its original entry. Publishing A → B → C redirects A and B directly to the current live C with HTTP 308; conflicting canonical or recorded paths are rejected. Draft saves and scheduling alone create no public paths or redirects. A scheduled capture records its path only when publication succeeds. Unpublish and trash remove public destinations, while reservations remain; the original entry can recover valid mappings when republished. Unavailable reserved paths return the normal public unavailable response rather than another entry's legacy alias. Sitemap, RSS and canonical metadata retain current live paths only.
 

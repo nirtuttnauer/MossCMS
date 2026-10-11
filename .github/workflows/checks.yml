@@ -15,8 +15,8 @@ jobs:
         working-directory: api
       - name: Check operator, release, and website setup scripts
         run: |
-          uv run ruff check --config pyproject.toml ../scripts ../personal-site/scripts/setup_moss.py
-          uv run ruff format --check --config pyproject.toml ../scripts ../personal-site/scripts/setup_moss.py
+          uv run ruff check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
+          uv run ruff format --check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
         working-directory: api
       - run: uv run mypy app
         working-directory: api
@@ -63,7 +63,7 @@ jobs:
         working-directory: web
       - run: npm run check && npm test && npm run build && npm audit --audit-level=high
         working-directory: web
-  personal_site:
+  example_site:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -71,8 +71,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: personal-site/package-lock.json
+          cache-dependency-path: example-site/package-lock.json
       - run: npm ci
-        working-directory: personal-site
+        working-directory: example-site
       - run: npm run check && npm test && npm run build && npm audit --audit-level=high
-        working-directory: personal-site
+        working-directory: example-site

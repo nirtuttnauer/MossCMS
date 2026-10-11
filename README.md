@@ -1,8 +1,20 @@
+<p align="center">
+  <img src="web/public/brand/moss-symbol-v2.png" alt="MossCMS logo" width="160" />
+</p>
+
 # MossCMS
 
 A self-hosted content service with a GraphQL API and a React admin. Define your data, publish entries, and consume them from any frontend. Python dependencies use **uv**; the admin uses **Vite, React, TypeScript, Tailwind, and Radix/shadcn-style components**. The multistage Docker image serves both from one origin, backed by PostgreSQL.
 
 [MIT licensed](LICENSE). Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+[![Checks](https://github.com/nirtuttnauer/MossCMS/actions/workflows/checks.yml/badge.svg)](https://github.com/nirtuttnauer/MossCMS/actions/workflows/checks.yml)
+
+![MossCMS content library and getting-started checklist](docs/acceptance-2026-10-11/first-use-three-ready.jpg)
+
+Model content visually, write with Markdown, upload media, and publish immediately or on a schedule. Drafts stay separate from live content. Each workspace has its own schemas, team, and delivery tokens.
+
+[Start locally](#start) · [First content walkthrough](#your-first-content) · [Run the example site](#example-website-frontend) · [Delivery API](#graphql-for-your-frontends) · [Production setup](#storage-and-production)
 
 ## Start
 
@@ -27,6 +39,31 @@ There is no automatic seed. After setup, an optional repeatable seed command is:
 ```sh
 docker compose exec app python -m app.cli seed --project YOUR_WORKSPACE_ID
 ```
+
+## Your first content
+
+1. **Choose a workspace.** Use the workspace menu in the sidebar. Administrators can create or rename workspaces in **Settings**.
+2. **Define a content type.** Open **Content types** and create an `article` type. Add a required text field named `title` and a rich text field named `body`. Save the schema. The [field definition example](#define-data) shows nested objects, lists, locales, references, and assets.
+3. **Write an entry.** Open **Content**, select your Article group, and choose **New entry**. Enter a slug such as `hello-world`, fill in the title, and write the body. **Save draft** keeps the entry private; the editor also autosaves changes.
+4. **Add media.** Upload an image in **Assets**, then insert it through the Markdown editor's image picker or an asset field. Markdown stores durable asset IDs, so expiring download links are refreshed when content is read.
+5. **Publish.** Choose **Publish now** to make the entry live. To publish later, use **Schedule publication** and select a date in your browser's timezone. Later draft edits preserve the live version and captured schedule. **Publications** shows the queue and failed publications.
+6. **Connect a frontend.** In **Settings**, create a delivery token scoped to `article`. Copy it once, keep it on your server, and query published content:
+
+```sh
+export MOSS_DELIVERY_TOKEN='YOUR_DELIVERY_TOKEN'
+curl http://localhost:8001/delivery/graphql \
+  -H "Authorization: Bearer $MOSS_DELIVERY_TOKEN" \
+  -H 'Content-Type: application/json' \
+  --data '{"query":"{ entries(typeKey: \"article\", first: 10) { nodes { id slug data } } }"}'
+```
+
+The getting-started checklist in **Content** guides you through defining a type, drafting an entry, publishing, and verifying a delivery query. For a complete frontend integration, use the [example website](example-site/README.md).
+
+<p>
+  <img src="docs/acceptance-2026-10-11/editor-mobile.jpg" alt="MossCMS mobile editor showing a live article with unpublished draft changes" width="280" />
+</p>
+
+The editor works on mobile, keeps draft and live states visible, and guards unsaved changes. See [editor workflows](docs/editor-workflows.md), [Markdown and images](docs/markdown.md), and [publishing semantics](docs/publication-contract.md) for detailed guides.
 
 ## Temporarily skip sign-in
 
@@ -95,7 +132,7 @@ Supported types: text, richText (Markdown stored as a string), number, boolean, 
 
 Schema updates validate every stored entry and published snapshot in one transaction. For incompatible changes, provide an explicit migration, for example `{"rename":{"oldName":"newName"},"defaults":{"requiredField":"value"},"drop":["obsolete"]}`. Schema and entry changes retain revisions. Entry updates require the current `version` to prevent overwriting concurrent edits. Restoring a revision creates a new draft and validates it against the current schema.
 
-Content is grouped by its schema type in the Content library. Each group shows its entry count and opens a filtered list; **New entry** uses the selected type. Create additional types in **Content types** to organize other collections. The personal website includes separate Projects, Blog posts, Website page, Homepage slide, and Website profile groups.
+Content is grouped by its schema type in the Content library. Each group shows its entry count and opens a filtered list; **New entry** uses the selected type. Create additional types in **Content types** to organize other collections. The example website includes separate Projects, Blog posts, Website page, Homepage slide, and Website profile groups.
 
 Entries have independent working, live and scheduled versions. **Save draft** and autosave preserve existing live content and captured schedules. **Publish now** replaces the complete live snapshot. **Schedule / Replace schedule** freezes the selected revision and UTC due time; later draft edits do not alter it. Use explicit **Cancel schedule** or **Unpublish** actions. The scheduler checks about every five seconds and on startup. Failed captures preserve live content and appear in **Publications**, where editors can retry the captured revision, replace it or discard it. Dates display the browser timezone. See [editor workflows](docs/editor-workflows.md) for autosave recovery, Markdown, media, saved website previews and schema tools, and [the publication contract](docs/publication-contract.md) for API transition semantics.
 
@@ -187,7 +224,7 @@ Node/Python image digests and Python/npm lockfiles pin builds. To update, delibe
 - `api/app/media_links.py`: original/variant media signing and expiry policy. `storage.py` handles upload/download operations; `images.py` handles bounded image decoding and variants.
 - `web/src/pages/` and `web/src/components/`: admin screens and form controls. `web/src/lib/` contains API requests, schema helpers, shared locale/entry validation, and autosave recovery.
 - `web/src/pages/Content.tsx` owns the content library; `EntryEditor.tsx` is shared by the content and publication screens. `web/src/lib/revisions.ts` builds field differences for the revision comparison component.
-- `personal-site/src/`: public website components. `personal-site/server/`: delivery loading, cache, preview sessions, publication events, routes, and metadata.
+- `example-site/src/`: public website components. `example-site/server/`: delivery loading, cache, preview sessions, publication events, routes, and metadata.
 - `shared/`: Markdown rendering policy and website routes shared across consumers. `scripts/`: operator configuration, backup/restore, and release acceptance tools.
 
 API tests live in `api/tests/`; admin and website server tests sit beside the code they exercise. Keep schema validation and public-data filtering shared between editorial saves, scheduled publication, delivery, and preview.
@@ -216,8 +253,8 @@ Local API development defaults to SQLite; set `DATABASE_URL` to use PostgreSQL. 
 cd api
 uv run ruff check app tests migrations
 uv run ruff format --check app tests migrations
-uv run ruff check --config pyproject.toml ../scripts ../personal-site/scripts/setup_moss.py
-uv run ruff format --check --config pyproject.toml ../scripts ../personal-site/scripts/setup_moss.py
+uv run ruff check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
+uv run ruff format --check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
 uv run mypy app
 uv run pytest
 ```
@@ -237,7 +274,7 @@ npm audit --audit-level=high
 ```
 
 ```sh
-cd personal-site
+cd example-site
 npm run check
 npm test
 npm run build
@@ -246,9 +283,21 @@ npm audit --audit-level=high
 
 CI runs the same checks. Tests cover authorization and workspace boundaries, token scopes/drafts/private fields, team roles, recovery, schema changes, revisions, scheduling, assets, generated GraphQL types, legacy migration, and core frontend interactions. External OAuth and S3 services require your credentials; unit coverage does not establish that a particular provider or bucket is configured correctly.
 
-## Personal website frontend
+## Example website frontend
 
-[personal-site/](personal-site/README.md) is a separate Vite React project with a 20% sidebar and 80% main content area, powered by a dedicated MossCMS workspace. Run `docker compose --profile website up --build -d personal-site` after its setup script to serve it on http://localhost:5174.
+[example-site/](example-site/README.md) is a standalone Vite + React frontend with generic starter content. It demonstrates projects, blog posts, editable pages, Markdown, media, draft previews, and a configurable home showcase. A Node server keeps the delivery token private and reads published content through `/delivery/graphql`.
+
+For local development, temporarily set `MOSS_SKIP_AUTH=true` in the root `.env`, then run from the repository root:
+
+```sh
+docker compose up -d app
+python3 example-site/scripts/setup_moss.py
+docker compose --profile website up --build -d example-site
+```
+
+Open [localhost:5174](http://localhost:5174). Select **Example website** in the CMS workspace menu to edit its content. The setup script creates five content types, sample entries, and a scoped server-only delivery token in the ignored `example-site/.env`; rerunning it preserves edits.
+
+Restore `MOSS_SKIP_AUTH=false` in the root `.env` and run `docker compose up -d app` when setup is complete. The delivery token continues working. For authenticated manual setup, local Vite development, deployment to your own domain, and signed publication events, follow the [example site guide](example-site/README.md).
 
 ## Product plan
 

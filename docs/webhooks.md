@@ -18,7 +18,7 @@ Public endpoints require HTTPS and global IPs. Every attempt resolves all DNS
 addresses, validates them and pins the selected address for the connection;
 TLS verifies the original hostname. Redirects are failures. No proxy environment
 is used. `MOSS_WEBHOOK_ORIGINS` is an explicit comma-separated operator override
-for trusted local origins, e.g. `http://personal-site:5174`; paths are not allowed
+for trusted local origins, e.g. `http://example-site:5174`; paths are not allowed
 in that setting. It intentionally grants private-network access to those origins.
 
 A separate worker fans out committed events, then performs network requests

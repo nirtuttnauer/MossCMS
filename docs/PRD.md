@@ -1,4 +1,4 @@
-# MossCMS and example.com — Product requirements
+# MossCMS and Moss Example — Product requirements
 
 Version: 1.0 baseline · Date: 7 October 2026 · Execution update: 8 October 2026
 
@@ -10,20 +10,20 @@ The baseline/gaps and proposed wording below preserve the 7 October planning rec
 
 ## 1. Product definition
 
-MossCMS is a self-hosted, GraphQL-first content service for developers who want to define structured data once and consume it from several frontends. It provides a browser admin for data modeling, authoring, publishing, assets, and team management. The reference consumer is example.com, a personal website with projects, a blog, an About me page, and a rotating component showcase.
+MossCMS is a self-hosted, GraphQL-first content service for developers who want to define structured data once and consume it from several frontends. It provides a browser admin for data modeling, authoring, publishing, assets, and team management. The reference consumer is Moss Example, a example website with projects, a blog, an About me page, and a rotating component showcase.
 
-The owner controls the application, database, media, and delivery credentials. The CMS remains useful independently of example.com.
+The owner controls the application, database, media, and delivery credentials. The CMS remains useful independently of Moss Example.
 
 ## 2. Sources and authority
 
 This PRD was drafted at the owner's request from this conversation and the repository as inspected on 7 October 2026. It was initially a draft; implementation authorization subsequently came from the owner's explicit chat approval described above.
 
-- **Owner requirements:** Docker with a multistage build; Python managed by uv; Vite/React with shadcn-style admin components; GraphQL content delivery; team management; OAuth; a temporary development auth bypass; scheduled posts; content groups such as projects and blog posts; and the CMS-managed example.com website described below.
+- **Owner requirements:** Docker with a multistage build; Python managed by uv; Vite/React with shadcn-style admin components; GraphQL content delivery; team management; OAuth; a temporary development auth bypass; scheduled posts; content groups such as projects and blog posts; and the CMS-managed Moss Example website described below.
 - **Observed baseline:** capabilities found in the current source. Existing features are retained rather than recreated as new tasks.
 - **Proposed next release:** improvements suggested by the agent, now captured for review. Their presence here does not authorize implementation or establish a release date.
 - **Aftur workflow:** import this exact document with its provenance, then propose actionable tasks linked to it. Task approval and execution remain separate from planning.
 
-Sources: root `README.md`, `TODO.md`, `TYPE_IMPROVEMENTS.md`, `personal-site/README.md`, and the API, admin, website, setup, and deployment source. Historical verification statements in existing documents were not rerun for this planning work. `TYPE_IMPROVEMENTS.md` is partly stale: a delivery-shape preview now exists, but its accuracy and UX still need review.
+Sources: root `README.md`, `TODO.md`, `TYPE_IMPROVEMENTS.md`, `example-site/README.md`, and the API, admin, website, setup, and deployment source. Historical verification statements in existing documents were not rerun for this planning work. `TYPE_IMPROVEMENTS.md` is partly stale: a delivery-shape preview now exists, but its accuracy and UX still need review.
 
 ## 3. Users and jobs
 
@@ -33,7 +33,7 @@ Sources: root `README.md`, `TODO.md`, `TYPE_IMPROVEMENTS.md`, `personal-site/REA
 | Content editor | Create projects and posts, attach media, preview changes, and publish now or later. |
 | Reader | Inspect editorial content without changing it. |
 | Frontend developer | Query published structured data through a stable, scoped GraphQL API. |
-| Website visitor | Browse example.com projects and posts and explore an accessible animated homepage. |
+| Website visitor | Browse Moss Example projects and posts and explore an accessible animated homepage. |
 
 ## 4. Goals and boundaries
 
@@ -42,7 +42,7 @@ Sources: root `README.md`, `TODO.md`, `TYPE_IMPROVEMENTS.md`, `personal-site/REA
 1. Make self-hosted content management practical with one documented Docker deployment.
 2. Make content reusable across independent frontend applications.
 3. Make publishing predictable: drafts, live content, scheduled changes, and failures are distinguishable.
-4. Make example.com content and existing visual components configurable from MossCMS.
+4. Make Moss Example content and existing visual components configurable from MossCMS.
 5. Preserve existing entries, IDs, history, workspace isolation, and API access boundaries during upgrades.
 
 ### Outside this release
@@ -50,7 +50,7 @@ Sources: root `README.md`, `TODO.md`, `TYPE_IMPROVEMENTS.md`, `personal-site/REA
 - A visual page designer or live graphical frontend editor.
 - Arbitrary React/JavaScript uploaded through the CMS; new animation component kinds require code.
 - Real-time collaborative document editing, payments, a plugin marketplace, or a hosted SaaS offering.
-- Automatic DNS changes or public deployment of example.com.
+- Automatic DNS changes or public deployment of Moss Example.
 - Additional OAuth providers, custom per-field team roles, or email delivery beyond the current manually shared invitations and recovery links.
 
 ## 5. Historical baseline — 7 October 2026
@@ -66,7 +66,7 @@ These are observed capabilities, not a certification of production readiness.
 | B05 | Authoring | Entries grouped by type, filters/search/pagination, optimistic versions, revisions/restore, recoverable trash, immediate and scheduled publication. |
 | B06 | API and assets | Editorial and scoped published-only delivery GraphQL; query limits, ETags, local/S3 media and expiring download URLs. |
 | B07 | Operations | Alembic migration, health/readiness, request IDs/timing, audit history, backup and restore tooling. |
-| B08 | example.com | CMS-driven profile, pages, projects, posts and slides; dark `#11151B` sidebar, desktop 20/80 layout, responsive navigation and randomized liquid/Three.js/promotion/blog carousel with motion controls. |
+| B08 | Moss Example | CMS-driven profile, pages, projects, posts and slides; dark `#11151B` sidebar, desktop 20/80 layout, responsive navigation and randomized liquid/Three.js/promotion/blog carousel with motion controls. |
 
 ### Observed gaps
 
@@ -86,10 +86,10 @@ The following owner requirements must survive every planned improvement:
 
 - Each workspace contains independent schemas, entries, members, assets, tokens and audit records.
 - Administrators manage schemas, members and tokens; editors manage content/media; readers inspect content. The final administrator cannot be removed.
-- Delivery credentials cannot mutate content, read drafts/history, or reveal private fields, including nested values. Credentials for example.com remain server-side.
+- Delivery credentials cannot mutate content, read drafts/history, or reveal private fields, including nested values. Credentials for Moss Example remain server-side.
 - Content groups come from schema types. Projects and blog posts remain separate collections without hard-coding the CMS to those two types.
 - Scheduled dates are stored in UTC and shown with an explicit authoring timezone. The server must be running to execute schedules; overdue schedules are handled after restart.
-- example.com retains Home, expandable Projects, Blog and About me navigation. The removed name/caption/Explore block stays removed. Defaults retain the requested sidebar color and desktop proportions.
+- Moss Example retains Home, expandable Projects, Blog and About me navigation. The removed name/caption/Explore block stays removed. Defaults retain the requested sidebar color and desktop proportions.
 - Existing animation kinds remain configurable through CMS data. Random rotation avoids immediate repeats, supports manual navigation/pause, and respects reduced motion and hidden tabs.
 
 ## 7. Proposed next-release requirements
@@ -122,11 +122,11 @@ Acceptance: closing, navigation and refresh protect unsaved changes; readers can
 
 Proposed first implementation: Markdown stored in the existing string-based rich-text fields, with formatting controls and a preview. Support headings, emphasis, lists, links, fenced code and asset-backed images. Keep legacy plain text readable and GraphQL string fields compatible. Raw HTML and unsafe URL schemes must not execute. A portable block-document format is deferred.
 
-Acceptance: the same supported formatting renders consistently in CMS preview and example.com; plain existing bodies retain their meaning; image references resolve without storing expiring signed URLs as durable source content.
+Acceptance: the same supported formatting renders consistently in CMS preview and Moss Example; plain existing bodies retain their meaning; image references resolve without storing expiring signed URLs as durable source content.
 
 ### FR05 — Preview on the actual website · P1
 
-An authorized editor can preview a saved working revision on example.com without publishing. Use an expiring, workspace/entry/revision-scoped preview grant redeemed by the website server. Show a persistent preview indicator and an exit action. A preview does not expand ordinary delivery-token permissions or expose private fields to site components.
+An authorized editor can preview a saved working revision on Moss Example without publishing. Use an expiring, workspace/entry/revision-scoped preview grant redeemed by the website server. Show a persistent preview indicator and an exit action. A preview does not expand ordinary delivery-token permissions or expose private fields to site components.
 
 Acceptance: expired/revoked/out-of-scope grants fail; preview responses are non-cacheable and non-indexable; preview credentials are removed from the visible URL after redemption and excluded from logs; published visitors continue to receive published data.
 
@@ -138,7 +138,7 @@ Acceptance: old entries remain valid; local and S3 assets work; non-image files 
 
 ### FR07 — Website routing and metadata · P2
 
-Support actual `/blog/<slug>` and `/projects/<slug>` routes, direct navigation, refresh, back/forward and real 404 responses. Preserve existing hash links through a compatibility redirect/translation. Render page-specific canonical, title, description and social image metadata in the initial HTML. Add published-only sitemap and RSS endpoints using https://example.com as the configured production origin.
+Support actual `/blog/<slug>` and `/projects/<slug>` routes, direct navigation, refresh, back/forward and real 404 responses. Preserve existing hash links through a compatibility redirect/translation. Render page-specific canonical, title, description and social image metadata in the initial HTML. Add published-only sitemap and RSS endpoints using http://localhost:5174 as the configured production origin.
 
 Acceptance: a direct HTTP request for a post receives its metadata and content route; unknown pages return 404; drafts/previews never appear in sitemap/RSS; legacy links resolve; changing a live slug has a documented redirect policy.
 
@@ -175,7 +175,7 @@ Acceptance: no fabricated pass claims; no production data overwrite during rehea
 ## 8. Architecture and compatibility constraints
 
 - Retain Python/FastAPI/Strawberry/SQLAlchemy, uv and PostgreSQL; use forward Alembic migrations rather than editing the existing migration in place.
-- Retain Vite/React/TypeScript admin and personal-site projects and multistage Docker builds.
+- Retain Vite/React/TypeScript admin and example-site projects and multistage Docker builds.
 - Keep the editorial API and delivery API separate; extend existing GraphQL operations compatibly where possible. Document any intentional breaking change before implementation.
 - Start with the current application scheduler/outbox worker lifecycle. A separate queue service is a later scaling decision, not an assumed new dependency.
 - Existing website setup upgrades are idempotent and preserve owner-edited content, entry IDs, history and compatible custom schema fields.

@@ -278,9 +278,9 @@
       "success_measure": "All recorded previously published URLs in rename fixtures reach their current live canonical page in one redirect; no private/draft path exposure.",
       "evidence": [
         "docs/PRD.md: hosting and redirects limitation",
-        "personal-site/server/moss.mjs: current-slug aliases",
+        "example-site/server/moss.mjs: current-slug aliases",
         "shared/routes.mjs",
-        "personal-site/server/pages.mjs",
+        "example-site/server/pages.mjs",
         "api/app/content.py: publish state transitions"
       ],
       "baseline_relation": "Follow-up to MC-19–MC-21; those delivered stable routes and legacy aliases without retaining historical published paths.",

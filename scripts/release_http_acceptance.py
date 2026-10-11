@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Destructive fixture walkthrough: use ONLY the explicitly guarded disposable restored database.
-Run with api/.venv/bin/python; build personal-site first. Ports 18033/15133 must be free.
+Run with api/.venv/bin/python; build example-site first. Ports 18033/15133 must be free.
 The fixture database must have no user accounts and 1,004 schema-0001 fixture entries.
 """
 
@@ -215,7 +215,7 @@ def main():
         }
         site = subprocess.Popen(
             [NODE, "server/index.mjs"],
-            cwd=ROOT / "personal-site",
+            cwd=ROOT / "example-site",
             env=siteenv,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,

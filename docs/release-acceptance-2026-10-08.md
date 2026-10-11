@@ -41,7 +41,7 @@ Release checks exposed and fixed a worker-shutdown race, overly slow webhook wor
 
 Use only a disposable local PostgreSQL instance, a role permitted to create test databases, and unused ports. These scripts deliberately refuse non-loopback databases or names outside `moss_release_*`. Seed also refuses non-empty databases; the HTTP walkthrough requires the untouched 1,004-entry fixture with no accounts and writes synthetic content. Do not point either script at an existing instance.
 
-1. Install locked API dev dependencies and website dependencies; build `personal-site`.
+1. Install locked API dev dependencies and website dependencies; build `example-site`.
 2. Create an empty `moss_release_legacy` database and set `MOSS_RELEASE_DATABASE_URL` to its SQLAlchemy PostgreSQL URL. Run `api/.venv/bin/python scripts/release_fixture.py seed` from the repository root.
 3. Dump that database with `pg_dump -Fc`; restore into a **different empty** `moss_release_restored` database with `pg_restore --no-owner --no-acl --single-transaction`. Retain the original fixture for comparison.
 4. Change `MOSS_RELEASE_DATABASE_URL` to the restored database. Run `api/.venv/bin/python scripts/release_fixture.py verify-upgrade`, then `api/.venv/bin/python scripts/release_http_acceptance.py`. Set `MOSS_RELEASE_NODE` if Node is not on PATH and `MOSS_RELEASE_RESULTS` to choose the JSON output path.
@@ -49,7 +49,7 @@ Use only a disposable local PostgreSQL instance, a role permitted to create test
 
 The checked-in scripts were also run against a second independently restored fixture. Its upgrade preserved the same 1,004 entries/history and took 0.1402 seconds; this verifies the saved reproduction path rather than relying only on a temporary harness.
 
-For ordinary checks, use the commands in the root README and `npm test` in `personal-site`. PostgreSQL tests require `MOSS_TEST_DATABASE_URL`; each test creates and removes its own database. Docker builds use the repository root as context for both images.
+For ordinary checks, use the commands in the root README and `npm test` in `example-site`. PostgreSQL tests require `MOSS_TEST_DATABASE_URL`; each test creates and removes its own database. Docker builds use the repository root as context for both images.
 
 ## Checks still requiring deployment evidence
 

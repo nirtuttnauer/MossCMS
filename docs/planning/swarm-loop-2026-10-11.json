@@ -185,7 +185,7 @@
     },
     {
       "id": "TASK-11",
-      "title": "MC-11 \u00b7 Render Markdown consistently on example.com",
+      "title": "MC-11 \u00b7 Render Markdown consistently on Moss Example",
       "status": "done",
       "depends_on": [
         "TASK-10"
@@ -312,7 +312,7 @@
     },
     {
       "id": "TASK-26",
-      "title": "MC-26 \u00b7 Refresh example.com from publication events",
+      "title": "MC-26 \u00b7 Refresh Moss Example from publication events",
       "status": "done",
       "depends_on": [
         "TASK-25"

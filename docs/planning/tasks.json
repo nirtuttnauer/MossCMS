@@ -286,13 +286,13 @@
       "requirements": [
         "FR04"
       ],
-      "title": "Render Markdown consistently on example.com",
+      "title": "Render Markdown consistently on Moss Example",
       "scope": "Replace paragraph-only body rendering with a safe renderer matching MC-10, including code, typography and graceful asset-reference handling.",
       "files": [
-        "personal-site/src/App.tsx",
-        "personal-site/src/style.css",
-        "personal-site/server/moss.mjs",
-        "personal-site/package.json"
+        "example-site/src/App.tsx",
+        "example-site/src/style.css",
+        "example-site/server/moss.mjs",
+        "example-site/package.json"
       ],
       "depends_on": [
         "MC-10"
@@ -346,9 +346,9 @@
       "title": "Add secure website preview sessions",
       "scope": "Redeem grants server-side into a short-lived preview session, remove credentials from URLs, and render scoped draft data with an exit control. Reuse the ordinary website components.",
       "files": [
-        "personal-site/server/index.mjs",
-        "personal-site/server/moss.mjs",
-        "personal-site/src/App.tsx"
+        "example-site/server/index.mjs",
+        "example-site/server/moss.mjs",
+        "example-site/src/App.tsx"
       ],
       "depends_on": [
         "MC-12"
@@ -401,8 +401,8 @@
       "title": "Define covers and project gallery fields",
       "scope": "Extend the repeatable website setup schema with optional cover/gallery asset IDs, alt text and focal/crop metadata. Define image-format and decoded-pixel limits.",
       "files": [
-        "personal-site/scripts/setup_moss.py",
-        "personal-site/server/moss.mjs"
+        "example-site/scripts/setup_moss.py",
+        "example-site/server/moss.mjs"
       ],
       "depends_on": [],
       "acceptance_criteria": [
@@ -483,9 +483,9 @@
       "title": "Display blog covers and project galleries",
       "scope": "Resolve asset fields in the website adapter and render responsive cover/gallery images with dimensions, alt text and selected crops.",
       "files": [
-        "personal-site/server/moss.mjs",
-        "personal-site/src/App.tsx",
-        "personal-site/src/style.css"
+        "example-site/server/moss.mjs",
+        "example-site/src/App.tsx",
+        "example-site/src/style.css"
       ],
       "depends_on": [
         "MC-16",
@@ -511,9 +511,9 @@
       "title": "Replace hash routes with stable website paths",
       "scope": "Implement /blog and /projects detail routes with browser navigation, server deep-link handling and real 404 status. Translate existing hash URLs and define slug redirect retention.",
       "files": [
-        "personal-site/src/App.tsx",
-        "personal-site/src/components/Showcase.tsx",
-        "personal-site/server/index.mjs"
+        "example-site/src/App.tsx",
+        "example-site/src/components/Showcase.tsx",
+        "example-site/server/index.mjs"
       ],
       "depends_on": [
         "MC-03"
@@ -538,10 +538,10 @@
       "title": "Serve per-page metadata in initial HTML",
       "scope": "Generate page title, description, canonical and social image metadata from the public snapshot before responding, safely escaping CMS values. Include the preview noindex path.",
       "files": [
-        "personal-site/server/index.mjs",
-        "personal-site/server/moss.mjs",
-        "personal-site/src/App.tsx",
-        "personal-site/index.html"
+        "example-site/server/index.mjs",
+        "example-site/server/moss.mjs",
+        "example-site/src/App.tsx",
+        "example-site/index.html"
       ],
       "depends_on": [
         "MC-18",
@@ -549,7 +549,7 @@
       ],
       "acceptance_criteria": [
         "Initial HTTP HTML for each published page includes its own canonical/title/description.",
-        "Canonical URLs use configured example.com origin and never request Host or preview credentials.",
+        "Canonical URLs use configured Moss Example origin and never request Host or preview credentials.",
         "HTML escaping prevents metadata injection; expired asset URLs are not permanent social-image references."
       ],
       "status": "proposed",
@@ -567,8 +567,8 @@
       "title": "Add published-only sitemap and blog RSS",
       "scope": "Serve sitemap.xml and blog RSS with canonical routes, publication dates and safe XML escaping; exclude drafts, previews, trashed and unpublished entries.",
       "files": [
-        "personal-site/server/index.mjs",
-        "personal-site/server/moss.mjs"
+        "example-site/server/index.mjs",
+        "example-site/server/moss.mjs"
       ],
       "depends_on": [
         "MC-19",
@@ -708,12 +708,12 @@
       "requirements": [
         "FR08"
       ],
-      "title": "Refresh example.com from publication events",
+      "title": "Refresh Moss Example from publication events",
       "scope": "Add an authenticated invalidation endpoint, current-content cache and lightweight browser update signal. Retain polling recovery and account for signed media URL lifetimes.",
       "files": [
-        "personal-site/server/index.mjs",
-        "personal-site/server/moss.mjs",
-        "personal-site/src/App.tsx",
+        "example-site/server/index.mjs",
+        "example-site/server/moss.mjs",
+        "example-site/src/App.tsx",
         "compose.yaml"
       ],
       "depends_on": [
@@ -904,7 +904,7 @@
         "docs/planning/TASKS.md",
         "api/app",
         "web/src",
-        "personal-site/src"
+        "example-site/src"
       ],
       "depends_on": [
         "MC-09",
@@ -938,7 +938,7 @@
       "scope": "Update operator/editor docs for the final approved behavior, environment options, previews, callbacks, Markdown, schedules, upgrade and rollback. Reconcile stale TODO/type-improvement entries after evidence is available.",
       "files": [
         "README.md",
-        "personal-site/README.md",
+        "example-site/README.md",
         "TODO.md",
         "TYPE_IMPROVEMENTS.md",
         "docs"

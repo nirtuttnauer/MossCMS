@@ -16,7 +16,7 @@ Aftur's original proposed/dependency statuses remain distinct from execution evi
 | MC-08 / TASK-8 | Provide a conflict-safe draft autosave contract | `feature/mc-08-draft-autosave-api` |
 | MC-09 / TASK-9 | Add debounced entry autosave and recovery feedback | `feature/mc-09-autosave-recovery` |
 | MC-10 / TASK-10 | Add Markdown authoring controls and preview | `feature/mc-10-markdown-authoring` |
-| MC-11 / TASK-11 | Render Markdown consistently on example.com | `feature/mc-11-website-markdown` |
+| MC-11 / TASK-11 | Render Markdown consistently on Moss Example | `feature/mc-11-website-markdown` |
 | MC-12 / TASK-12 | Issue scoped expiring preview grants | `feature/mc-12-scoped-preview-grants` |
 | MC-13 / TASK-13 | Add secure website preview sessions | `feature/mc-13-website-preview-sessions` |
 | MC-14 / TASK-14 | Open saved website previews from the editor | `feature/mc-14-editor-previews` |
@@ -31,7 +31,7 @@ Aftur's original proposed/dependency statuses remain distinct from execution evi
 | MC-23 / TASK-23 | Build the upcoming and failed publication queue | `feature/mc-23-publication-queue-ui` |
 | MC-24 / TASK-24 | Record publication events in a transactional outbox | `feature/mc-24-publication-outbox` |
 | MC-25 / TASK-25 | Deliver signed webhooks with bounded retries | `feature/mc-25-signed-webhooks` |
-| MC-26 / TASK-26 | Refresh example.com from publication events | `feature/mc-26-website-events` |
+| MC-26 / TASK-26 | Refresh Moss Example from publication events | `feature/mc-26-website-events` |
 | MC-27 / TASK-27 | Reconcile uncertain saves and expose request timing | `feature/mc-27-save-reconciliation` |
 | MC-28 / TASK-28 | Correct schema delivery preview and make form preview interactive | `feature/mc-28-schema-previews` |
 | MC-29 / TASK-29 | Suggest schema migrations from explicit field diffs | `feature/mc-29-migration-suggestions` |

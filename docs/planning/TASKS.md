@@ -25,7 +25,7 @@ Acceptance criteria were read back after import. Where the Aftur importer omitte
 | MC-08 | TASK-8 | P1 | M2 | Provide a conflict-safe draft autosave contract | MC-03, MC-04 |
 | MC-09 | TASK-9 | P1 | M2 | Add debounced entry autosave and recovery feedback | MC-06, MC-07, MC-08 |
 | MC-10 | TASK-10 | P1 | M2 | Add Markdown authoring controls and preview | — |
-| MC-11 | TASK-11 | P1 | M2 | Render Markdown consistently on example.com | MC-10 |
+| MC-11 | TASK-11 | P1 | M2 | Render Markdown consistently on Moss Example | MC-10 |
 | MC-12 | TASK-12 | P1 | M2 | Issue scoped expiring preview grants | MC-03 |
 | MC-13 | TASK-13 | P1 | M2 | Add secure website preview sessions | MC-12 |
 | MC-14 | TASK-14 | P1 | M2 | Open saved website previews from the editor | MC-09, MC-13 |
@@ -40,7 +40,7 @@ Acceptance criteria were read back after import. Where the Aftur importer omitte
 | MC-23 | TASK-23 | P1 | M4 | Build the upcoming and failed publication queue | MC-06, MC-22 |
 | MC-24 | TASK-24 | P2 | M4 | Record publication events in a transactional outbox | MC-03, MC-04, MC-05 |
 | MC-25 | TASK-25 | P2 | M4 | Deliver signed webhooks with bounded retries | MC-24 |
-| MC-26 | TASK-26 | P2 | M4 | Refresh example.com from publication events | MC-25 |
+| MC-26 | TASK-26 | P2 | M4 | Refresh Moss Example from publication events | MC-25 |
 | MC-27 | TASK-27 | P1 | M4 | Reconcile uncertain saves and expose request timing | MC-06, MC-08, MC-26 |
 | MC-28 | TASK-28 | P2 | M5 | Correct schema delivery preview and make form preview interactive | — |
 | MC-29 | TASK-29 | P2 | M5 | Suggest schema migrations from explicit field diffs | MC-28 |
@@ -210,7 +210,7 @@ Upgrade string-based richText inputs with accessible formatting controls, code f
 
 **Dependencies:** None
 
-## MC-11 — Render Markdown consistently on example.com
+## MC-11 — Render Markdown consistently on Moss Example
 
 Aftur: `TASK-11` · M2 · P1 · Requirements: FR04
 
@@ -222,7 +222,7 @@ Replace paragraph-only body rendering with a safe renderer matching MC-10, inclu
 - Unsafe HTML/URL input remains inert in website output.
 - Long code, links and content remain readable on mobile; missing images have a fallback.
 
-**Relevant files:** `personal-site/src/App.tsx`, `personal-site/src/style.css`, `personal-site/server/moss.mjs`, `personal-site/package.json`
+**Relevant files:** `example-site/src/App.tsx`, `example-site/src/style.css`, `example-site/server/moss.mjs`, `example-site/package.json`
 
 **Dependencies:** MC-10
 
@@ -254,7 +254,7 @@ Redeem grants server-side into a short-lived preview session, remove credentials
 - Session expiry/revocation exits safely; published requests are unaffected.
 - Preview has no-store and noindex responses, avoids credential logging and grants no general CMS access.
 
-**Relevant files:** `personal-site/server/index.mjs`, `personal-site/server/moss.mjs`, `personal-site/src/App.tsx`
+**Relevant files:** `example-site/server/index.mjs`, `example-site/server/moss.mjs`, `example-site/src/App.tsx`
 
 **Dependencies:** MC-12
 
@@ -286,7 +286,7 @@ Extend the repeatable website setup schema with optional cover/gallery asset IDs
 - Blog/project covers and ordered gallery items have a documented contract.
 - Limits and behavior for missing/non-image assets are defined before processing.
 
-**Relevant files:** `personal-site/scripts/setup_moss.py`, `personal-site/server/moss.mjs`
+**Relevant files:** `example-site/scripts/setup_moss.py`, `example-site/server/moss.mjs`
 
 **Dependencies:** None
 
@@ -334,7 +334,7 @@ Resolve asset fields in the website adapter and render responsive cover/gallery 
 - Signed URL expiry is handled through fresh reads; broken assets do not break pages.
 - Responsive images reserve space and obey crop settings and alt text.
 
-**Relevant files:** `personal-site/server/moss.mjs`, `personal-site/src/App.tsx`, `personal-site/src/style.css`
+**Relevant files:** `example-site/server/moss.mjs`, `example-site/src/App.tsx`, `example-site/src/style.css`
 
 **Dependencies:** MC-16, MC-17
 
@@ -350,7 +350,7 @@ Implement /blog and /projects detail routes with browser navigation, server deep
 - Existing unique simple hashes and namespaced hashes resolve to their matching page.
 - Unknown routes return 404; draft-only/new slugs do not leak into public routing.
 
-**Relevant files:** `personal-site/src/App.tsx`, `personal-site/src/components/Showcase.tsx`, `personal-site/server/index.mjs`
+**Relevant files:** `example-site/src/App.tsx`, `example-site/src/components/Showcase.tsx`, `example-site/server/index.mjs`
 
 **Dependencies:** MC-03
 
@@ -363,10 +363,10 @@ Generate page title, description, canonical and social image metadata from the p
 **Acceptance criteria**
 
 - Initial HTTP HTML for each published page includes its own canonical/title/description.
-- Canonical URLs use configured example.com origin and never request Host or preview credentials.
+- Canonical URLs use configured Moss Example origin and never request Host or preview credentials.
 - HTML escaping prevents metadata injection; expired asset URLs are not permanent social-image references.
 
-**Relevant files:** `personal-site/server/index.mjs`, `personal-site/server/moss.mjs`, `personal-site/src/App.tsx`, `personal-site/index.html`
+**Relevant files:** `example-site/server/index.mjs`, `example-site/server/moss.mjs`, `example-site/src/App.tsx`, `example-site/index.html`
 
 **Dependencies:** MC-18, MC-19
 
@@ -382,7 +382,7 @@ Serve sitemap.xml and blog RSS with canonical routes, publication dates and safe
 - Publication dates reflect publication rather than an unrelated draft save.
 - Unknown/private content and unsafe XML cannot enter feed output.
 
-**Relevant files:** `personal-site/server/index.mjs`, `personal-site/server/moss.mjs`
+**Relevant files:** `example-site/server/index.mjs`, `example-site/server/moss.mjs`
 
 **Dependencies:** MC-19, MC-20
 
@@ -450,7 +450,7 @@ Add administrator-managed webhook endpoints/secrets, signed events, retry backof
 
 **Dependencies:** MC-24
 
-## MC-26 — Refresh example.com from publication events
+## MC-26 — Refresh Moss Example from publication events
 
 Aftur: `TASK-26` · M4 · P2 · Requirements: FR08
 
@@ -462,7 +462,7 @@ Add an authenticated invalidation endpoint, current-content cache and lightweigh
 - Duplicate/out-of-order events do not regress content; failed fetch preserves last valid cache.
 - Fallback polling remains functional; cache/preview isolation and URL-expiry limits are explicit.
 
-**Relevant files:** `personal-site/server/index.mjs`, `personal-site/server/moss.mjs`, `personal-site/src/App.tsx`, `compose.yaml`
+**Relevant files:** `example-site/server/index.mjs`, `example-site/server/moss.mjs`, `example-site/src/App.tsx`, `compose.yaml`
 
 **Dependencies:** MC-25
 
@@ -574,7 +574,7 @@ After the selected implementation scope is approved and complete, perform the PR
 - Latency/freshness targets are measured with documented conditions and unmet targets are recorded.
 - Upgrade preserves IDs/counts/history; evidence lists any external OAuth/S3 checks not performed.
 
-**Relevant files:** `docs/PRD.md`, `docs/planning/TASKS.md`, `api/app`, `web/src`, `personal-site/src`
+**Relevant files:** `docs/PRD.md`, `docs/planning/TASKS.md`, `api/app`, `web/src`, `example-site/src`
 
 **Dependencies:** MC-09, MC-11, MC-14, MC-18, MC-21, MC-23, MC-27, MC-29, MC-30
 
@@ -590,6 +590,6 @@ Update operator/editor docs for the final approved behavior, environment options
 - Editor instructions explain live drafts, fixed scheduled revisions, cancel/unpublish and preview.
 - Docs distinguish shipped features from optional P3 work and deployment/provider setup still required.
 
-**Relevant files:** `README.md`, `personal-site/README.md`, `TODO.md`, `TYPE_IMPROVEMENTS.md`, `docs`
+**Relevant files:** `README.md`, `example-site/README.md`, `TODO.md`, `TYPE_IMPROVEMENTS.md`, `docs`
 
 **Dependencies:** MC-33

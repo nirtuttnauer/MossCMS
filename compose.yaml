@@ -41,13 +41,13 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
-  personal-site:
+  example-site:
     profiles: [website]
     build:
       context: .
-      dockerfile: personal-site/Dockerfile
+      dockerfile: example-site/Dockerfile
     env_file:
-      - ./personal-site/.env
+      - ./example-site/.env
     environment:
       MOSS_API_URL: http://app:8001
       PORT: 5174

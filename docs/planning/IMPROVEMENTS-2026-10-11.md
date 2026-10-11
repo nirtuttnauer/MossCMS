@@ -352,9 +352,9 @@ As a site owner, I want previously shared URLs to keep resolving after I rename 
 **Evidence**
 
 - docs/PRD.md: hosting and redirects limitation
-- personal-site/server/moss.mjs: current-slug aliases
+- example-site/server/moss.mjs: current-slug aliases
 - shared/routes.mjs
-- personal-site/server/pages.mjs
+- example-site/server/pages.mjs
 - api/app/content.py: publish state transitions
 
 **Dependencies.** None; build on current main.

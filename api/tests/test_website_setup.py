@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-SCRIPT = Path(__file__).resolve().parents[2] / "personal-site/scripts/setup_moss.py"
+SCRIPT = Path(__file__).resolve().parents[2] / "example-site/scripts/setup_moss.py"
 TYPE_KEYS = ["siteProfile", "sitePage", "siteSlide", "siteProject", "sitePost"]
 
 
@@ -158,7 +158,7 @@ def test_main_preserves_existing_schema_entry_identity_and_server_credentials(mo
         if path == "/auth/status":
             result = {"authSkipped": True}
         elif path == "/auth/me":
-            result = {"csrf": "csrf-token", "projects": [{"name": "Personal website", "id": "project-id"}]}
+            result = {"csrf": "csrf-token", "projects": [{"name": "Example website", "id": "project-id"}]}
         elif path == "/delivery/graphql":
             result = {"data": {"contentTypes": [{"key": key} for key in TYPE_KEYS]}}
         else:
@@ -208,6 +208,9 @@ def test_main_preserves_existing_schema_entry_identity_and_server_credentials(mo
     assert schema["version"] == 4
     assert schema["fields"][0] == custom_field
     saves = [values for query, values in mutations if "saveEntry(" in query]
+    example = next(values for values in saves if values["slug"] == "example-website")
+    assert example["key"] == "siteProject"
+    assert example["data"]["title"] == "Moss Example"
     assert not any(values["key"] == "siteProfile" for values in saves)
     for old_slug, new_slug in [("notes", "blog"), ("contact", "about"), ("projects", "projects")]:
         old = next(item for item in existing_entries["sitePage"] if item["slug"] == old_slug)
@@ -226,7 +229,7 @@ def test_main_preserves_existing_schema_entry_identity_and_server_credentials(mo
         "MOSS_API_URL": "http://cms.test",
         "PORT": "9000",
         "OTHER": "kept",
-        "SITE_PUBLIC_URL": "https://example.com",
+        "SITE_PUBLIC_URL": "http://localhost:5174",
     }
     assert modes == [(env_file, 0o600)]
     delivery = next(request for request in calls if request.full_url.endswith("/delivery/graphql"))

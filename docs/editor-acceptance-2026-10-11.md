@@ -12,14 +12,14 @@ Product changes for MC-35–MC-44 / TASK-35–TASK-44 are implemented in the wor
 | `cd api && .venv/bin/python -m pytest -q` | 123 passed, 2 skipped |
 | `cd api && .venv/bin/ruff check app tests` | Passed |
 | `cd api && .venv/bin/mypy app` | Passed, 19 source files |
-| `cd personal-site && npm test` | 42 passed |
-| `cd personal-site && npm run build` | Passed |
+| `cd example-site && npm test` | 42 passed |
+| `cd example-site && npm run build` | Passed |
 
 The two default-run skips require PostgreSQL. A separate run against actual **PostgreSQL 17.11** passed **22 tests with no skips**: populated `0008` → `0009` migration, product improvements, publication, concurrency and outbox. Twenty-one used PostgreSQL; one existing test explicitly used SQLite. The migration preserved working/live/scheduled localized data, slugs, versions, timing and history; scheduler/outbox locking and competing homepage publication rollback passed. The cached `postgres:17-alpine` image ran in a disposable container with temporary storage on loopback port 18112; it was removed afterward. This was a synthetic rehearsal, not a production-data restore or deployment. API deprecation warnings and jsdom's unimplemented `scrollTo` notices did not fail checks.
 
 ## Actual browser evidence
 
-The latest frontend continuation reran the complete web suite, TypeScript and production build. API, PostgreSQL and personal-site results above are the earlier integration evidence; they were not repeated for these frontend fixes.
+The latest frontend continuation reran the complete web suite, TypeScript and production build. API, PostgreSQL and example-site results above are the earlier integration evidence; they were not repeated for these frontend fixes.
 
 The original HTTP/browser writes targeted a temporary SQLite database, temporary media directory, and a synthetic workspace on loopback ports **18111/15111**. Supplementary Safari first-use and in-app validation checks used a separate disposable fixture on **18114/15114**, described in the linked supplement. Existing development and production workspaces were not used. The fixture contained 160 reference targets, an Article, and five batch entries.
 
@@ -155,6 +155,6 @@ The integration fixture recreates its test schema. Never point this variable at 
 - Empty-workspace Safari first-use, canceled dirty navigation, pointer locale-group targeting and the remaining keyboard journeys are verified in the supplements. Full standalone Chromium and spoken assistive-technology repetition remain owner-deferred.
 - TASK-35’s three first-use walkthroughs are now recorded: this report plus [walkthrough two](acceptance-2026-10-11/first-use-two.md) and [walkthrough three](acceptance-2026-10-11/first-use-three.md), produced concurrently in separate fixtures. Aftur records owner acceptance. They are agent-operated; the proposed human activation metric remains unmeasured and is not a claim of usability improvement.
 - List-item and required localized-group recovery now have Safari keyboard evidence; new defaults and required nested children have browser evidence. A null required object cannot arise through normal new-entry controls or validated schema migration, so that artificial state remains automated-only. Media and revision keyboard interactions are documented; spoken announcements remain unverified.
-- Deployment acceptance and a rehearsal on a separately restored production-like PostgreSQL database/media pair remain outside this synthetic run. Deploy the API and personal-site together as described in [deployment recovery](deployment-recovery.md).
+- Deployment acceptance and a rehearsal on a separately restored production-like PostgreSQL database/media pair remain outside this synthetic run. Deploy the API and example-site together as described in [deployment recovery](deployment-recovery.md).
 
 TASK-45 remains partial for manual acceptance in Aftur. Its dependencies are now owner-accepted; this agent did not change their completion states. No production deployment or universal accessibility claim was performed. The root swarm records the owner’s explicit acceptance for TASK-1–44; TASK-45 has no outcome acceptance. Reproducible steps/results and fixture helpers were saved in local evidence commit `adba95b`; implementation remains in the existing working tree. Existing unrelated changes are preserved. Temporary browser overrides and services are restored/stopped after verification.
