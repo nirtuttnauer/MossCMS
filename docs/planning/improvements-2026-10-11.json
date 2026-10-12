@@ -1,7 +1,6 @@
 {
   "date": "2026-10-11",
   "project": "MossCMS",
-  "project_path": "/Users/nirtuttnauer/Documents/Code/MossCMS/ProjectMemory/MossCMS",
   "source": "Assistant product-management proposals requested by the owner in this Codex chat. Priorities and targets are recommendations, not measured results or approval to implement.",
   "strategy": "Help self-hosting owners and small editorial teams reach their first published entry, complete daily editing without losing context, and recover confidently from errors. Extend the shipped MC-01–MC-34 baseline rather than repeat it.",
   "priority_definition": {
@@ -46,8 +45,7 @@
         "web/src/pages/Explorer.tsx"
       ],
       "baseline_relation": "Extends the delivered MC-32 templates; does not recreate schemas, token permissions or publication state.",
-      "depends_on": [],
-      "aftur_task_id": "TASK-35"
+      "depends_on": []
     },
     {
       "key": "MC-36",
@@ -71,8 +69,7 @@
         "web/src/pages/Content.tsx: type/status/search/sort/editor state"
       ],
       "baseline_relation": "Admin navigation extension; MC-19 covered public website routes only.",
-      "depends_on": [],
-      "aftur_task_id": "TASK-36"
+      "depends_on": []
     },
     {
       "key": "MC-37",
@@ -97,8 +94,7 @@
         "api/app/content.py: validate_value reference rules"
       ],
       "baseline_relation": "Completes entry-level reference selection; MC-30 covered schema target validation and empty-target warnings.",
-      "depends_on": [],
-      "aftur_task_id": "TASK-37"
+      "depends_on": []
     },
     {
       "key": "MC-38",
@@ -124,8 +120,7 @@
         "web/src/components/Fields.tsx"
       ],
       "baseline_relation": "Extends MC-07/MC-09/MC-27 feedback rather than replacing autosave, conflicts or idempotency.",
-      "depends_on": [],
-      "aftur_task_id": "TASK-38"
+      "depends_on": []
     },
     {
       "key": "MC-39",
@@ -150,8 +145,7 @@
         "docs/publication-contract.md"
       ],
       "baseline_relation": "MC-31 compares schemas, not entry revisions; existing revision storage and restore behavior are reused.",
-      "depends_on": [],
-      "aftur_task_id": "TASK-39"
+      "depends_on": []
     },
     {
       "key": "MC-40",
@@ -176,8 +170,7 @@
         "web/src/lib/autosave.ts"
       ],
       "baseline_relation": "Entry duplication is separate from the delivered MC-32 type/field duplication.",
-      "depends_on": [],
-      "aftur_task_id": "TASK-40"
+      "depends_on": []
     },
     {
       "key": "MC-41",
@@ -202,8 +195,7 @@
         "docs/publication-contract.md: trash interactions"
       ],
       "baseline_relation": "Improves existing bulk trash recovery; reuses publication state and MC-27 uncertain-outcome principles.",
-      "depends_on": [],
-      "aftur_task_id": "TASK-41"
+      "depends_on": []
     },
     {
       "key": "MC-42",
@@ -229,8 +221,7 @@
         "TYPE_IMPROVEMENTS.md: workspace default locales follow-up"
       ],
       "baseline_relation": "Explicit follow-up outside MC-01–MC-34; extends existing locale maps rather than replacing them.",
-      "depends_on": [],
-      "aftur_task_id": "TASK-42"
+      "depends_on": []
     },
     {
       "key": "MC-43",
@@ -256,8 +247,7 @@
         "docs/images.md"
       ],
       "baseline_relation": "Extends MC-17 picker/gallery authoring; reuses MC-16 processing and existing storage authorization.",
-      "depends_on": [],
-      "aftur_task_id": "TASK-43"
+      "depends_on": []
     },
     {
       "key": "MC-44",
@@ -284,8 +274,7 @@
         "api/app/content.py: publish state transitions"
       ],
       "baseline_relation": "Follow-up to MC-19–MC-21; those delivered stable routes and legacy aliases without retaining historical published paths.",
-      "depends_on": [],
-      "aftur_task_id": "TASK-44"
+      "depends_on": []
     },
     {
       "key": "MC-45",
@@ -316,8 +305,7 @@
         "MC-37",
         "MC-38",
         "MC-41"
-      ],
-      "aftur_task_id": "TASK-45"
+      ]
     }
   ]
 }

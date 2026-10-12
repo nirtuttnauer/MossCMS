@@ -2,57 +2,53 @@
 
 Prepared 7 October 2026 as proposed improvements. Execution update, 8 October: the owner approved all 34 tasks in chat and they are implemented on retained feature branches integrated into local `main`. See [execution ledger](IMPLEMENTATION.md), [release evidence](../release-acceptance-2026-10-08.md) and [operator guidance](../deployment-recovery.md). The original descriptions/status language below preserve the planning snapshot.
 
-PRD: [Product requirements](../PRD.md). Aftur MCP attempts/artifacts record execution; its WIP approval/dependency workflow may still show proposed statuses. This document retains the initial plan and is not current tracker-state evidence.
-
-Aftur workspace: `/Users/nirtuttnauer/Documents/Code/MossCMS/ProjectMemory/MossCMS`. Imported PRD: `PRD-e46f6b17`.
+PRD: [Product requirements](../PRD.md). This document retains the initial plan; consult the implementation ledger for delivered behavior.
 
 Existing delivered functionality is documented in the PRD baseline and is not recreated here.
 Priorities: P0 publishing integrity; P1 authoring/release; P2 extensions; P3 optional schema tools.
-Priorities and milestones are recorded in task descriptions because the current agent proposal API has no dedicated priority or milestone field.
-Acceptance criteria were read back after import. Where the Aftur importer omitted the native field, the criteria were saved and verified as attributed task notes (available through task discussion and agent context).
 
 ## Task index
 
-| Plan ID | Aftur ID | Priority | Milestone | Task | Depends on |
-| --- | --- | --- | --- | --- | --- |
-| MC-01 | TASK-1 | P0 | M1 | Define the publication and scheduling state contract | — |
-| MC-02 | TASK-2 | P0 | M1 | Migrate complete live and scheduled snapshots | MC-01 |
-| MC-03 | TASK-3 | P0 | M1 | Separate draft saves from live GraphQL delivery | MC-02 |
-| MC-04 | TASK-4 | P0 | M1 | Publish the captured scheduled revision safely | MC-02, MC-03 |
-| MC-05 | TASK-5 | P0 | M1 | Add explicit unpublish and schedule-cancel actions | MC-03, MC-04 |
-| MC-06 | TASK-6 | P0 | M1 | Show live, draft and scheduled state in the admin | MC-03, MC-04, MC-05 |
-| MC-07 | TASK-7 | P1 | M2 | Protect unsaved entry and schema edits | — |
-| MC-08 | TASK-8 | P1 | M2 | Provide a conflict-safe draft autosave contract | MC-03, MC-04 |
-| MC-09 | TASK-9 | P1 | M2 | Add debounced entry autosave and recovery feedback | MC-06, MC-07, MC-08 |
-| MC-10 | TASK-10 | P1 | M2 | Add Markdown authoring controls and preview | — |
-| MC-11 | TASK-11 | P1 | M2 | Render Markdown consistently on Moss Example | MC-10 |
-| MC-12 | TASK-12 | P1 | M2 | Issue scoped expiring preview grants | MC-03 |
-| MC-13 | TASK-13 | P1 | M2 | Add secure website preview sessions | MC-12 |
-| MC-14 | TASK-14 | P1 | M2 | Open saved website previews from the editor | MC-09, MC-13 |
-| MC-15 | TASK-15 | P2 | M3 | Define covers and project gallery fields | — |
-| MC-16 | TASK-16 | P2 | M3 | Generate bounded image variants for local and S3 assets | MC-15 |
-| MC-17 | TASK-17 | P2 | M3 | Improve image picking and gallery authoring | MC-15, MC-16 |
-| MC-18 | TASK-18 | P2 | M3 | Display blog covers and project galleries | MC-16, MC-17 |
-| MC-19 | TASK-19 | P2 | M3 | Replace hash routes with stable website paths | MC-03 |
-| MC-20 | TASK-20 | P2 | M3 | Serve per-page metadata in initial HTML | MC-18, MC-19 |
-| MC-21 | TASK-21 | P2 | M3 | Add published-only sitemap and blog RSS | MC-19, MC-20 |
-| MC-22 | TASK-22 | P1 | M4 | Persist structured publication failures | MC-04, MC-05 |
-| MC-23 | TASK-23 | P1 | M4 | Build the upcoming and failed publication queue | MC-06, MC-22 |
-| MC-24 | TASK-24 | P2 | M4 | Record publication events in a transactional outbox | MC-03, MC-04, MC-05 |
-| MC-25 | TASK-25 | P2 | M4 | Deliver signed webhooks with bounded retries | MC-24 |
-| MC-26 | TASK-26 | P2 | M4 | Refresh Moss Example from publication events | MC-25 |
-| MC-27 | TASK-27 | P1 | M4 | Reconcile uncertain saves and expose request timing | MC-06, MC-08, MC-26 |
-| MC-28 | TASK-28 | P2 | M5 | Correct schema delivery preview and make form preview interactive | — |
-| MC-29 | TASK-29 | P2 | M5 | Suggest schema migrations from explicit field diffs | MC-28 |
-| MC-30 | TASK-30 | P2 | M5 | Improve enum editing and reference confidence | — |
-| MC-31 | TASK-31 | P3 | M5 | Add schema outline, accessible reordering and version comparison | MC-28 |
-| MC-32 | TASK-32 | P3 | M5 | Add type templates and safe duplication | MC-30 |
-| MC-33 | TASK-33 | P1 | M6 | Record end-to-end release acceptance evidence | MC-09, MC-11, MC-14, MC-18, MC-21, MC-23, MC-27, MC-29, MC-30 |
-| MC-34 | TASK-34 | P1 | M6 | Document deployment, recovery and new publishing workflows | MC-33 |
+| Plan ID | Priority | Milestone | Task | Depends on |
+| --- | --- | --- | --- | --- |
+| MC-01 | P0 | M1 | Define the publication and scheduling state contract | — |
+| MC-02 | P0 | M1 | Migrate complete live and scheduled snapshots | MC-01 |
+| MC-03 | P0 | M1 | Separate draft saves from live GraphQL delivery | MC-02 |
+| MC-04 | P0 | M1 | Publish the captured scheduled revision safely | MC-02, MC-03 |
+| MC-05 | P0 | M1 | Add explicit unpublish and schedule-cancel actions | MC-03, MC-04 |
+| MC-06 | P0 | M1 | Show live, draft and scheduled state in the admin | MC-03, MC-04, MC-05 |
+| MC-07 | P1 | M2 | Protect unsaved entry and schema edits | — |
+| MC-08 | P1 | M2 | Provide a conflict-safe draft autosave contract | MC-03, MC-04 |
+| MC-09 | P1 | M2 | Add debounced entry autosave and recovery feedback | MC-06, MC-07, MC-08 |
+| MC-10 | P1 | M2 | Add Markdown authoring controls and preview | — |
+| MC-11 | P1 | M2 | Render Markdown consistently on Moss Example | MC-10 |
+| MC-12 | P1 | M2 | Issue scoped expiring preview grants | MC-03 |
+| MC-13 | P1 | M2 | Add secure website preview sessions | MC-12 |
+| MC-14 | P1 | M2 | Open saved website previews from the editor | MC-09, MC-13 |
+| MC-15 | P2 | M3 | Define covers and project gallery fields | — |
+| MC-16 | P2 | M3 | Generate bounded image variants for local and S3 assets | MC-15 |
+| MC-17 | P2 | M3 | Improve image picking and gallery authoring | MC-15, MC-16 |
+| MC-18 | P2 | M3 | Display blog covers and project galleries | MC-16, MC-17 |
+| MC-19 | P2 | M3 | Replace hash routes with stable website paths | MC-03 |
+| MC-20 | P2 | M3 | Serve per-page metadata in initial HTML | MC-18, MC-19 |
+| MC-21 | P2 | M3 | Add published-only sitemap and blog RSS | MC-19, MC-20 |
+| MC-22 | P1 | M4 | Persist structured publication failures | MC-04, MC-05 |
+| MC-23 | P1 | M4 | Build the upcoming and failed publication queue | MC-06, MC-22 |
+| MC-24 | P2 | M4 | Record publication events in a transactional outbox | MC-03, MC-04, MC-05 |
+| MC-25 | P2 | M4 | Deliver signed webhooks with bounded retries | MC-24 |
+| MC-26 | P2 | M4 | Refresh Moss Example from publication events | MC-25 |
+| MC-27 | P1 | M4 | Reconcile uncertain saves and expose request timing | MC-06, MC-08, MC-26 |
+| MC-28 | P2 | M5 | Correct schema delivery preview and make form preview interactive | — |
+| MC-29 | P2 | M5 | Suggest schema migrations from explicit field diffs | MC-28 |
+| MC-30 | P2 | M5 | Improve enum editing and reference confidence | — |
+| MC-31 | P3 | M5 | Add schema outline, accessible reordering and version comparison | MC-28 |
+| MC-32 | P3 | M5 | Add type templates and safe duplication | MC-30 |
+| MC-33 | P1 | M6 | Record end-to-end release acceptance evidence | MC-09, MC-11, MC-14, MC-18, MC-21, MC-23, MC-27, MC-29, MC-30 |
+| MC-34 | P1 | M6 | Document deployment, recovery and new publishing workflows | MC-33 |
 
 ## MC-01 — Define the publication and scheduling state contract
 
-Aftur: `TASK-1` · M1 · P0 · Requirements: FR01, FR02
+M1 · P0 · Requirements: FR01, FR02
 
 Specify editable, published and scheduled snapshots; metadata, slug uniqueness, transition rules, GraphQL compatibility, and revision/schema migration behavior. Include a state-transition table and failure semantics before code changes.
 
@@ -68,7 +64,7 @@ Specify editable, published and scheduled snapshots; metadata, slug uniqueness, 
 
 ## MC-02 — Migrate complete live and scheduled snapshots
 
-Aftur: `TASK-2` · M1 · P0 · Requirements: FR01, FR02
+M1 · P0 · Requirements: FR01, FR02
 
 Add forward Alembic migration and model fields from MC-01, backfilling current published entries and existing pending schedules. Preserve entry IDs, revisions, and current live URLs.
 
@@ -84,7 +80,7 @@ Add forward Alembic migration and model fields from MC-01, backfilling current p
 
 ## MC-03 — Separate draft saves from live GraphQL delivery
 
-Aftur: `TASK-3` · M1 · P0 · Requirements: FR01
+M1 · P0 · Requirements: FR01
 
 Refactor save, restore, generic delivery, generated resolvers, references, title/search/sort and slug lookup to respect complete live snapshots. Keep version conflicts and workspace checks.
 
@@ -100,7 +96,7 @@ Refactor save, restore, generic delivery, generated resolvers, references, title
 
 ## MC-04 — Publish the captured scheduled revision safely
 
-Aftur: `TASK-4` · M1 · P0 · Requirements: FR02
+M1 · P0 · Requirements: FR02
 
 Use the stored scheduled snapshot, revalidate it when due, and handle worker locks/restarts. Later draft saves must not modify it. Preserve the last live snapshot on validation failure.
 
@@ -116,7 +112,7 @@ Use the stored scheduled snapshot, revalidate it when due, and handle worker loc
 
 ## MC-05 — Add explicit unpublish and schedule-cancel actions
 
-Aftur: `TASK-5` · M1 · P0 · Requirements: FR01, FR02
+M1 · P0 · Requirements: FR01, FR02
 
 Expose editorial operations for unpublish and cancellation using optimistic versions. Define trash and restore interactions through the state contract, with audit events.
 
@@ -132,7 +128,7 @@ Expose editorial operations for unpublish and cancellation using optimistic vers
 
 ## MC-06 — Show live, draft and scheduled state in the admin
 
-Aftur: `TASK-6` · M1 · P0 · Requirements: FR01, FR02, FR09
+M1 · P0 · Requirements: FR01, FR02, FR09
 
 Update entry API types, overview counts, list badges and publishing controls to represent independent states. Show scheduled revision and warn when newer draft edits are not scheduled.
 
@@ -148,7 +144,7 @@ Update entry API types, overview counts, list badges and publishing controls to 
 
 ## MC-07 — Protect unsaved entry and schema edits
 
-Aftur: `TASK-7` · M2 · P1 · Requirements: FR03
+M2 · P1 · Requirements: FR03
 
 Add dirty tracking and guarded close, Escape, backdrop and navigation. Preserve form state after errors and use browser unload protection where supported.
 
@@ -164,7 +160,7 @@ Add dirty tracking and guarded close, Escape, backdrop and navigation. Preserve 
 
 ## MC-08 — Provide a conflict-safe draft autosave contract
 
-Aftur: `TASK-8` · M2 · P1 · Requirements: FR03, FR09
+M2 · P1 · Requirements: FR03, FR09
 
 Extend/reuse draft save to return authoritative entry/version and support a stable creation identifier or idempotency key. Keep publication/schedule writes separate.
 
@@ -180,7 +176,7 @@ Extend/reuse draft save to return authoritative entry/version and support a stab
 
 ## MC-09 — Add debounced entry autosave and recovery feedback
 
-Aftur: `TASK-9` · M2 · P1 · Requirements: FR03
+M2 · P1 · Requirements: FR03
 
 Serialize debounced saves, keep acknowledged versions, and display saving/saved/offline/conflict states. Handle unfinished required fields, unmount, workspace switches and in-flight manual publish.
 
@@ -196,7 +192,7 @@ Serialize debounced saves, keep acknowledged versions, and display saving/saved/
 
 ## MC-10 — Add Markdown authoring controls and preview
 
-Aftur: `TASK-10` · M2 · P1 · Requirements: FR04
+M2 · P1 · Requirements: FR04
 
 Upgrade string-based richText inputs with accessible formatting controls, code fences, safe links and a Markdown preview. Define asset-ID image syntax and keep localized richText working.
 
@@ -212,7 +208,7 @@ Upgrade string-based richText inputs with accessible formatting controls, code f
 
 ## MC-11 — Render Markdown consistently on Moss Example
 
-Aftur: `TASK-11` · M2 · P1 · Requirements: FR04
+M2 · P1 · Requirements: FR04
 
 Replace paragraph-only body rendering with a safe renderer matching MC-10, including code, typography and graceful asset-reference handling.
 
@@ -228,7 +224,7 @@ Replace paragraph-only body rendering with a safe renderer matching MC-10, inclu
 
 ## MC-12 — Issue scoped expiring preview grants
 
-Aftur: `TASK-12` · M2 · P1 · Requirements: FR05
+M2 · P1 · Requirements: FR05
 
 Add authenticated editor operations to create/revoke a 15-minute grant for a saved revision. Implement server redemption with precise workspace/entry/revision scope and public-field projection.
 
@@ -244,7 +240,7 @@ Add authenticated editor operations to create/revoke a 15-minute grant for a sav
 
 ## MC-13 — Add secure website preview sessions
 
-Aftur: `TASK-13` · M2 · P1 · Requirements: FR05
+M2 · P1 · Requirements: FR05
 
 Redeem grants server-side into a short-lived preview session, remove credentials from URLs, and render scoped draft data with an exit control. Reuse the ordinary website components.
 
@@ -260,7 +256,7 @@ Redeem grants server-side into a short-lived preview session, remove credentials
 
 ## MC-14 — Open saved website previews from the editor
 
-Aftur: `TASK-14` · M2 · P1 · Requirements: FR05
+M2 · P1 · Requirements: FR05
 
 Configure an allowed website preview origin and add Preview for supported website types. Save explicitly when needed and show which revision is being previewed.
 
@@ -276,7 +272,7 @@ Configure an allowed website preview origin and add Preview for supported websit
 
 ## MC-15 — Define covers and project gallery fields
 
-Aftur: `TASK-15` · M3 · P2 · Requirements: FR06
+M3 · P2 · Requirements: FR06
 
 Extend the repeatable website setup schema with optional cover/gallery asset IDs, alt text and focal/crop metadata. Define image-format and decoded-pixel limits.
 
@@ -292,7 +288,7 @@ Extend the repeatable website setup schema with optional cover/gallery asset IDs
 
 ## MC-16 — Generate bounded image variants for local and S3 assets
 
-Aftur: `TASK-16` · M3 · P2 · Requirements: FR06
+M3 · P2 · Requirements: FR06
 
 Implement image dimensions and bounded variants, with signed delivery, persistent IDs and storage-backend support. Avoid running unlimited processing during frontend requests.
 
@@ -308,7 +304,7 @@ Implement image dimensions and bounded variants, with signed delivery, persisten
 
 ## MC-17 — Improve image picking and gallery authoring
 
-Aftur: `TASK-17` · M3 · P2 · Requirements: FR06
+M3 · P2 · Requirements: FR06
 
 Add paginated searchable image selection with thumbnails, alt text and crop/focal controls using existing Assets and field components.
 
@@ -324,7 +320,7 @@ Add paginated searchable image selection with thumbnails, alt text and crop/foca
 
 ## MC-18 — Display blog covers and project galleries
 
-Aftur: `TASK-18` · M3 · P2 · Requirements: FR06
+M3 · P2 · Requirements: FR06
 
 Resolve asset fields in the website adapter and render responsive cover/gallery images with dimensions, alt text and selected crops.
 
@@ -340,7 +336,7 @@ Resolve asset fields in the website adapter and render responsive cover/gallery 
 
 ## MC-19 — Replace hash routes with stable website paths
 
-Aftur: `TASK-19` · M3 · P2 · Requirements: FR07
+M3 · P2 · Requirements: FR07
 
 Implement /blog and /projects detail routes with browser navigation, server deep-link handling and real 404 status. Translate existing hash URLs and define slug redirect retention.
 
@@ -356,7 +352,7 @@ Implement /blog and /projects detail routes with browser navigation, server deep
 
 ## MC-20 — Serve per-page metadata in initial HTML
 
-Aftur: `TASK-20` · M3 · P2 · Requirements: FR07
+M3 · P2 · Requirements: FR07
 
 Generate page title, description, canonical and social image metadata from the public snapshot before responding, safely escaping CMS values. Include the preview noindex path.
 
@@ -372,7 +368,7 @@ Generate page title, description, canonical and social image metadata from the p
 
 ## MC-21 — Add published-only sitemap and blog RSS
 
-Aftur: `TASK-21` · M3 · P2 · Requirements: FR07
+M3 · P2 · Requirements: FR07
 
 Serve sitemap.xml and blog RSS with canonical routes, publication dates and safe XML escaping; exclude drafts, previews, trashed and unpublished entries.
 
@@ -388,7 +384,7 @@ Serve sitemap.xml and blog RSS with canonical routes, publication dates and safe
 
 ## MC-22 — Persist structured publication failures
 
-Aftur: `TASK-22` · M4 · P1 · Requirements: FR02
+M4 · P1 · Requirements: FR02
 
 Expose schedule failure state and reason through editorial queries with failure timestamp and captured revision. Add permission-checked retry/resolve semantics.
 
@@ -404,7 +400,7 @@ Expose schedule failure state and reason through editorial queries with failure 
 
 ## MC-23 — Build the upcoming and failed publication queue
 
-Aftur: `TASK-23` · M4 · P1 · Requirements: FR02, FR09
+M4 · P1 · Requirements: FR02, FR09
 
 Add a dedicated list/calendar-style queue using server pagination and scheduled/overdue/failed filters. Include timezone, revision, error detail and edit/reschedule actions.
 
@@ -420,7 +416,7 @@ Add a dedicated list/calendar-style queue using server pagination and scheduled/
 
 ## MC-24 — Record publication events in a transactional outbox
 
-Aftur: `TASK-24` · M4 · P2 · Requirements: FR08
+M4 · P2 · Requirements: FR08
 
 Add an outbox model/migration and worker claiming/recovery for publication, unpublish and trash events. Exclude draft saves and private payload fields.
 
@@ -436,7 +432,7 @@ Add an outbox model/migration and worker claiming/recovery for publication, unpu
 
 ## MC-25 — Deliver signed webhooks with bounded retries
 
-Aftur: `TASK-25` · M4 · P2 · Requirements: FR08
+M4 · P2 · Requirements: FR08
 
 Add administrator-managed webhook endpoints/secrets, signed events, retry backoff and delivery history. Validate destinations and use an explicit operator allowlist for local website callbacks.
 
@@ -452,7 +448,7 @@ Add administrator-managed webhook endpoints/secrets, signed events, retry backof
 
 ## MC-26 — Refresh Moss Example from publication events
 
-Aftur: `TASK-26` · M4 · P2 · Requirements: FR08
+M4 · P2 · Requirements: FR08
 
 Add an authenticated invalidation endpoint, current-content cache and lightweight browser update signal. Retain polling recovery and account for signed media URL lifetimes.
 
@@ -468,7 +464,7 @@ Add an authenticated invalidation endpoint, current-content cache and lightweigh
 
 ## MC-27 — Reconcile uncertain saves and expose request timing
 
-Aftur: `TASK-27` · M4 · P1 · Requirements: FR09
+M4 · P1 · Requirements: FR09
 
 Preserve GraphQL error codes/request IDs, reconcile committed mutations after timeouts, and show accurate publish versus website-update states. Reuse current timing logs/metrics to diagnose latency.
 
@@ -484,7 +480,7 @@ Preserve GraphQL error codes/request IDs, reconcile committed mutations after ti
 
 ## MC-28 — Correct schema delivery preview and make form preview interactive
 
-Aftur: `TASK-28` · M5 · P2 · Requirements: FR10
+M5 · P2 · Requirements: FR10
 
 Audit existing deliveryShape against backend-generated SDL; fix list/localized/private/reference/asset handling and show hidden-field summary. Wire form preview changes into previewData.
 
@@ -500,7 +496,7 @@ Audit existing deliveryShape against backend-generated SDL; fix list/localized/p
 
 ## MC-29 — Suggest schema migrations from explicit field diffs
 
-Aftur: `TASK-29` · M5 · P2 · Requirements: FR10
+M5 · P2 · Requirements: FR10
 
 Show before/after changes and propose defaults/drops; request explicit rename mapping. Preserve user-edited migration JSON and keep server all-entry validation.
 
@@ -516,7 +512,7 @@ Show before/after changes and propose defaults/drops; request explicit rename ma
 
 ## MC-30 — Improve enum editing and reference confidence
 
-Aftur: `TASK-30` · M5 · P2 · Requirements: FR10
+M5 · P2 · Requirements: FR10
 
 Allow inline enum choice renames with duplicate/identifier validation; validate reference targets and show their entry counts, including empty targets. Explain title-driven slug behavior.
 
@@ -532,7 +528,7 @@ Allow inline enum choice renames with duplicate/identifier validation; validate 
 
 ## MC-31 — Add schema outline, accessible reordering and version comparison
 
-Aftur: `TASK-31` · M5 · P3 · Requirements: FR11
+M5 · P3 · Requirements: FR11
 
 Optional scope: collapsible nested cards/outline, keyboard-supported ordering and read-only schema history diff. Retain current arrow controls as a usable fallback.
 
@@ -548,7 +544,7 @@ Optional scope: collapsible nested cards/outline, keyboard-supported ordering an
 
 ## MC-32 — Add type templates and safe duplication
 
-Aftur: `TASK-32` · M5 · P3 · Requirements: FR11
+M5 · P3 · Requirements: FR11
 
 Optional scope: starter Article/Product/Person/Event templates and whole-type or field duplication. Require unique type/field keys and never copy entries implicitly.
 
@@ -564,7 +560,7 @@ Optional scope: starter Article/Product/Person/Event templates and whole-type or
 
 ## MC-33 — Record end-to-end release acceptance evidence
 
-Aftur: `TASK-33` · M6 · P1 · Requirements: FR12
+M6 · P1 · Requirements: FR12
 
 After the selected implementation scope is approved and complete, perform the PRD acceptance walkthrough on a separate restored database. Record actual results, fixture/load context, role boundaries and limitations; never manufacture pass claims.
 
@@ -580,7 +576,7 @@ After the selected implementation scope is approved and complete, perform the PR
 
 ## MC-34 — Document deployment, recovery and new publishing workflows
 
-Aftur: `TASK-34` · M6 · P1 · Requirements: FR12
+M6 · P1 · Requirements: FR12
 
 Update operator/editor docs for the final approved behavior, environment options, previews, callbacks, Markdown, schedules, upgrade and rollback. Reconcile stale TODO/type-improvement entries after evidence is available.
 

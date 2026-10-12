@@ -4,7 +4,7 @@ Version: 1.0 baseline · Date: 7 October 2026 · Execution update: 8 October 202
 
 ## Execution update
 
-The owner approved all 34 derived tasks in this chat, including optional P3 work, and requested sequential implementation on feature branches from `main`. MC-01–MC-34 are implemented and integrated into local `main`; retained branches and Aftur MCP attempts/artifacts are listed in [the execution ledger](planning/IMPLEMENTATION.md). Aftur is work in progress: its original proposed/dependency statuses have not been presented as approval or completion evidence.
+The owner approved all 34 derived tasks, including optional P3 work, and requested sequential implementation on feature branches from `main`. MC-01–MC-34 are implemented and integrated into local `main`; retained branches are listed in [the implementation ledger](planning/IMPLEMENTATION.md).
 
 The baseline/gaps and proposed wording below preserve the 7 October planning record. They are historical, not descriptions of today's defects or unapproved work. [Release evidence](release-acceptance-2026-10-08.md) records actual checks and unverified production/browser/provider conditions. [Editor workflows](editor-workflows.md) and [deployment/recovery](deployment-recovery.md) describe shipped behavior. No public deployment or hosting change was performed.
 
@@ -21,7 +21,6 @@ This PRD was drafted at the owner's request from this conversation and the repos
 - **Owner requirements:** Docker with a multistage build; Python managed by uv; Vite/React with shadcn-style admin components; GraphQL content delivery; team management; OAuth; a temporary development auth bypass; scheduled posts; content groups such as projects and blog posts; and the CMS-managed Moss Example website described below.
 - **Observed baseline:** capabilities found in the current source. Existing features are retained rather than recreated as new tasks.
 - **Proposed next release:** improvements suggested by the agent, now captured for review. Their presence here does not authorize implementation or establish a release date.
-- **Aftur workflow:** import this exact document with its provenance, then propose actionable tasks linked to it. Task approval and execution remain separate from planning.
 
 Sources: root `README.md`, `TODO.md`, `TYPE_IMPROVEMENTS.md`, `example-site/README.md`, and the API, admin, website, setup, and deployment source. Historical verification statements in existing documents were not rerun for this planning work. `TYPE_IMPROVEMENTS.md` is partly stale: a delivery-shape preview now exists, but its accuracy and UX still need review.
 
@@ -94,7 +93,7 @@ The following owner requirements must survive every planned improvement:
 
 ## 7. Proposed next-release requirements
 
-All FR items below are proposed scope awaiting review in Aftur.
+All FR items below preserve the initial proposed scope. See the execution update for implementation status.
 
 ### FR01 — Independent editable and published versions · P0
 
@@ -180,7 +179,6 @@ Acceptance: no fabricated pass claims; no production data overwrite during rehea
 - Start with the current application scheduler/outbox worker lifecycle. A separate queue service is a later scaling decision, not an assumed new dependency.
 - Existing website setup upgrades are idempotent and preserve owner-edited content, entry IDs, history and compatible custom schema fields.
 - Keep public snapshots, schedules and schema migrations in consistent transactions. Define migration handling for historical revisions before changing snapshot format.
-- Aftur project memory lives under `ProjectMemory/MossCMS`; this is planning data, not runtime CMS content.
 
 ## 9. Quality and proposed success measures
 
@@ -207,7 +205,7 @@ These are release targets, not measured current performance.
 | M5 — Schema usability | Accurate previews and migration help; optional larger-schema tools. | Schema validation and migration review remain intact. |
 | M6 — Release readiness | Acceptance evidence and operator/upgrade documentation. | Owner review before public deployment. |
 
-The detailed proposed tasks and dependency graph are in Aftur and mirrored in `docs/planning/TASKS.md`. No release date or elapsed-time estimate is committed.
+The detailed proposed tasks and dependency graph are in [the task plan](planning/TASKS.md). No release date or elapsed-time estimate is committed.
 
 ## 11. Initial decisions and recorded implementation
 

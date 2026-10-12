@@ -2,7 +2,26 @@
   "date": "2026-10-11",
   "authorization": "Human continued work and explicitly requested parallel subagents in this Codex chat.",
   "implementation": "Recorded implementation and evidence retained in repository; root evidence commits adba95b,9fc4a31,38ff7bd; closure does not claim new tests or deployment.",
-  "verification": "docs/editor-acceptance-2026-10-11.md",
+  "verification": {
+    "api_sqlite": {
+      "passed": 112,
+      "skipped": 1,
+      "skipped_reason": "PostgreSQL concurrency scenario requires a PostgreSQL fixture"
+    },
+    "web": {
+      "passed": 134,
+      "test_files": 23,
+      "typecheck_and_build": "passed"
+    },
+    "personal_site": {
+      "passed": 42,
+      "typecheck_and_build": "passed"
+    },
+    "api_mypy": "passed: 19 source files",
+    "ruff_lint": "passed",
+    "ruff_format": "Earlier observation only; not a current formatting verification.",
+    "source": "Earlier root baseline audit; latest integration results are separately attributed in reported_integration_verification."
+  },
   "tests": {
     "web": 271,
     "web_files": 28,
@@ -15,108 +34,118 @@
   },
   "tasks": [
     {
-      "id": "TASK-35",
+      "plan_id": "MC-35",
       "title": "MC-35 · Guide new workspaces to their first published entry",
-      "status": "done",
-      "blocked": false,
-      "checkpoint_id": "ATTEMPT-117",
-      "attempt_count": 3
+      "implementation_status": "implemented"
     },
     {
-      "id": "TASK-36",
+      "plan_id": "MC-36",
       "title": "MC-36 · Make entry links and content-list context survive navigation",
-      "status": "done",
-      "blocked": false,
-      "checkpoint_id": "ATTEMPT-97",
-      "attempt_count": 2
+      "implementation_status": "implemented"
     },
     {
-      "id": "TASK-37",
+      "plan_id": "MC-37",
       "title": "MC-37 · Find and select references beyond the first 100 entries",
-      "status": "done",
-      "blocked": false,
-      "checkpoint_id": "ATTEMPT-98",
-      "attempt_count": 2
+      "implementation_status": "implemented"
     },
     {
-      "id": "TASK-38",
+      "plan_id": "MC-38",
       "title": "MC-38 · Show validation errors beside the fields editors must fix",
-      "status": "done",
-      "blocked": false,
-      "checkpoint_id": "ATTEMPT-99",
-      "attempt_count": 2
+      "implementation_status": "implemented"
     },
     {
-      "id": "TASK-39",
+      "plan_id": "MC-39",
       "title": "MC-39 · Compare entry revisions and live content in readable form",
-      "status": "done",
-      "blocked": false,
-      "checkpoint_id": "ATTEMPT-100",
-      "attempt_count": 2
+      "implementation_status": "implemented"
     },
     {
-      "id": "TASK-40",
+      "plan_id": "MC-40",
       "title": "MC-40 · Duplicate an entry into a new unpublished draft",
-      "status": "done",
-      "blocked": false,
-      "checkpoint_id": "ATTEMPT-101",
-      "attempt_count": 2
+      "implementation_status": "implemented"
     },
     {
-      "id": "TASK-41",
+      "plan_id": "MC-41",
       "title": "MC-41 · Report partial bulk-trash results and retry only unresolved entries",
-      "status": "done",
-      "blocked": false,
-      "checkpoint_id": "ATTEMPT-102",
-      "attempt_count": 2
+      "implementation_status": "implemented"
     },
     {
-      "id": "TASK-42",
+      "plan_id": "MC-42",
       "title": "MC-42 · Configure workspace locales and use the default in new entries",
-      "status": "done",
-      "blocked": false,
-      "checkpoint_id": "ATTEMPT-103",
-      "attempt_count": 1
+      "implementation_status": "implemented"
     },
     {
-      "id": "TASK-43",
+      "plan_id": "MC-43",
       "title": "MC-43 · Upload and select media without leaving the entry editor",
-      "status": "done",
-      "blocked": false,
-      "checkpoint_id": "ATTEMPT-104",
-      "attempt_count": 1
+      "implementation_status": "implemented"
     },
     {
-      "id": "TASK-44",
+      "plan_id": "MC-44",
       "title": "MC-44 · Preserve previously published website URLs after slug changes",
-      "status": "done",
-      "blocked": false,
-      "checkpoint_id": "ATTEMPT-105",
-      "attempt_count": 1
+      "implementation_status": "implemented"
     },
     {
-      "id": "TASK-45",
+      "plan_id": "MC-45",
       "title": "MC-45 · Verify the next editing release in real browsers and assistive technology",
-      "status": "done",
-      "blocked": false,
-      "checkpoint_id": "ATTEMPT-123",
-      "attempt_count": 8
+      "implementation_status": "implemented"
     }
   ],
   "verification_supplement": "docs/acceptance-2026-10-11/safari-keyboard.md",
-  "aftur_revision": 540,
   "fixture_cleanup": "Created Safari/IAB tabs closed; Safari zoom100 and prior tab restored; owning services stopped; no listeners15115/18115",
   "accepted_at": "2026-10-12",
   "outcome_acceptance": {
-    "scope": "TASK-45",
-    "statement": "accept TASK-45 with the skipped checks recorded as unverified and finish the loop",
-    "source": "Direct human instruction in root chat on12October2026",
-    "application": "Native Aftur Accept outcome and fresh scoped MCP readback",
+    "scope": "MC-45",
+    "date": "2026-10-12",
+    "source": "Owner acceptance with the recorded limits",
     "skipped_checks": "Standalone Chromium and spoken VoiceOver remain UNVERIFIED"
   },
   "owner_skipped_unverified": [
     "Standalone versioned Chromium browser checks; no Chrome installation",
     "Spoken VoiceOver verification with a human listener"
   ],
-  "swarm_loop": "Finished; heartbeat PAUSED; all45scoped tickets Done; no ready tasks"
+  "revision_fix": "Avoid redundant optional-object presence rows when children already show the change; preserve empty-object presence and distinguish empty translations from absent translations.",
+  "limits": [
+    "Standalone Chromium and spoken VoiceOver were skipped at the owner’s explicit request and remain UNVERIFIED",
+    "Artificial null required-object browser state remains automated-only; exact browser history-index preservation is not established",
+    "No production deployment/live S3/external OAuth or production-data restore",
+    "Human activation improvement and universal accessibility conformance are not established"
+  ],
+  "reported_integration_verification": {
+    "source": "Final owning improvement chat and docs/editor-acceptance-2026-10-11.md; latest web suite/typecheck/build rerun by that chat, earlier API/PostgreSQL/site results not repeated by root",
+    "web_passed": 271,
+    "web_test_files": 28,
+    "api_passed": 123,
+    "api_skipped": 2,
+    "website_passed": 42,
+    "postgres_passed": 22,
+    "postgres_version": "17.11, disposable synthetic fixture; not production restore",
+    "api_lint_and_mypy": "passed,19files",
+    "web_and_website_builds": "passed"
+  },
+  "onboarding_walkthroughs": [
+    {
+      "source": "docs/editor-acceptance-2026-10-11.md",
+      "operator": "owning improvement chat agent",
+      "result": "completed first-use path in original isolated fixture"
+    },
+    {
+      "source": "docs/acceptance-2026-10-11/first-use-two.md",
+      "operator": "root via CUA in fresh isolated fixture",
+      "result": "4/4 in105sec; keyboard activation plus semantic filling; exact delivery body assertion"
+    },
+    {
+      "source": "docs/acceptance-2026-10-11/first-use-three.md",
+      "operator": "independent subagent via CUA in fresh isolated fixture",
+      "result": "4/4 within4m07sec including cookie collision/resume; actual Tab/Shift+Tab/Enter/Space traversal"
+    }
+  ],
+  "supplementary_verification": {
+    "source": "docs/acceptance-2026-10-11/safari-first-use.md",
+    "safari": "27.0.1 build22625.1.29.11.28; fresh emptyworkspace 4/4, exactdeliverybody, dismissal/reload/resume, actualBack/Forward filterrestoration",
+    "elapsed_seconds_including_native_interruption": 461,
+    "iab": "Engineversionunexposed;390x844 list/locale/group keyboardsummaryfocus,zero recovery,hedefaultnewentry",
+    "cleanup": "Agentwindow/tabclosed;viewportreset;owned18114/15114servicesstopped;private token removed;fixturesretained",
+    "keyboard_source": "docs/acceptance-2026-10-11/safari-keyboard.md",
+    "safari_keyboard": "Safari27.0.1 actual200% list/locale group and pointer/Enter recovery; comparison tab keys/trap and Restore Cancel focus; saved-entry/duplicate dirty navigation retention and explicit discard; library image alt/insertion/preview; oldest of160 reference selection; native upload at100%; exact final draftv5, no live/schedule/persisted duplicate; identical saved-value recovery remainsv4.",
+    "keyboard_cleanup": "Owned native/IAB tabs closed, Safari100% and prior Audit tab restored; API/UI sessions terminal and no18115/15115 listeners. Temporary fixture/config retained for reproduction."
+  }
 }

@@ -27,9 +27,7 @@
         "Existing API callers have an explicit compatibility path and schema-change handling is documented."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-1",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-02",
@@ -54,9 +52,7 @@
         "Migration supports a separate restored database and documents recovery using the prior backup/image."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-2",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-03",
@@ -80,9 +76,7 @@
         "Delivery scopes and recursive private-field projection remain enforced."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-3",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-04",
@@ -107,9 +101,7 @@
         "Failure preserves live content and records entry, scheduled revision and actionable reason."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-4",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-05",
@@ -135,9 +127,7 @@
         "Readers, delivery tokens and stale versions cannot perform either action."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-5",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-06",
@@ -167,9 +157,7 @@
         "Timezone and current group/filter behavior remain usable; readers see no editing controls."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-6",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-07",
@@ -193,9 +181,7 @@
         "Confirmation remains keyboard accessible and focus returns to the editor on cancellation."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-7",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-08",
@@ -222,9 +208,7 @@
         "Autosave leaves live and captured scheduled snapshots unchanged."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-8",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-09",
@@ -250,9 +234,7 @@
         "Conflict/offline/error states keep editor values and provide an explicit recovery action."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-9",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-10",
@@ -275,9 +257,7 @@
         "Raw HTML and unsafe links cannot execute; image references do not persist signed URLs."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-10",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-11",
@@ -303,9 +283,7 @@
         "Long code, links and content remain readable on mobile; missing images have a fallback."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-11",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-12",
@@ -332,9 +310,7 @@
         "Responses are non-cacheable, secrets are excluded from logs, and private fields remain excluded."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-12",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-13",
@@ -359,9 +335,7 @@
         "Preview has no-store and noindex responses, avoids credential logging and grants no general CMS access."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-13",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-14",
@@ -387,9 +361,7 @@
         "Preview never implicitly publishes and opening it preserves current authoring state."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-14",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-15",
@@ -411,9 +383,7 @@
         "Limits and behavior for missing/non-image assets are defined before processing."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-15",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-16",
@@ -440,9 +410,7 @@
         "Dimensions, variant metadata, storage/recovery behavior and missing-file handling are documented."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-16",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-17",
@@ -469,9 +437,7 @@
         "Gallery order, alt text and crop values survive save/reopen and are keyboard accessible."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-17",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-18",
@@ -497,9 +463,7 @@
         "Responsive images reserve space and obey crop settings and alt text."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-18",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-19",
@@ -524,9 +488,7 @@
         "Unknown routes return 404; draft-only/new slugs do not leak into public routing."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-19",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-20",
@@ -553,9 +515,7 @@
         "HTML escaping prevents metadata injection; expired asset URLs are not permanent social-image references."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-20",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-21",
@@ -580,9 +540,7 @@
         "Unknown/private content and unsafe XML cannot enter feed output."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-21",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-22",
@@ -609,9 +567,7 @@
         "Retry is explicit, version-checked and revalidates content; delivery reveals no failure internals."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-22",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-23",
@@ -638,9 +594,7 @@
         "Queue refresh does not overwrite an open editor and readers cannot mutate schedules."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-23",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-24",
@@ -668,9 +622,7 @@
         "Worker restart/duplicate claims are safe and network requests stay outside write transactions."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-24",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-25",
@@ -697,9 +649,7 @@
         "Failures/retries are visible and bounded; secrets are not returned after creation or logged."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-25",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-26",
@@ -725,9 +675,7 @@
         "Fallback polling remains functional; cache/preview isolation and URL-expiry limits are explicit."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-26",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-27",
@@ -755,9 +703,7 @@
         "Website update is marked confirmed only with acknowledgement/version evidence; logs omit secrets/body data."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-27",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-28",
@@ -780,9 +726,7 @@
         "Preview inputs accept changes without writing content, and reset only on meaningful shape changes."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-28",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-29",
@@ -806,9 +750,7 @@
         "Suggestions are editable and cannot overwrite a user migration without confirmation."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-29",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-30",
@@ -832,9 +774,7 @@
         "Counts are workspace-scoped and no valid existing schema is silently rewritten."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-30",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-31",
@@ -859,9 +799,7 @@
         "Version comparison displays additions/removals/changes and never restores implicitly."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-31",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-32",
@@ -886,9 +824,7 @@
         "Field duplication catches same-level name conflicts before save."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-32",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-33",
@@ -923,9 +859,7 @@
         "Upgrade preserves IDs/counts/history; evidence lists any external OAuth/S3 checks not performed."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-33",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     },
     {
       "code": "MC-34",
@@ -952,21 +886,17 @@
         "Docs distinguish shipped features from optional P3 work and deployment/provider setup still required."
       ],
       "status": "proposed",
-      "source": "Agent-proposed improvement; review against PRD before implementation.",
-      "aftur_id": "TASK-34",
-      "aftur_acceptance_storage": "task note (importer drops native acceptance_criteria)"
+      "source": "Agent-proposed improvement; review against PRD before implementation."
     }
   ],
-  "aftur_project_path": "/Users/nirtuttnauer/Documents/Code/MossCMS/ProjectMemory/MossCMS",
-  "aftur_prd_id": "PRD-e46f6b17",
-  "prd_sha256": "c06a7be846f3c2c1c2f3b231adb3492006d2b829807d77addf586d2b163bf622",
   "snapshot_kind": "initial_plan",
   "execution_update": {
     "date": "2026-10-08",
-    "authorization": "Owner approved all34 tasks in chat; feature branches from main; Aftur workflow is WIP.",
+    "authorization": "Owner approved all 34 baseline tasks; feature branches from main.",
     "implementation_status": "implemented_locally",
     "ledger": "IMPLEMENTATION.md",
     "evidence": "../release-acceptance-2026-10-08.md",
-    "note": "Original per-task status/source fields retain the planning snapshot; MCP attempts and branch/commit artifacts record execution. No public deployment."
-  }
+    "note": "Original per-task status/source fields retain the planning snapshot; the implementation ledger and release evidence record delivered behavior. No public deployment."
+  },
+  "prd_sha256": "adf4cf851d2d018adf44044b5a88fee776250ef497919e7eed10ee7703c37c87"
 }

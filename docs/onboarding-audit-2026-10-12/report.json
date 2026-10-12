@@ -41,7 +41,6 @@
     "Edit the sample post, confirm the public payload still has the previous body, publish, and confirm the new body renders publicly. Evidence: 16-confirmed-website-publication.png."
   ],
   "application_changes": "No application source edits were made for this audit. Tickets describe future fixes. Manual workarounds only changed synthetic records in the disposable instance.",
-  "aftur_ticket_mapping": "aftur-tickets.json",
   "limits": [
     "This is an expert walkthrough, not a timed study with representative first-time users.",
     "Docker build layers and installed package caches were available; cold-machine installation/download time is unmeasured.",
@@ -371,9 +370,8 @@
   "post_audit_review": {
     "date": "2026-10-12",
     "reviewed_readme_commit": "9321596",
-    "aftur_review_revision": 567,
-    "task47": "The README now specifies --port 8001, addressing the primary mismatch observed in the audit baseline. Custom-port guidance and API/proxy isolation acceptance checks were not independently rerun; proposal remains open.",
-    "scope": "Report, images, references, task mapping and source consistency reviewed. No browser trial repeated or proposed application fixes implemented.",
-    "source_note": "Historical audited snapshot and original proposal receipt remain unchanged."
+    "scope": "Report, images, references and source consistency reviewed. No browser trial repeated or proposed application fixes implemented.",
+    "source_note": "Historical audited snapshot retained; later implementation checks are recorded separately.",
+    "ONB-02": "The README now specifies --port 8001, addressing the primary mismatch observed in the audit baseline. Custom-port guidance and API/proxy isolation acceptance checks were not independently rerun; proposal remains open."
   }
 }

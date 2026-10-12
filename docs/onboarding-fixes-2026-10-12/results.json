@@ -3,63 +3,62 @@
   "browser": "Chromium 156.0.8078.4",
   "environment": "Separate empty PostgreSQL/media volumes; Compose project mosscms-onboarding-fixes; CMS 18086 and website 18087. Current working tree includes existing unrelated SQLite/Compose changes, which were retained.",
   "records": {
-    "TASK-46": {
+    "ONB-01": {
       "priority": "P1",
       "change": "Authenticated bootstrap uses a cookie-retaining session; one-workspace operator recovery refuses existing members.",
       "verification": "Real API bootstrap/rerun/content preservation tests; real PostgreSQL recovery scoped to one fixture; browser logout/login retains Example website access."
     },
-    "TASK-47": {
+    "ONB-02": {
       "priority": "P1",
       "change": "README API command explicitly uses port 8001 and documents uv/Python/Node and custom Vite backend configuration.",
       "verification": "README and Vite target both use 8001, with a consistent custom-port example."
     },
-    "TASK-51": {
+    "ONB-06": {
       "priority": "P1",
       "change": "Creation links carry workspace/type and open the editor; publication guide opens the single draft or an explicit filtered choice.",
       "verification": "Unit tests cover route parameters and multiple drafts; actual browser caught and verified correction of the programmatic navigation event. A delayed-search regression reproduced an old-workspace URL overwrite without the guard and passed after preventing route writes to another workspace."
     },
-    "TASK-52": {
+    "ONB-07": {
       "priority": "P1",
       "change": "Publishing mode labels are Draft, Immediate publication and Scheduled publication; only the actual submission says Publish now.",
       "verification": "Existing uncertain-response, duplicate and URL-change tests pass; browser confirms one Publish now action and public output."
     },
-    "TASK-48": {
+    "ONB-03": {
       "priority": "P2",
       "change": "Explicit local --port and --public-url configure matching bind/public URL/origins, reject conflicting options, preserve secrets and allow independent production proxy origins.",
       "verification": "Operator tests cover valid/invalid/conflicting ports, production proxy mapping and repeat preservation; Docker uses port 18086."
     },
-    "TASK-49": {
+    "ONB-04": {
       "priority": "P2",
       "change": "python3 scripts/start.py checks Docker/Compose, configures, waits for readiness and hands the first operator a private setup token in their terminal.",
       "verification": "Operator tests confirm readiness flags and token suppression after setup; actual startup finishes with the correct ready URL and retained account."
     },
-    "TASK-50": {
+    "ONB-05": {
       "priority": "P2",
       "change": "First setup distinguishes Your name and Workspace name, displays a connected password-length hint, and keeps the old API default.",
       "verification": "Auth unit test, all API setup/invitation tests and a browser-created My first website workspace."
     },
-    "TASK-53": {
+    "ONB-08": {
       "priority": "P2",
       "change": "The checklist creates a 90-day type-scoped delivery token, verifies it inline and shows its secret once; Settings deep links scroll and focus the token section.",
       "verification": "Unit test checks scopes, expiry, verification and no token in storage/URL; browser completes inline verification."
     },
-    "TASK-54": {
+    "ONB-09": {
       "priority": "P2",
       "change": "Explicit draft save keeps Content and Publications editors open; a new draft gains its durable entry URL.",
       "verification": "Browser confirms the editor stays open and entry=new becomes the persisted ID; existing autosave/conflict/duplicate tests pass."
     },
-    "TASK-55": {
+    "ONB-10": {
       "priority": "P2",
       "change": "Completed onboarding folds into a resumable connection summary and returns focus to its action; inactive steps use compact explanations.",
       "verification": "At 390x844 the content heading is at y=639 and creation button at y=721 in the initial review build; final 375px/landscape checks show no overflow."
     },
-    "TASK-56": {
+    "ONB-11": {
       "priority": "P2",
       "change": "Website setup configures the trusted preview origin using --website-url or the retained site URL; an unconfigured editor offers a connection step.",
-      "verification": "Authenticated API bootstrap configures preview and preserves a custom existing origin; browser opens a saved preview without manual origin changes.",
-      "workflow_note": "Implementation verified under the human authorization for all twelve tickets. Aftur cannot claim this ticket until TASK-46 is accepted; its approved state and dependency are retained."
+      "verification": "Authenticated API bootstrap configures preview and preserves a custom existing origin; browser opens a saved preview without manual origin changes."
     },
-    "TASK-57": {
+    "ONB-12": {
       "priority": "P2",
       "change": "A shared frontend handoff supplies the actual endpoint and type, a server-side curl example, copy action and an explained example-site path.",
       "verification": "Actual copied curl returns the intended published Article; explorer allows type choice; browser confirms a draft stays private until its new body renders publicly."

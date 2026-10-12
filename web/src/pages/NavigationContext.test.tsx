@@ -8,7 +8,7 @@ vi.mock('../lib/api', async importOriginal => ({
   gql: vi.fn(),
 }))
 
-describe('Navigation and Content-List Context (TASK-36 / MC-36)', () => {
+describe('Navigation and Content-List Context (MC-36)', () => {
   const types: ContentType[] = [
     { id: 't1', key: 'article', name: 'Articles', version: 1, fields: [{ name: 'title', type: 'text' }] },
     { id: 't2', key: 'product', name: 'Products', version: 1, fields: [{ name: 'title', type: 'text' }] },

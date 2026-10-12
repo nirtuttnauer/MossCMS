@@ -1,4 +1,4 @@
-# TASK-35 first-use walkthrough two — 11 October 2026
+# MC-35 first-use walkthrough two — 11 October 2026
 
 **Result: passed in an isolated fresh workspace, operated by the root agent through CUA.** The complete checklist flow used keyboard actions and semantic field filling, without mouse clicks. This is agent-operated browser evidence, not a human first-use participant or proof of the proposed activation metric. The operator had source context.
 

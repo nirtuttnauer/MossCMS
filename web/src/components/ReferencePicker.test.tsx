@@ -21,7 +21,7 @@ afterEach(() => {
   setContext(previousContext.project, previousContext.csrf)
 })
 
-describe('ReferencePicker (TASK-37)', () => {
+describe('ReferencePicker (MC-37)', () => {
   it('discards stale searches and resets the cursor when the search changes', async () => {
     const entry = (id: string, title: string) => ({ id, title, typeKey: 'author', slug: id, data: {}, status: 'draft', version: 1, updatedAt: '', isLive: false, hasUnpublishedChanges: false })
     let oldResolve!: (value: unknown) => void

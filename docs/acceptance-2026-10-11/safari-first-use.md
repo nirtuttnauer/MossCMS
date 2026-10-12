@@ -1,4 +1,4 @@
-# TASK-45 empty-workspace Safari first-use — 11 October 2026
+# MC-45 empty-workspace Safari first-use — 11 October 2026
 
 **Result: the empty-workspace Safari first-use flow completed in the root agent's actual browser session.** It reached 4/4 only after publishing and successfully verifying delivery. This is agent-operated synthetic evidence, not a human activation study, complete release approval, or proof of spoken VoiceOver behavior.
 
@@ -84,6 +84,6 @@ Two pointer attempts on the localized-group validation summary focused `main-con
 
 At root authorization, both owning sessions were stopped at 17:42:10 UTC (20:42:10 Asia/Jerusalem). API session `10851` reported orderly application shutdown and PID `56872` finished with exit 0; frontend session `27402` ended with exit 130 following Ctrl+C. Only the regular mode-0600 `/tmp/moss-safari-first-use-20261011/delivery-token` file was unlinked. SQLite fixtures, private non-secret IDs and screenshots remain as evidence. The root closed its own Safari window and in-app tab and reset the temporary viewport; the user’s pre-existing Safari window was preserved. This subagent did not operate browsers.
 
-The updated acceptance report and full planning criteria were read. A read-only task-context request through this subagent's exposed Aftur tool returned `not_found`; no ticket claim, status or canonical planning file was changed. No source file was edited by this subagent. Other fixtures, notes and existing working-tree changes are preserved.
+The updated acceptance report and full planning criteria were read. No source file was edited by this verification run. Other fixtures, notes and existing working-tree changes were preserved.
 
 This result supplies the previously missing empty-workspace Safari first-use evidence and additional in-app keyboard validation/default-locale results. Standalone Chromium and spoken VoiceOver remain owner-deferred. Dirty-navigation Cancel/Stay and pointer summary-focus recovery were unverified in this earlier fixture; both were subsequently verified in the [Safari keyboard supplement](safari-keyboard.md). The artificial missing-object fieldset state remains automated-only because normal controls and validated schema migration cannot produce it. Production deployment acceptance and universal accessibility claims are outside this run.

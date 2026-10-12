@@ -1,4 +1,4 @@
-# TASK-35 first-use walkthrough three — 11 October 2026
+# MC-35 first-use walkthrough three — 11 October 2026
 
 **Result: completed agent-operated keyboard walkthrough, with an infrastructure interruption and successful resume.** This is one fresh synthetic workspace run. It is not a human participant study, an activation-rate measurement, a speech test, or release approval.
 
@@ -48,4 +48,4 @@ The no-token final screenshot is saved in `first-use-three-ready.jpg`; it shows 
 
 Initial API PID **40645**, tool session **37723**, and initial UI session **88361** were stopped for the cookie-host restart. Resumed API PID **42374**, tool session **30216**, and resumed UI session **97412** were stopped after verification; Uvicorn confirmed shutdown, and both Vite sessions exited with interrupt status. Only the created IAB tab **1** was closed. The temporary database/media/screenshot were retained for evidence; no active server was intentionally left running.
 
-This run completes the observed TASK-35 path for one additional agent-operated fresh fixture. The count of three independent agent runs must be assessed alongside their other reports. Human usability/activation improvement, spoken accessibility output, other browsers, production operation and a frozen-revision repeat remain unverified.
+This run completes the observed MC-35 path for one additional agent-operated fresh fixture. The count of three independent agent runs must be assessed alongside their other reports. Human usability/activation improvement, spoken accessibility output, other browsers, production operation and a frozen-revision repeat remain unverified.

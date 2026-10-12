@@ -36,7 +36,6 @@ The original starter backlog is implemented. The items below record the delivere
 - [x] **T041 — Document backup and recovery.** Add PostgreSQL backup/restore commands, volume recovery guidance, and a tested upgrade procedure for self-hosters.
 - [x] **T050 — Add automated checks.** Cover GraphQL queries/mutations, authorization boundaries, migrations, and UI states; run Python formatting/type/lint checks and frontend type/build checks in CI.
 
-
 ## Additional requested features
 
 - [x] Team management: administrator/editor/reader roles, invitation acceptance and revocation, membership removal, last-administrator protection, and workspace switching.
@@ -44,7 +43,7 @@ The original starter backlog is implemented. The items below record the delivere
 
 ## Approved MC-01–MC-34 release
 
-All 34 Aftur tasks, including optional P3 schema tools, were approved in this chat and implemented sequentially on feature branches from local `main`. The [execution ledger](docs/planning/IMPLEMENTATION.md) maps each task to its retained branch. MCP attempts and commit artifacts record the work; the WIP Aftur workflow may still display the original proposed statuses.
+All 34 baseline tasks, including optional P3 schema tools, were approved and implemented sequentially on feature branches from local `main`. The [implementation ledger](docs/planning/IMPLEMENTATION.md) maps each MossCMS plan item to its retained branch.
 
 Delivered scope includes independent live/draft/scheduled snapshots, explicit publication actions, autosave/conflict recovery, Markdown, saved website previews, responsive covers/galleries, public paths/metadata/feeds, failure queues, outbox/signed webhooks/SSE with polling, uncertain-save reconciliation, schema previews/migration suggestions and larger-schema tools. [Editor guide](docs/editor-workflows.md) and [operator guide](docs/deployment-recovery.md) describe the shipped behavior.
 

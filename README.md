@@ -446,8 +446,8 @@ If an older bypass setup left the workspace without members, recover only that w
 [PRD](docs/PRD.md) · [Tasks and acceptance criteria](docs/planning/TASKS.md) · [Implementation ledger](docs/planning/IMPLEMENTATION.md) · [Release evidence](docs/release-acceptance-2026-10-08.md)
 
 <details>
-<summary>Planning history and Aftur tracking</summary>
+<summary>Planning history</summary>
 
-The [PRD](docs/PRD.md) retains the 7 October baseline and records the approved release scope. The [task breakdown](docs/planning/TASKS.md) includes acceptance criteria and dependencies. The original task plan is tracked in the local Aftur project at `ProjectMemory/MossCMS`; open that folder in Aftur to review the PRD and plan. The owner approved all 34 tasks in this chat on 8 October 2026; they are now implemented sequentially on feature branches integrated into local `main`. [Execution ledger](docs/planning/IMPLEMENTATION.md) and [release evidence](docs/release-acceptance-2026-10-08.md) record the result. Aftur MCP attempts/artifacts record execution; its unfinished workflow statuses may still show proposed/dependency blocks. The original Markdown/JSON plan retains that historical status and is not current implementation evidence.
+The [PRD](docs/PRD.md) retains the 7 October baseline and records the approved release scope. The [task breakdown](docs/planning/TASKS.md) includes acceptance criteria and dependencies. All 34 baseline tasks were approved on 8 October 2026 and implemented sequentially on feature branches integrated into local `main`. The [implementation ledger](docs/planning/IMPLEMENTATION.md) and [release evidence](docs/release-acceptance-2026-10-08.md) record the result. The original Markdown/JSON plan preserves the historical proposal snapshot; consult the implementation and acceptance documents for delivered behavior.
 
 </details>

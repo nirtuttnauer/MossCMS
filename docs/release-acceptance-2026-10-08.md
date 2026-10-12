@@ -1,6 +1,6 @@
 # Release acceptance — 8 October 2026
 
-MC-33 records execution after the owner approved all 34 tasks in this chat. Aftur's unfinished approval/dependency workflow still shows the initial proposed statuses; MCP attempts and branch/commit artifacts record actual implementation. This is local acceptance evidence, not a public deployment certification.
+MC-33 records execution after the owner approved all 34 baseline tasks. Retained branches and release checks document the implementation. This is local acceptance evidence, not a public deployment certification.
 
 ## Fixture and method
 

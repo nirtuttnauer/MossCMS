@@ -27,4 +27,4 @@ Follow-up ideas outside MC-01–MC-34 remain open:
 - Cross-type field clipboard/copy-paste (item 14).
 - Workspace default locales and per-type icons (items 15–16).
 
-[Execution ledger](docs/planning/IMPLEMENTATION.md), [editor workflows](docs/editor-workflows.md) and [release evidence](docs/release-acceptance-2026-10-08.md) provide the approved scope and validation limits. Aftur's unfinished status workflow is distinct from the MCP execution attempts/artifacts.
+[Implementation ledger](docs/planning/IMPLEMENTATION.md), [editor workflows](docs/editor-workflows.md) and [release evidence](docs/release-acceptance-2026-10-08.md) provide the approved scope and validation limits.

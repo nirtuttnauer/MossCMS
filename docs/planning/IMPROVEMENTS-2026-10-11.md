@@ -2,31 +2,31 @@
 
 Help self-hosting owners and small editorial teams reach their first published entry, complete daily editing without losing context, and recover confidently from errors. Extend the shipped MC-01–MC-34 baseline rather than repeat it.
 
-These began as assistant product-management proposals requested by the owner. The owner subsequently authorized implementation with “continue” and “use subagents to do these in parralel.” TASK-35–TASK-45 are implemented and human-accepted in Aftur. TASK-45 was accepted on 12 October 2026 with standalone Chromium and spoken VoiceOver checks skipped and recorded unverified in [the acceptance report](../editor-acceptance-2026-10-11.md). Priorities, effort and success targets remain estimates rather than measured outcomes. The shipped MC-01–MC-34 work was checked against implementation/release documentation rather than treating stale proposed statuses as unfinished scope.
+These began as product-management proposals requested by the owner. MC-35–MC-45 are implemented and owner-accepted. MC-45 was accepted on 12 October 2026 with standalone Chromium and spoken VoiceOver checks skipped and recorded unverified in [the acceptance report](../editor-acceptance-2026-10-11.md). Priorities, effort and success targets remain estimates rather than measured outcomes. The shipped MC-01–MC-34 baseline was checked against implementation/release documentation.
 
 ## Recommended sequence
 
 Address truthful bulk-trash recovery, complete reference selection, and actionable validation first. Then improve first-use onboarding and navigation. Verify that iteration in actual browsers before adding convenience features, locales and historical redirects. P1 means next iteration; P2 means follow-on. Effort is relative, not a time commitment.
 
-| Order | Ticket | Aftur ID | Priority | Relative effort |
-| --- | --- | --- | --- | --- |
-| 1 | MC-41 — Report partial bulk-trash results and retry only unresolved entries | TASK-41 | P1 | S–M |
-| 2 | MC-37 — Find and select references beyond the first 100 entries | TASK-37 | P1 | M |
-| 3 | MC-38 — Show validation errors beside the fields editors must fix | TASK-38 | P1 | M |
-| 4 | MC-35 — Guide new workspaces to their first published entry | TASK-35 | P1 | M |
-| 5 | MC-36 — Make entry links and content-list context survive navigation | TASK-36 | P2 | M |
-| 6 | MC-45 — Verify the next editing release in real browsers and assistive technology | TASK-45 | P1 | M |
-| 7 | MC-39 — Compare entry revisions and live content in readable form | TASK-39 | P2 | M |
-| 8 | MC-40 — Duplicate an entry into a new unpublished draft | TASK-40 | P2 | S–M |
-| 9 | MC-43 — Upload and select media without leaving the entry editor | TASK-43 | P2 | M |
-| 10 | MC-42 — Configure workspace locales and use the default in new entries | TASK-42 | P2 | M |
-| 11 | MC-44 — Preserve previously published website URLs after slug changes | TASK-44 | P2 | L |
+| Order | Ticket | Priority | Relative effort |
+| --- | --- | --- | --- |
+| 1 | MC-41 — Report partial bulk-trash results and retry only unresolved entries | P1 | S–M |
+| 2 | MC-37 — Find and select references beyond the first 100 entries | P1 | M |
+| 3 | MC-38 — Show validation errors beside the fields editors must fix | P1 | M |
+| 4 | MC-35 — Guide new workspaces to their first published entry | P1 | M |
+| 5 | MC-36 — Make entry links and content-list context survive navigation | P2 | M |
+| 6 | MC-45 — Verify the next editing release in real browsers and assistive technology | P1 | M |
+| 7 | MC-39 — Compare entry revisions and live content in readable form | P2 | M |
+| 8 | MC-40 — Duplicate an entry into a new unpublished draft | P2 | S–M |
+| 9 | MC-43 — Upload and select media without leaving the entry editor | P2 | M |
+| 10 | MC-42 — Configure workspace locales and use the default in new entries | P2 | M |
+| 11 | MC-44 — Preserve previously published website URLs after slug changes | P2 | L |
 
 ## Ticket details
 
 ### MC-35 — Guide new workspaces to their first published entry
 
-Aftur: **TASK-35** · P1 · Effort: M
+P1 · Effort: M
 
 As a new workspace owner, I want a short guided path from defining content to reading a published entry so I can understand whether MossCMS fits my website.
 
@@ -60,7 +60,7 @@ As a new workspace owner, I want a short guided path from defining content to re
 
 ### MC-36 — Make entry links and content-list context survive navigation
 
-Aftur: **TASK-36** · P2 · Effort: M
+P2 · Effort: M
 
 As an editor, I want to bookmark an entry and return to my filtered list so I can resume work and share precise context with teammates.
 
@@ -92,7 +92,7 @@ As an editor, I want to bookmark an entry and return to my filtered list so I ca
 
 ### MC-37 — Find and select references beyond the first 100 entries
 
-Aftur: **TASK-37** · P1 · Effort: M
+P1 · Effort: M
 
 As an editor with a growing content library, I want to search all valid reference targets so I can link the correct entry regardless of its age or position.
 
@@ -125,7 +125,7 @@ As an editor with a growing content library, I want to search all valid referenc
 
 ### MC-38 — Show validation errors beside the fields editors must fix
 
-Aftur: **TASK-38** · P1 · Effort: M
+P1 · Effort: M
 
 As an editor, I want the failed field highlighted with a clear correction so I can fix my entry without searching the whole form.
 
@@ -159,7 +159,7 @@ As an editor, I want the failed field highlighted with a clear correction so I c
 
 ### MC-39 — Compare entry revisions and live content in readable form
 
-Aftur: **TASK-39** · P2 · Effort: M
+P2 · Effort: M
 
 As an editor, I want a field-by-field comparison of revisions so I can make an informed publish or restore decision.
 
@@ -192,7 +192,7 @@ As an editor, I want a field-by-field comparison of revisions so I can make an i
 
 ### MC-40 — Duplicate an entry into a new unpublished draft
 
-Aftur: **TASK-40** · P2 · Effort: S–M
+P2 · Effort: S–M
 
 As an editor, I want to start from an existing entry so I can produce a similar item without changing or republishing the original.
 
@@ -225,7 +225,7 @@ As an editor, I want to start from an existing entry so I can produce a similar 
 
 ### MC-41 — Report partial bulk-trash results and retry only unresolved entries
 
-Aftur: **TASK-41** · P1 · Effort: S–M
+P1 · Effort: S–M
 
 As an editor cleaning a content library, I want a truthful result for each selected entry so I can recover safely from a partial failure.
 
@@ -258,7 +258,7 @@ As an editor cleaning a content library, I want a truthful result for each selec
 
 ### MC-42 — Configure workspace locales and use the default in new entries
 
-Aftur: **TASK-42** · P2 · Effort: M
+P2 · Effort: M
 
 As a multilingual workspace owner, I want a default locale and suggested locale list so new entries start in the language my team uses.
 
@@ -292,7 +292,7 @@ As a multilingual workspace owner, I want a default locale and suggested locale 
 
 ### MC-43 — Upload and select media without leaving the entry editor
 
-Aftur: **TASK-43** · P2 · Effort: M
+P2 · Effort: M
 
 As an editor, I want to upload a missing image where I am selecting it so I can finish my post without switching screens.
 
@@ -326,7 +326,7 @@ As an editor, I want to upload a missing image where I am selecting it so I can 
 
 ### MC-44 — Preserve previously published website URLs after slug changes
 
-Aftur: **TASK-44** · P2 · Effort: L
+P2 · Effort: L
 
 As a site owner, I want previously shared URLs to keep resolving after I rename a published page so readers can still reach it.
 
@@ -361,7 +361,7 @@ As a site owner, I want previously shared URLs to keep resolving after I rename 
 
 ### MC-45 — Verify the next editing release in real browsers and assistive technology
 
-Aftur: **TASK-45** · P1 · Effort: M
+P1 · Effort: M
 
 As a workspace owner, I want the normal editing journey verified in the interfaces my team uses so a passing build does not hide a blocked workflow.
 
@@ -390,10 +390,8 @@ As a workspace owner, I want the normal editing journey verified in the interfac
 - web/src/components/ui/dialog.tsx
 - web/src/pages/Content.test.tsx
 
-**Dependencies.** TASK-35 (MC-35), TASK-36 (MC-36), TASK-37 (MC-37), TASK-38 (MC-38), TASK-41 (MC-41)
+**Dependencies.** MC-35, MC-36, MC-37, MC-38, MC-41
 
-## Import verification
+## Plan and verification
 
-Created and read back 11 proposed tasks through the MossCMS-scoped MCP server. Existing tasks were unchanged. Titles, scope, acceptance criteria and dependencies were verified. Priority and effort are recorded in descriptions because propose_task has no priority/estimate parameters.
-
-All 44 acceptance criteria were verified in the native acceptance-criteria fields and in the ticket descriptions. The current MCP bridge preserved them, unlike the initial 7 October import. The [import receipt](improvements-2026-10-11-aftur.json) records IDs, status, dependencies and verification. The [structured plan](improvements-2026-10-11.json) contains the same scopes and Aftur IDs.
+The [structured plan](improvements-2026-10-11.json) records all 11 improvement scopes, acceptance criteria and dependencies using MossCMS plan IDs. Implementation and verification are documented in [the acceptance report](../editor-acceptance-2026-10-11.md) and [implementation results](improvements-2026-10-11-execution.json).

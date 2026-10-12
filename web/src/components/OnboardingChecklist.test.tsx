@@ -19,7 +19,7 @@ vi.mock('../lib/api', async importOriginal => ({
   gql: vi.fn(),
 }))
 
-describe('OnboardingChecklist (TASK-35 / MC-35)', () => {
+describe('OnboardingChecklist (MC-35)', () => {
   const adminProject: Project = {
     id: 'proj-1',
     name: 'Main Workspace',

@@ -1,6 +1,6 @@
 # Safari keyboard and editor checks — 11 October 2026
 
-This records agent-operated checks in a fresh, authenticated synthetic fixture. It supplements the [editing acceptance report](../editor-acceptance-2026-10-11.md); it does not establish human usability improvement or complete TASK-45.
+This records agent-operated checks in a fresh, authenticated synthetic fixture. It supplements the [editing acceptance report](../editor-acceptance-2026-10-11.md); it does not establish human usability improvement or complete MC-45.
 
 ## Isolation and method
 
