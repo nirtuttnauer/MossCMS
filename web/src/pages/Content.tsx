@@ -4,7 +4,7 @@ import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Dialog } from '../components/ui/dialog'
 import { confirmNavigation, useUnsavedChanges } from '../lib/unsaved'
-import { contentHash, readContentRoute, setContentRoute } from '../lib/navigation'
+import { contentHash, fieldOrder, sortableFields, readContentRoute, setContentRoute } from '../lib/navigation'
 import { getContext, entryByIdQuery, entryFields, gql, message, type ContentType, type Entry } from '../lib/api'
 import { creationLabels, timestamp, typeOrder, type DuplicationSource, type EntryPage as Page } from '../lib/entries'
 import { trashEntry, type TrashResult } from '../lib/bulkTrash'
@@ -44,6 +44,7 @@ export function Content({ types, role, onChanged, projectId, defaultLocale = 'en
   const [deleting, setDeleting] = useState<Entry[] | null>(null)
   const [trash, setTrash] = useState<TrashResult | null>(null)
   const [busy, setBusy] = useState(false)
+  const [loaded, setLoaded] = useState(false)
   const [trashBusy, setTrashBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -62,6 +63,9 @@ export function Content({ types, role, onChanged, projectId, defaultLocale = 'en
   }, [trashBusy, deleting, context, trashActionId])
   const editable = role !== 'reader'
   const selectedType = types.find(item => item.key === type)
+  const orderBy = fieldOrder(sort, selectedType)
+  const effectiveSort = sort.startsWith('field:') && !orderBy ? 'updated_desc' : sort
+  useEffect(() => { if (sort !== effectiveSort) setSort(effectiveSort) }, [sort, effectiveSort])
   const groupList = [...groups].sort((a, b) => {
     const rank = (key: string) => typeOrder.includes(key) ? typeOrder.indexOf(key) : 99
     return rank(a.key) - rank(b.key) || a.name.localeCompare(b.name)
@@ -74,9 +78,9 @@ export function Content({ types, role, onChanged, projectId, defaultLocale = 'en
       if (type) params.set('type', type); else params.delete('type')
       if (status) params.set('status', status); else params.delete('status')
       if (search) params.set('search', search); else params.delete('search')
-      if (sort && sort !== 'updated_desc') params.set('sort', sort); else params.delete('sort')
+      if (effectiveSort !== 'updated_desc') params.set('sort', effectiveSort); else params.delete('sort')
     }, false)
-  }, [type, status, search, sort])
+  }, [type, status, search, effectiveSort])
 
   const openEntry = (item: Entry | null) => {
     listScroll.current = window.scrollY
@@ -172,9 +176,9 @@ export function Content({ types, role, onChanged, projectId, defaultLocale = 'en
   }, [editor, deleting])
   useEffect(() => {
     let alive = true; setBusy(true); setError('')
-    gql<{ entries: Page; contentGroups: Group[] }>(`query($type:String,$status:String,$search:String!,$sort:String!,$after:String){entries(typeKey:$type,status:$status,search:$search,sort:$sort,first:20,after:$after){nodes{${entryFields}} total endCursor hasNextPage} contentGroups(status:$status)}`, { type: type || null, status: status || null, search, sort, after: cursors[cursors.length - 1] }, context).then(result => { if (alive) { setPage(result.entries); setGroups(result.contentGroups); setSelected(old => old.filter(id => result.entries.nodes.some(entry => entry.id === id))) } }).catch(reason => { if (alive) { if (cursors.length > 1) setCursors([null]); else setError(message(reason)) } }).finally(() => { if (alive) setBusy(false) })
+    gql<{ entries: Page; contentGroups: Group[] }>(`query($type:String,$status:String,$search:String!,$sort:String!,$orderBy:EntryOrderBy,$after:String){entries(typeKey:$type,status:$status,search:$search,sort:$sort,orderBy:$orderBy,first:20,after:$after){nodes{${entryFields}} total endCursor hasNextPage} contentGroups(status:$status)}`, { type: type || null, status: status || null, search, sort: orderBy ? 'updated_desc' : effectiveSort, orderBy, after: cursors[cursors.length - 1] }, context).then(result => { if (alive) { setPage(result.entries); setLoaded(true); setGroups(result.contentGroups); setSelected(old => old.filter(id => result.entries.nodes.some(entry => entry.id === id))) } }).catch(reason => { if (alive) { if (cursors.length > 1) setCursors([null]); else setError(message(reason)) } }).finally(() => { if (alive) setBusy(false) })
     return () => { alive = false }
-  }, [type, status, search, sort, cursors, refresh])
+  }, [type, status, search, effectiveSort, cursors, refresh])
   async function remove(items: Entry[]) {
     if (trashBusy) return
     recoverTrashFocus.current = Boolean(document.activeElement?.closest('[role="dialog"]'))
@@ -223,21 +227,21 @@ export function Content({ types, role, onChanged, projectId, defaultLocale = 'en
     <div className="page-heading"><div><div className="eyebrow">CONTENT LIBRARY</div><h1 ref={listHeading} tabIndex={-1}>{selectedType?.name || 'Content'}</h1><p className="subtitle">Organize content by type. Publish now or plan ahead.</p></div>{editable && <Button disabled={!types.length} onClick={() => openEntry(null)}><Plus size={16} />{creationLabels[type] || 'New entry'}</Button>}</div>
     {!types.length && <p className="notice">Create a content type first in <a href="#types">Content types</a>.</p>}
     <div className="content-groups" role="group" aria-label="Content groups">
-      <button className={!type ? 'selected' : ''} aria-pressed={!type} onClick={() => setType('')}><FileText size={15} />All content<span>{groups.reduce((total, group) => total + group.count, 0)}</span></button>
+      <button className={!type ? 'selected' : ''} aria-pressed={!type} onClick={() => setType('')}><FileText size={15} />All content<span>{loaded ? groups.reduce((total, group) => total + group.count, 0) : '—'}</span></button>
       {groupList.map(group => { const Icon = typeIcons[group.key as keyof typeof typeIcons] || FileText; return <button key={group.key} className={type === group.key ? 'selected' : ''} aria-pressed={type === group.key} onClick={() => setType(group.key)}><Icon size={15} />{group.name}<span>{group.count}</span></button> })}
     </div>
-    {notice && <p className="notice" role="status">{notice}{notice.includes('moved to trash') && <> <button type="button" className="text-button" onClick={() => setStatus('deleted')}>View trash</button></>}</p>}{error && <p className="form-error" role="alert">{error}</p>}
-    <section className="entries-panel" aria-label="Entries">
-      <div className="panel-heading"><h2>{selectedType?.name || 'All entries'} <span className="entry-total">{page.total}</span></h2><select aria-label="Content type" value={type} onChange={event => setType(event.target.value)}><option value="">All content types</option>{types.map(item => <option key={item.key} value={item.key}>{item.name}</option>)}</select></div>
-      <div className="table-toolbar"><label className="searchbox"><Search size={16} /><input aria-label="Search entries" placeholder="Search entries…" value={filter} onChange={event => setFilter(event.target.value)} /></label><select aria-label="Publishing status" value={status} onChange={event => setStatus(event.target.value)}><option value="">Active entries</option><option value="draft">Draft</option><option value="published">Published</option><option value="scheduled">Scheduled</option><option value="deleted">Trash</option></select><select aria-label="Sort entries" value={sort} onChange={event => setSort(event.target.value)}><option value="updated_desc">Newest first</option><option value="updated_asc">Oldest first</option><option value="title_asc">Title A–Z</option><option value="title_desc">Title Z–A</option></select>{selected.length > 0 && editable && status !== 'deleted' && <Button variant="outline" onClick={() => setDeleting(page.nodes.filter(entry => selected.includes(entry.id)))}>Trash {selected.length}</Button>}</div>
+    {notice && <p className="notice" role="status">{notice}{notice.includes('moved to trash') && <> <button type="button" className="text-button" onClick={() => setStatus('deleted')}>View trash</button></>}</p>}{error && <p className="form-error" role="alert">{error} <Button variant="outline" onClick={() => setRefresh(old => old + 1)}>Retry</Button></p>}
+    <section className="entries-panel" aria-label="Entries" aria-busy={busy}>
+      <div className="panel-heading"><h2>{selectedType?.name || 'All entries'} <span className="entry-total">{loaded ? page.total : '—'}</span></h2><select aria-label="Content type" value={type} onChange={event => setType(event.target.value)}><option value="">All content types</option>{types.map(item => <option key={item.key} value={item.key}>{item.name}</option>)}</select></div>
+      <div className="table-toolbar"><label className="searchbox"><Search size={16} /><input aria-label="Search entries" placeholder="Search entries…" value={filter} onChange={event => setFilter(event.target.value)} /></label><select aria-label="Publishing status" value={status} onChange={event => setStatus(event.target.value)}><option value="">Active entries</option><option value="draft">Draft</option><option value="published">Published</option><option value="scheduled">Scheduled</option><option value="deleted">Trash</option></select><select aria-label="Sort entries" value={effectiveSort} onChange={event => setSort(event.target.value)}><option value="updated_desc">Newest first</option><option value="updated_asc">Oldest first</option><option value="title_asc">Title A–Z</option><option value="title_desc">Title Z–A</option>{sortableFields(selectedType).map(field => <optgroup key={field.name} label={field.label || field.name}><option value={`field:${field.name}:asc`}>{field.label || field.name} · ascending</option><option value={`field:${field.name}:desc`}>{field.label || field.name} · descending</option></optgroup>)}</select>{selected.length > 0 && editable && status !== 'deleted' && <Button variant="outline" onClick={() => setDeleting(page.nodes.filter(entry => selected.includes(entry.id)))}>Trash {selected.length}</Button>}</div>
       <div className="table-scroll"><table className="content-table"><thead><tr><th className="check-cell"><input type="checkbox" aria-label="Select all entries" checked={page.nodes.length > 0 && selected.length === page.nodes.length} onChange={event => setSelected(event.target.checked ? page.nodes.map(row => row.id) : [])} /></th><th>TITLE</th><th>TYPE</th><th>STATUS / PUBLISHING</th><th>UPDATED</th><th>ACTIONS</th></tr></thead><tbody>
-        {busy && !page.nodes.length ? <tr><td colSpan={6} className="empty-state">Loading entries…</td></tr> : page.nodes.map(entry => {
+        {busy && !page.nodes.length ? <tr><td colSpan={6} className="empty-state"><span role="status">Loading entries…</span></td></tr> : page.nodes.map(entry => {
           const Icon = typeIcons[entry.typeKey as keyof typeof typeIcons] || FileText
           return <tr key={entry.id}><td className="check-cell"><input type="checkbox" aria-label={`Select ${entry.title}`} checked={selected.includes(entry.id)} onChange={event => setSelected(old => event.target.checked ? [...old, entry.id] : old.filter(id => id !== entry.id))} /></td><td><button className="title-cell text-button" onClick={() => openEntry(entry)}><div className={`doc-icon ${entry.typeKey}`}><Icon size={15} /></div><div><strong>{entry.title}</strong><span className="entry-slug">/{entry.slug}</span></div></button></td><td><span className={`content-type-label ${entry.typeKey}`}>{types.find(item => item.key === entry.typeKey)?.name || entry.typeKey}</span></td><td><div className="publishing-cell"><Badge className={entry.isLive ? 'published' : entry.status}><span />{entry.status === 'deleted' ? 'Trash' : entry.isLive ? 'Live' : 'Unpublished'}</Badge>{entry.hasUnpublishedChanges && entry.status !== 'deleted' && <small>Unpublished changes</small>}{entry.scheduledAt && <small>Scheduled revision {entry.scheduledRevision}</small>}{entry.scheduleError && <small role="status">Publication failed</small>}{entry.scheduledAt && <span className="scheduled-date" title={`${timestamp(entry.scheduledAt)} (${Intl.DateTimeFormat().resolvedOptions().timeZone})`}><CalendarClock size={12} /><time dateTime={entry.scheduledAt}>{timestamp(entry.scheduledAt)}</time></span>}</div></td><td className="updated"><time dateTime={entry.updatedAt} title={timestamp(entry.updatedAt)}>{new Date(entry.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</time></td><td><div className="row-actions"><button className="text-button" onClick={() => openEntry(entry)}>{editable ? entry.status === 'deleted' ? 'Restore' : 'Edit' : 'View'}</button><button className="text-button" onClick={() => copyEntryLink(entry)} title="Copy entry link">Copy link</button>{editable && entry.status !== 'deleted' && <button className="text-button" disabled={busy} onClick={() => duplicateEntry(entry)} title="Duplicate entry">Duplicate</button>}{editable && entry.status !== 'deleted' && <button className="text-button destructive-text" onClick={() => setDeleting([entry])}>Trash</button>}</div></td></tr>
         })}
-        {!busy && page.total === 0 && <tr><td className="empty-state" colSpan={6}><div className="empty-content"><Search size={28} aria-hidden="true" /><h3>{filter || status ? 'No matching entries' : 'Your library starts here'}</h3><p>{filter || status ? 'Try another search or publishing status.' : 'Create your first entry to start building your content library.'}</p>{filter || status ? <Button variant="outline" onClick={() => { setFilter(''); setStatus('') }}>Clear search and status</Button> : editable && types.length > 0 && <Button onClick={() => openEntry(null)}><Plus size={16} aria-hidden="true" />{creationLabels[type] || 'New entry'}</Button>}</div></td></tr>}
+        {!busy && !error && page.total === 0 && <tr><td className="empty-state" colSpan={6}><div className="empty-content"><Search size={28} aria-hidden="true" /><h3>{filter || status ? 'No matching entries' : 'Your library starts here'}</h3><p>{filter || status ? 'Try another search or publishing status.' : 'Create your first entry to start building your content library.'}</p>{filter || status ? <Button variant="outline" onClick={() => { setFilter(''); setStatus('') }}>Clear search and status</Button> : editable && types.length > 0 && <Button onClick={() => openEntry(null)}><Plus size={16} aria-hidden="true" />{creationLabels[type] || 'New entry'}</Button>}</div></td></tr>}
       </tbody></table></div>
-      <footer className="table-footer"><span>{busy ? 'Refreshing…' : `${page.total} ${page.total === 1 ? "entry" : "entries"} · page ${cursors.length}`}</span><div className="pagination"><Button variant="outline" disabled={cursors.length === 1 || busy} onClick={() => setCursors(old => old.slice(0, -1))}>Previous</Button><Button variant="outline" disabled={!page.hasNextPage || busy} onClick={() => setCursors(old => [...old, page.endCursor])}>Next</Button></div></footer>
+      <footer className="table-footer"><span role="status">{error ? 'Entries unavailable. Retry above.' : busy ? 'Refreshing…' : `${page.total} ${page.total === 1 ? "entry" : "entries"} · page ${cursors.length}`}</span><div className="pagination"><Button variant="outline" disabled={cursors.length === 1 || busy} onClick={() => setCursors(old => old.slice(0, -1))}>Previous</Button><Button variant="outline" disabled={!page.hasNextPage || busy} onClick={() => setCursors(old => [...old, page.endCursor])}>Next</Button></div></footer>
     </section>
 
     {deleting && <Dialog title={trash ? "Trash results and retry" : "Move entries to trash?"} open onClose={() => { if (!trashBusy) { setDeleting(null); setTrash(null) } }}>

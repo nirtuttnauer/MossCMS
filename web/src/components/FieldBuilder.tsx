@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react'
 import { Button } from './ui/button'
 import { cn } from '../lib/utils'
 import type { ContentType, Field } from '../lib/api'
@@ -91,15 +91,17 @@ function FieldEditor({
         <Button
           type="button"
           variant="ghost"
+          size="icon"
           aria-label={`Move ${label} up`}
           onClick={() => onMove(-1)}
-        >↑</Button>
+        ><ArrowUp size={16} aria-hidden="true" /></Button>
         <Button
           type="button"
           variant="ghost"
+          size="icon"
           aria-label={`Move ${label} down`}
           onClick={() => onMove(1)}
-        >↓</Button>
+        ><ArrowDown size={16} aria-hidden="true" /></Button>
         {onDuplicate && (
           <Button
             type="button"
@@ -111,9 +113,10 @@ function FieldEditor({
         <Button
           type="button"
           variant="ghost"
+          size="icon"
           aria-label={`Remove ${label}`}
           onClick={onRemove}
-        >×</Button>
+        ><X size={16} aria-hidden="true" /></Button>
       </div>
       <p className="field-type-hint">{meta.hint}</p>
       {field.type === 'enum' && (
@@ -137,7 +140,7 @@ function FieldEditor({
                   type="button"
                   aria-label={`Remove choice ${option}`}
                   onClick={() => onPatch({ options: options.filter((_, index) => index !== i) })}
-                >×</button>
+                ><X size={12} aria-hidden="true" /></button>
               </span>
             ))}
             {options.length < 40 && (

@@ -34,6 +34,8 @@ from .preview import router as preview_router
 from .query_limits import bounded_query
 from .security import CmsError, identify, require
 from .storage import router as storage_router
+from .telemetry import Telemetry, TelemetryMiddleware
+from .workspace_migration import MAX_ARCHIVE_UPLOAD, router as migration_router
 
 load_dotenv()
 logger = logging.getLogger("mosscms")
@@ -50,13 +52,10 @@ def create_app(settings=None):
 
     settings = (settings or Settings()).validate()
     engine, factory = database(settings.database_url)
+    telemetry = Telemetry(settings)
 
     @asynccontextmanager
     async def lifespan(app):
-        await asyncio.to_thread(migrate, engine)
-        if settings.skip_auth:
-            await asyncio.to_thread(initialize_development, factory)
-
         stopping = asyncio.Event()
 
         async def pause(seconds):
@@ -66,7 +65,8 @@ def create_app(settings=None):
         async def scheduler():
             while not stopping.is_set():
                 try:
-                    await asyncio.to_thread(publish_due, factory)
+                    with telemetry.operation("moss.worker.publish"):
+                        await asyncio.to_thread(publish_due, factory)
                 except Exception as exc:
                     logger.error("Publishing scheduler failed: %s", type(exc).__name__)
                 await pause(5)
@@ -74,21 +74,34 @@ def create_app(settings=None):
         async def webhook_worker():
             while not stopping.is_set():
                 try:
-                    await asyncio.to_thread(deliver, factory, settings)
+                    with telemetry.operation("moss.worker.webhooks"):
+                        await asyncio.to_thread(deliver, factory, settings)
                 except Exception as exc:
                     logger.error("Webhook worker failed: %s", type(exc).__name__)
                 await pause(1)
 
-        hooks_job = asyncio.create_task(webhook_worker())
-        job = asyncio.create_task(scheduler())
-        yield
-        stopping.set()
-        await asyncio.gather(job, hooks_job)
-        engine.dispose()
+        try:
+            telemetry.start(engine)
+            with telemetry.operation("moss.startup.migrate"):
+                await asyncio.to_thread(migrate, engine)
+            if settings.skip_auth:
+                await asyncio.to_thread(initialize_development, factory)
+            hooks_job = asyncio.create_task(webhook_worker())
+            job = asyncio.create_task(scheduler())
+            try:
+                yield
+            finally:
+                stopping.set()
+                await asyncio.gather(job, hooks_job)
+        finally:
+            engine.dispose()
+            await asyncio.to_thread(telemetry.shutdown)
 
     app = FastAPI(title="MossCMS", version="0.2.0", lifespan=lifespan)
     app.include_router(webhooks_router)
+    app.include_router(migration_router)
     app.state.settings, app.state.engine, app.state.db = settings, engine, factory
+    app.state.telemetry = telemetry
     app.state.started = time.monotonic()
     app.state.login_attempts = {}
     app.state.development_csrf = secrets.token_urlsafe(32)
@@ -123,7 +136,8 @@ def create_app(settings=None):
             length = int(request.headers.get("content-length", 0))
         except ValueError:
             return JSONResponse({"detail": "Invalid Content-Length."}, status_code=400)
-        if length > settings.max_upload + 1024 * 1024:
+        body_limit = MAX_ARCHIVE_UPLOAD if request.url.path == "/api/migration/import" else settings.max_upload
+        if length > body_limit + 1024 * 1024:
             return JSONResponse({"detail": "Request body is too large."}, status_code=413)
         try:
             response = await call_next(request)
@@ -151,6 +165,7 @@ def create_app(settings=None):
                     "path": request.url.path,
                     "status": response.status_code,
                     "seconds": round(duration, 4),
+                    **telemetry.log_fields(),
                 }
             )
         )
@@ -208,18 +223,25 @@ def create_app(settings=None):
 
     @app.post("/graphql")
     @app.post("/delivery/graphql")
+    @telemetry.graphql
     def graphql(body: GraphQLRequest, request: Request):
         delivery = request.url.path.startswith("/delivery/")
         with factory() as session:
             c = {**identify(request, session, delivery), "session": session, "settings": settings, "request": request}
             require(c)
             try:
-                bounded_query(body.query)
+                document = bounded_query(body.query, return_document=True)
+                telemetry.graphql_kind(request, document, body.operationName)
                 definitions = session.scalars(scoped(session, ContentType, c)).all()
-                schema = generated_schema(definitions, delivery, c.get("scopes"))
-                result = schema.execute_sync(
-                    body.query, variable_values=body.variables, operation_name=body.operationName, context_value=c
-                )
+                c["type_records"] = {definition.key: definition for definition in definitions}
+                c["entry_records"] = {}
+                c["asset_records"] = {}
+                with telemetry.operation("moss.graphql.schema"):
+                    schema = generated_schema(definitions, delivery, c.get("scopes"))
+                with telemetry.operation("moss.graphql.execute"):
+                    result = schema.execute_sync(
+                        body.query, variable_values=body.variables, operation_name=body.operationName, context_value=c
+                    )
                 errors = []
                 for error in result.errors or []:
                     original = website_path_conflict(error.original_error)
@@ -272,6 +294,7 @@ def create_app(settings=None):
                         {"message": "The operation could not be completed.", "extensions": {"code": "INTERNAL"}}
                     ],
                 }
+        telemetry.graphql_result(request, payload)
         response_errors = payload.get("errors") or []
         if response_errors:
             logger.warning(
@@ -311,6 +334,7 @@ def create_app(settings=None):
             return FileResponse(static / "index.html", headers={"Cache-Control": "no-cache"})
         return {"service": "MossCMS", "admin": "Run the Vite dev server on port 5173."}
 
+    app.add_middleware(TelemetryMiddleware, telemetry=telemetry)
     return app
 
 

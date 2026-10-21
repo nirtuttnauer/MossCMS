@@ -31,7 +31,7 @@ test('asset loading and request errors do not claim the media library is empty',
   expect(screen.getByRole('status').textContent).toBe('Loading assets…')
   expect(screen.queryByText('A home for your media')).toBeNull()
   reject(new Error('Connection unavailable'))
-  expect((await screen.findByRole('alert')).textContent).toBe('Connection unavailable')
+  expect((await screen.findByRole('alert')).textContent).toContain('Connection unavailable')
   expect(screen.queryByText('A home for your media')).toBeNull()
   expect(screen.queryByRole('button', { name: 'Upload asset' })).toBeNull()
 })
@@ -41,4 +41,22 @@ test('a failed queue request does not reassure editors that the queue is clear',
   render(<PublicationQueue types={[]} role="editor" onChanged={vi.fn()} />)
   expect((await screen.findByRole('alert')).textContent).toBe('Queue unavailable')
   expect(screen.queryByText('Your queue is clear')).toBeNull()
+})
+
+test('a failed library request suppresses fabricated empty totals and retries with the current filters', async () => {
+  history.replaceState(null, '', '/#content?status=draft&search=article')
+  let unavailable = true
+  vi.mocked(gql).mockImplementation(async () => { if (unavailable) throw new Error('Content unavailable'); return { entries: { nodes: [], total: 0, endCursor: null, hasNextPage: false }, contentGroups: [] } })
+  render(<Content types={[]} role="reader" onChanged={vi.fn()} />)
+  expect((await screen.findByRole('alert')).textContent).toContain('Content unavailable')
+  expect(screen.queryByText('Your library starts here')).toBeNull()
+  expect(screen.queryByText('No matching entries')).toBeNull()
+  expect(screen.getByRole('heading', { name: 'All entries —' })).toBeTruthy()
+  unavailable = false
+  fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+  await screen.findByText('No matching entries')
+  expect(screen.queryByRole('alert')).toBeNull()
+  const variables = vi.mocked(gql).mock.calls[vi.mocked(gql).mock.calls.length - 1]?.[1]
+  expect(variables).toMatchObject({ status: 'draft', search: 'article' })
+  history.replaceState(null, '', '/')
 })

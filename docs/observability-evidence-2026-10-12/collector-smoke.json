@@ -1,0 +1,15 @@
+{
+  "syntheticContent": true,
+  "backend": "sqlite",
+  "providerShutdownCompleted": true,
+  "prometheusMetricFamilies": [
+    "http_server_request_duration_seconds_bucket",
+    "db_client_operation_duration_seconds_bucket",
+    "moss_graphql_operation_duration_seconds_bucket",
+    "moss_operation_duration_seconds_bucket",
+    "moss_graphql_errors_total"
+  ],
+  "graphqlHttp200ErrorCounted": true,
+  "privateValuesExcluded": true,
+  "serviceInstanceLabel": true
+}

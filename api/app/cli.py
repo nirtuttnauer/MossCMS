@@ -3,9 +3,12 @@
 import argparse
 import json
 import os
+import zipfile
+from pathlib import Path
 from types import SimpleNamespace
 
 from dotenv import load_dotenv
+from fastapi import HTTPException
 from sqlalchemy import select
 
 from .config import Settings
@@ -19,9 +22,17 @@ from .security import audit, issue_token
 def main():
     load_dotenv()
     parser = argparse.ArgumentParser(description="MossCMS operator tools")
-    parser.add_argument("command", choices=["serve", "migrate", "reset-password", "claim-workspace", "seed"])
+    parser.add_argument(
+        "command",
+        choices=["serve", "migrate", "reindex", "reset-password", "claim-workspace", "seed", "export", "import"],
+    )
     parser.add_argument("--email")
     parser.add_argument("--project")
+    parser.add_argument("--file", type=Path, help="Workspace archive path")
+    parser.add_argument("--pipeline", type=Path, help="Import transform JSON")
+    parser.add_argument("--include-private", action="store_true", help="Include private content in an export")
+    parser.add_argument("--history", action="store_true", help="Include revision history in an export")
+    parser.add_argument("--apply", action="store_true", help="Commit an import (the default is a dry run)")
     args = parser.parse_args()
     settings = Settings().validate()
     engine, factory = database(settings.database_url)
@@ -38,6 +49,35 @@ def main():
                 log_level="info",
                 timeout_graceful_shutdown=20,
             )
+        elif args.command in {"export", "import"}:
+            from .portability import export_workspace, import_workspace, _load
+            from .security import CmsError
+
+            if not args.project or not args.email or not args.file:
+                parser.error("--project, --email, and --file are required for workspace migration")
+            if args.command == "export" and (args.apply or args.pipeline):
+                parser.error("--apply and --pipeline are import options")
+            if args.command == "import" and (args.include_private or args.history):
+                parser.error("--include-private and --history are export options")
+            try:
+                if args.command == "export":
+                    report = export_workspace(
+                        factory,
+                        settings,
+                        args.project,
+                        args.email,
+                        args.file,
+                        include_private=args.include_private,
+                        history=args.history,
+                    )
+                else:
+                    pipeline = _load(args.pipeline.read_bytes()) if args.pipeline else None
+                    report = import_workspace(
+                        factory, settings, args.project, args.email, args.file, pipeline=pipeline, apply=args.apply
+                    )
+            except (CmsError, OSError, ValueError, zipfile.BadZipFile, HTTPException) as error:
+                parser.error(str(error))
+            print(json.dumps(report, ensure_ascii=False))
         elif args.command == "reset-password":
             if not args.email:
                 parser.error("--email is required")
@@ -50,6 +90,17 @@ def main():
                 raw, _ = issue_token(session, "reset", days=1, user_id=user.id, email=user.email)
                 audit(session, None, "operator", "account.recovery.issue", userId=user.id)
                 print(settings.public_url + "/#reset/" + raw)
+        elif args.command == "reindex":
+            if not args.project:
+                parser.error("--project is required; reindexing is limited to one workspace")
+            from .indexing import rebuild
+            from .models import Entry, EntryFieldIndex
+
+            with factory.begin() as session:
+                if not session.get(Project, args.project):
+                    parser.error("Workspace not found")
+                count = rebuild(session.connection(), Entry.__table__, EntryFieldIndex.__table__, args.project)
+                print(json.dumps({"reindexed": args.project, "entries": count}))
         elif args.command == "claim-workspace":
             if not args.email or not args.project:
                 parser.error("--email and --project are required; recovery is limited to one unowned workspace")

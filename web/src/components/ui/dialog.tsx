@@ -1,5 +1,6 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useRef, type ReactNode } from 'react'
+import { X } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
 export function Dialog({ title, open, onClose, children, wide }: { title: string; open: boolean; onClose: () => void; children: ReactNode; wide?: boolean }) {
@@ -12,5 +13,5 @@ export function Dialog({ title, open, onClose, children, wide }: { title: string
       event.preventDefault()
       target.focus()
     }
-  }}><div className="modal-heading"><DialogPrimitive.Title>{title}</DialogPrimitive.Title><DialogPrimitive.Close className="modal-close" aria-label="Close dialog">×</DialogPrimitive.Close></div>{children}</DialogPrimitive.Content></DialogPrimitive.Portal></DialogPrimitive.Root>
+  }}><div className="modal-heading"><DialogPrimitive.Title>{title}</DialogPrimitive.Title><DialogPrimitive.Close className="modal-close" aria-label="Close dialog"><X size={18} aria-hidden="true" /></DialogPrimitive.Close></div>{children}</DialogPrimitive.Content></DialogPrimitive.Portal></DialogPrimitive.Root>
 }

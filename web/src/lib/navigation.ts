@@ -1,10 +1,19 @@
-import type { ContentType } from './api'
+import type { ContentType, Field } from './api'
 
 const statuses = ['', 'draft', 'published', 'scheduled', 'deleted']
 const sorts = ['updated_desc', 'updated_asc', 'title_asc', 'title_desc']
+export function sortableFields(type?: ContentType): Field[] {
+  return type?.fields.filter(field => !field.localized && ['text', 'richText', 'enum', 'number', 'boolean', 'date'].includes(field.type)) || []
+}
+export function fieldOrder(sort: string, type?: ContentType) {
+  const [, name, direction] = sort.split(':')
+  if (!sort.startsWith('field:') || !['asc', 'desc'].includes(direction) || !sortableFields(type).some(field => field.name === name)) return null
+  return { field: name, direction: direction.toUpperCase() as 'ASC' | 'DESC' }
+}
 export function readContentRoute(types?: ContentType[], hash = location.hash) {
   const source = new URLSearchParams(hash.split('?')[1] || '')
   const type = source.get('type') || ''
+  const sort = source.get('sort') || 'updated_desc'
   return {
     workspace: source.get('workspace') || '',
     entry: source.get('entry') || '',
@@ -13,7 +22,7 @@ export function readContentRoute(types?: ContentType[], hash = location.hash) {
     type: !types || types.some(item => item.key === type) ? type : '',
     status: statuses.includes(source.get('status') || '') ? source.get('status') || '' : '',
     search: (source.get('search') || '').slice(0, 500),
-    sort: sorts.includes(source.get('sort') || '') ? source.get('sort') || 'updated_desc' : 'updated_desc',
+    sort: sorts.includes(sort) || fieldOrder(sort, types?.find(item => item.key === type)) ? sort : 'updated_desc',
   }
 }
 export function contentHash(route: ReturnType<typeof readContentRoute>) {

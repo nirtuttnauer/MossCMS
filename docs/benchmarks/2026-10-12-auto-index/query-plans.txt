@@ -1,0 +1,67 @@
+original
+                                                                                                                         QUERY PLAN                                                                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=6389.24..6389.25 rows=1 width=8) (actual time=177.693..177.693 rows=1 loops=1)
+   Buffers: shared hit=2827 read=2437
+   ->  Seq Scan on entries e  (cost=0.00..6389.00 rows=96 width=0) (actual time=0.054..177.048 rows=10000 loops=1)
+         Filter: ((published_slug IS NOT NULL) AND ((status)::text <> 'deleted'::text) AND ((project_id)::text = 'benchmark-workspace-0'::text) AND ((type_id)::text = 'benchmark-type-0'::text) AND ((published_data ->> 'category'::text) = 'news'::text))
+         Rows Removed by Filter: 40000
+         Buffers: shared hit=2827 read=2437
+ Planning:
+   Buffers: shared hit=211 read=16
+ Planning Time: 1.247 ms
+ Execution Time: 177.732 ms
+(10 rows)
+
+
+joined
+                                                                                                                                  QUERY PLAN                                                                                                                                   
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=7069.41..7069.42 rows=1 width=8) (actual time=130.205..132.328 rows=1 loops=1)
+   Buffers: shared hit=34421 read=10845 written=1650
+   ->  Gather  (cost=7069.20..7069.41 rows=2 width=8) (actual time=130.195..132.322 rows=3 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=34421 read=10845 written=1650
+         ->  Partial Aggregate  (cost=6069.20..6069.21 rows=1 width=8) (actual time=127.476..127.477 rows=1 loops=3)
+               Buffers: shared hit=34421 read=10845 written=1650
+               ->  Nested Loop  (cost=0.42..6069.19 rows=1 width=0) (actual time=0.079..127.134 rows=3333 loops=3)
+                     Buffers: shared hit=34421 read=10845 written=1650
+                     ->  Parallel Seq Scan on entries e  (cost=0.00..5732.75 rows=40 width=21) (actual time=0.029..53.888 rows=3333 loops=3)
+                           Filter: ((published_slug IS NOT NULL) AND ((status)::text <> 'deleted'::text) AND ((project_id)::text = 'benchmark-workspace-0'::text) AND ((type_id)::text = 'benchmark-type-0'::text) AND ((published_data ->> 'category'::text) = 'news'::text))
+                           Rows Removed by Filter: 13333
+                           Buffers: shared hit=2768 read=2496 written=16
+                     ->  Index Scan using entry_field_indexes_pkey on entry_field_indexes  (cost=0.42..8.41 rows=1 width=21) (actual time=0.022..0.022 rows=1 loops=10000)
+                           Index Cond: (((entry_id)::text = (e.id)::text) AND ((snapshot)::text = 'published'::text) AND ((field)::text = 'category'::text))
+                           Filter: (((project_id)::text = 'benchmark-workspace-0'::text) AND ((type_id)::text = 'benchmark-type-0'::text) AND ((value_hash)::text = 'a05d20d36e18ab874af9f925cb6d6b85cb8c4f64a62ae5ea2d1ed864af5f69b6'::text))
+                           Buffers: shared hit=31653 read=8349 written=1634
+ Planning:
+   Buffers: shared hit=463 read=16
+ Planning Time: 2.078 ms
+ Execution Time: 132.442 ms
+(22 rows)
+
+
+conditional
+                                                                                                                                                                   QUERY PLAN                                                                                                                                                                   
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=10836.61..10836.62 rows=1 width=8) (actual time=93.350..93.356 rows=1 loops=1)
+   Buffers: shared hit=9748 read=2650 written=15
+   ->  Seq Scan on entries e  (cost=4298.55..10812.55 rows=9626 width=0) (actual time=18.777..93.028 rows=10000 loops=1)
+         Filter: ((published_slug IS NOT NULL) AND ((status)::text <> 'deleted'::text) AND ((project_id)::text = 'benchmark-workspace-0'::text) AND ((type_id)::text = 'benchmark-type-0'::text) AND CASE WHEN (ANY ((id)::text = ((hashed SubPlan 1).col1)::text)) THEN ((published_data ->> 'category'::text) = 'news'::text) ELSE false END)
+         Rows Removed by Filter: 40000
+         Buffers: shared hit=9748 read=2650 written=15
+         SubPlan 1
+           ->  Bitmap Heap Scan on entry_field_indexes  (cost=177.21..4294.51 rows=1615 width=21) (actual time=3.615..16.252 rows=10000 loops=1)
+                 Recheck Cond: (((project_id)::text = 'benchmark-workspace-0'::text) AND ((type_id)::text = 'benchmark-type-0'::text) AND ((snapshot)::text = 'published'::text) AND ((field)::text = 'category'::text) AND ((value_hash)::text = 'a05d20d36e18ab874af9f925cb6d6b85cb8c4f64a62ae5ea2d1ed864af5f69b6'::text))
+                 Heap Blocks: exact=6903
+                 Buffers: shared hit=6903 read=231 written=11
+                 ->  Bitmap Index Scan on ix_entry_fields_lookup  (cost=0.00..176.81 rows=1615 width=0) (actual time=3.127..3.130 rows=10000 loops=1)
+                       Index Cond: (((project_id)::text = 'benchmark-workspace-0'::text) AND ((type_id)::text = 'benchmark-type-0'::text) AND ((snapshot)::text = 'published'::text) AND ((field)::text = 'category'::text) AND ((value_hash)::text = 'a05d20d36e18ab874af9f925cb6d6b85cb8c4f64a62ae5ea2d1ed864af5f69b6'::text))
+                       Buffers: shared read=231 written=11
+ Planning:
+   Buffers: shared hit=318
+ Planning Time: 1.131 ms
+ Execution Time: 93.588 ms
+(18 rows)
+

@@ -1,0 +1,188 @@
+{
+  "startedAt": "2026-10-12T01:20:10.782936+00:00",
+  "sourceCommit": "03b0cdf348baaaafdf8959f129c8b04409abecab",
+  "sourceSnapshotSha256": "90755f2cdac4b8ad68e1bd56f7c59d47b4e1322e54aa3a15a0614e13d92fd5da",
+  "host": "macOS-27.0.1-arm64-arm-64bit",
+  "architecture": "arm64",
+  "resourceLimits": {
+    "app": "2 CPUs / 4 GiB",
+    "db": "2 CPUs / 4 GiB"
+  },
+  "conditions": "Local Docker Desktop; shared host; container CPU/memory caps are not dedicated cloud hardware",
+  "runs": [
+    {
+      "size": 50000,
+      "fixture": {
+        "entries": 50000,
+        "revisions": 150000,
+        "workspaces": 3,
+        "workspaceMix": "80% / 10% / 10%",
+        "liveEntries": 30000,
+        "scheduledEntries": 20000,
+        "assets": 3,
+        "upgrade": {
+          "from": "0008",
+          "to": "0011",
+          "seconds": 8.127346045002923,
+          "recordsPreserved": true
+        },
+        "seed": "index-based-v1",
+        "python": "3.12.15"
+      },
+      "checks": {
+        "delivery": true,
+        "privateFieldsExcluded": true,
+        "workspaceIsolation": true,
+        "scopeIsolation": true,
+        "draftExcluded": true,
+        "media": true
+      },
+      "load": {
+        "durationSeconds": 60.875,
+        "requestedSeconds": 60,
+        "readers": 20,
+        "writers": 3,
+        "operations": {
+          "search": {
+            "requests": 937,
+            "requestsPerSecond": 15.392,
+            "p50Ms": 164.847,
+            "p95Ms": 286.746,
+            "p99Ms": 384.266
+          },
+          "list": {
+            "requests": 937,
+            "requestsPerSecond": 15.392,
+            "p50Ms": 153.156,
+            "p95Ms": 249.756,
+            "p99Ms": 321.08
+          },
+          "etag": {
+            "requests": 934,
+            "requestsPerSecond": 15.343,
+            "p50Ms": 155.418,
+            "p95Ms": 266.067,
+            "p99Ms": 319.603
+          },
+          "filter": {
+            "requests": 938,
+            "requestsPerSecond": 15.409,
+            "p50Ms": 287.412,
+            "p95Ms": 430.189,
+            "p99Ms": 484.685
+          },
+          "generated": {
+            "requests": 938,
+            "requestsPerSecond": 15.409,
+            "p50Ms": 488.515,
+            "p95Ms": 643.915,
+            "p99Ms": 786.217
+          },
+          "save": {
+            "requests": 146,
+            "requestsPerSecond": 2.398,
+            "p50Ms": 212.263,
+            "p95Ms": 363.73,
+            "p99Ms": 431.261
+          }
+        },
+        "errors": {},
+        "httpStatuses": {
+          "200": 3766,
+          "304": 918
+        },
+        "initialRequests": [
+          {
+            "phase": "first_after_start",
+            "operation": "list",
+            "milliseconds": 35.37766699810163
+          },
+          {
+            "phase": "first_after_start",
+            "operation": "generated",
+            "milliseconds": 28.94525000010617
+          },
+          {
+            "phase": "after_warmup",
+            "operation": "list",
+            "milliseconds": 8.913958998164162
+          },
+          {
+            "phase": "after_warmup",
+            "operation": "generated",
+            "milliseconds": 22.179083000082755
+          }
+        ],
+        "cacheNote": "Initial and warmed process requests are separate; database/OS caches are not forcibly evicted. ETag measures conditional responses, not a CDN or server response cache.",
+        "liveAndScheduledSnapshotsPreserved": true,
+        "databaseBytes": 348993203
+      },
+      "resources": {
+        "app": {
+          "peakMemoryBytes": 153511526,
+          "peakCpuPercent": 115.83,
+          "samples": 6
+        },
+        "db": {
+          "peakMemoryBytes": 253650534,
+          "peakCpuPercent": 198.85,
+          "samples": 6
+        }
+      },
+      "recovery": {
+        "seconds": 30.255836666999983,
+        "fingerprintsMatch": true,
+        "afterRestore": {
+          "delivery": true,
+          "privateFieldsExcluded": true,
+          "workspaceIsolation": true,
+          "scopeIsolation": true,
+          "draftExcluded": true,
+          "media": true
+        },
+        "afterRestart": {
+          "delivery": true,
+          "privateFieldsExcluded": true,
+          "workspaceIsolation": true,
+          "scopeIsolation": true,
+          "draftExcluded": true,
+          "media": true
+        },
+        "backupBytes": 13523113,
+        "capturedSchedule": {
+          "capturedRevisionPublished": true,
+          "laterDraftPreserved": true,
+          "publicationEvents": 1
+        },
+        "afterSecondRestart": {
+          "capturedRevisionPublished": true,
+          "laterDraftPreserved": true,
+          "publicationEvents": 1
+        },
+        "historicalRestore": {
+          "historicalRevisionRestoredAsDraft": true,
+          "liveSnapshotPreserved": true,
+          "schedulePreserved": true
+        },
+        "deliveryClient": {
+          "streamingPages": 2,
+          "privateFieldsExcluded": true,
+          "tokenScopeEnforced": true,
+          "structuredErrorAndRequestId": true
+        },
+        "backupCapturedAtUtc": "2026-10-12T01:22:03+00:00",
+        "backupAgeAtVerificationSeconds": 33.675476
+      }
+    }
+  ],
+  "complete": true,
+  "imageId": "sha256:b0896322fde1c3a053c27276e1686b668ac3603fe81ba55afa6fe2a6a719ef2b",
+  "docker": {
+    "ServerVersion": "29.8.2",
+    "Architecture": "aarch64",
+    "NCPU": 18,
+    "MemTotal": 8317267968,
+    "KernelVersion": "7.0.14-linuxkit"
+  },
+  "finishedAt": "2026-10-12T01:22:37.696349+00:00"
+}

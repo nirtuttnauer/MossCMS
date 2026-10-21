@@ -92,13 +92,13 @@ export function getContext() { return { ...current }; }
 export class ApiError extends Error {
   constructor(message: string, public code = 'REQUEST_FAILED', public requestId?: string, public uncertain = false, public fieldPath?: string, public fieldErrors?: Record<string, string>, public reason?: string) { super(message); }
 }
-export async function rest<T>(path: string, method = 'GET', body?: unknown, context = getContext()): Promise<T> {
+export async function rest<T>(path: string, method = 'GET', body?: unknown, context = getContext(), timeoutMs?: number): Promise<T> {
   const multipart = body instanceof FormData;
   try {
     const response = await fetch(path, {
       method,
       credentials: 'include',
-      signal: AbortSignal.timeout(multipart ? MULTIPART_REQUEST_TIMEOUT_MS : REQUEST_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs ?? (multipart ? MULTIPART_REQUEST_TIMEOUT_MS : REQUEST_TIMEOUT_MS)),
       headers: {
         'X-Moss-Project': context.project,
         'X-Moss-CSRF': context.csrf,

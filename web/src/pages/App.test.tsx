@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { getContext, gql, rest, type ContentType, type Me } from '../lib/api'
@@ -100,7 +100,9 @@ describe('App workspace and navigation boundaries', () => {
   it.each(['hashchange', 'popstate'])('keeps a dirty editor and its workspace when %s navigation is canceled', async event => {
     vi.spyOn(window, 'confirm').mockReturnValue(false)
     render(<App />)
-    fireEvent.click(await screen.findByRole('button', { name: 'New entry' }))
+    // Scope to the header action; the empty state also offers creation after loading.
+    const heading = await screen.findByRole('heading', { name: 'Content', level: 1 })
+    fireEvent.click(within(heading.closest<HTMLElement>('.page-heading')!).getByRole('button', { name: 'New entry' }))
     fireEvent.change(await screen.findByLabelText('Title'), { target: { value: 'Unsaved wording' } })
     const editorHash = location.hash
     navigate('#content?workspace=b', event)
@@ -110,4 +112,15 @@ describe('App workspace and navigation boundaries', () => {
     expect((screen.getByLabelText('Workspace') as HTMLSelectElement).value).toBe('a')
     expect(screen.queryByText('Loading workspace…')).toBeNull()
   })
+})
+
+it('overview publication metrics open the corresponding publishing status', async () => {
+  history.replaceState(null, '', '/#overview?workspace=a')
+  render(<App />)
+  const published = (await screen.findByText('Published', { selector: '.stat-top span' })).closest('a')!
+  expect(published.getAttribute('href')).toBe('#content?status=published')
+  expect(screen.getByText('Drafts', { selector: '.stat-top span' }).closest('a')!.getAttribute('href')).toBe('#content?status=draft')
+  navigate(published.getAttribute('href')!)
+  await waitFor(() => expect((screen.getByLabelText('Publishing status') as HTMLSelectElement).value).toBe('published'))
+  expect(vi.mocked(gql).mock.calls.some(([, variables]) => variables?.status === 'published')).toBe(true)
 })

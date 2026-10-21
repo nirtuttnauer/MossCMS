@@ -22,6 +22,6 @@ test('renders supported Markdown to static HTML',async()=>{
   expect(html).toContain('<h1>Same heading</h1>')
   expect(html).toContain('<strong>bold</strong>')
   expect(html).toContain('<a href="https://example.com">link</a>')
-  expect(html).toContain('<pre><code>code\n</code></pre>')
+  expect(html).toContain('<pre tabindex="0"><code>code\n</code></pre>')
   expect(html).not.toContain('<script>')
 })

@@ -60,6 +60,13 @@ class Settings:
     use_sqlite: bool = field(
         default_factory=lambda: os.getenv("MOSS_USE_SQLITE", "false").lower() in {"true", "1", "yes"}
     )
+    otel_enabled: bool = field(default_factory=lambda: os.getenv("MOSS_OTEL_ENABLED", "false").lower() == "true")
+    otel_endpoint: str = field(
+        default_factory=lambda: os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
+    )
+    otel_service_name: str = field(default_factory=lambda: os.getenv("OTEL_SERVICE_NAME", "mosscms"))
+    otel_sample_rate: float = field(default_factory=lambda: float(os.getenv("MOSS_OTEL_TRACES_SAMPLE_RATE", "0.1")))
+    otel_metric_interval_ms: int = field(default_factory=lambda: int(os.getenv("OTEL_METRIC_EXPORT_INTERVAL", "10000")))
 
     def __post_init__(self):
         if self.use_sqlite:
@@ -68,6 +75,25 @@ class Settings:
             self.database_url = configured_database()
 
     def validate(self):
+        if self.otel_enabled:
+            from urllib.parse import urlsplit
+
+            endpoint = urlsplit(self.otel_endpoint)
+            if (
+                endpoint.scheme not in {"http", "https"}
+                or not endpoint.hostname
+                or endpoint.username
+                or endpoint.password
+                or endpoint.query
+                or endpoint.fragment
+            ):
+                raise RuntimeError("OTEL_EXPORTER_OTLP_ENDPOINT must be an HTTP(S) base URL without credentials/query.")
+            if not 0 <= self.otel_sample_rate <= 1:
+                raise RuntimeError("MOSS_OTEL_TRACES_SAMPLE_RATE must be between 0 and 1.")
+            if not 1000 <= self.otel_metric_interval_ms <= 3600000:
+                raise RuntimeError("OTEL_METRIC_EXPORT_INTERVAL must be 1000–3600000 milliseconds.")
+            if not self.otel_service_name or len(self.otel_service_name) > 100:
+                raise RuntimeError("OTEL_SERVICE_NAME must contain 1–100 characters.")
         if self.skip_auth and self.environment != "development":
             raise RuntimeError("MOSS_SKIP_AUTH is only available when MOSS_ENV=development.")
         if len(self.secret) < 32 or len(self.setup_token) < 24:

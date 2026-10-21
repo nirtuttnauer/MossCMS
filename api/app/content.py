@@ -7,14 +7,28 @@ import re
 from copy import deepcopy
 from datetime import datetime
 
-from sqlalchemy import case, and_, func, or_, select
+from sqlalchemy import case, and_, false, func, inspect, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import StaleDataError
+from sqlalchemy.sql import ColumnElement
 
-from .models import ContentType, DraftReceipt, Entry, Project, Revision, SchemaRevision, WebsitePath, now, uid
+from .models import (
+    ContentType,
+    DraftReceipt,
+    Entry,
+    EntryFieldIndex,
+    Project,
+    Revision,
+    SchemaRevision,
+    WebsitePath,
+    now,
+    uid,
+)
+from .indexing import SORT_PREFIX_BYTES, indexed_value, scalar_fields
 from .outbox import emit
 from .schema import NAME, public_data, reference_targets, validate_data, validate_fields
 from .security import CmsError, audit, require
+from .transforms import transform_data, validate_steps
 
 
 def slugify(value):
@@ -33,16 +47,31 @@ def scoped(session, model, identity):
 
 
 def get_type(session, identity, key):
-    record = session.scalar(scoped(session, ContentType, identity).where(ContentType.key == key))
-    if record is None or (identity.get("delivery") and identity["scopes"] and key not in identity["scopes"]):
+    cached = identity.get("type_records", {})
+    record = cached.get(key)
+    if record is None or inspect(record).deleted or record in session.deleted:
+        record = session.scalar(scoped(session, ContentType, identity).where(ContentType.key == key))
+    if (
+        record is None
+        or record.project_id != identity["project_id"]
+        or (identity.get("delivery") and identity["scopes"] and key not in identity["scopes"])
+    ):
         raise CmsError("Content type not found.", "NOT_FOUND")
     return record
 
 
 def get_entry(session, identity, id):
-    record = session.get(Entry, id)
+    cached = identity.get("entry_records")
+    if cached is not None and id in cached:
+        record = cached[id]
+    else:
+        record = session.get(Entry, id)
+        if cached is not None:
+            cached[id] = record
     if (
         not record
+        or inspect(record).deleted
+        or record in session.deleted
         or record.project_id != identity["project_id"]
         or (identity.get("delivery") and (record.published_slug is None or record.status == "deleted"))
     ):
@@ -102,26 +131,46 @@ def entry_dict(session, identity, record):
     }
 
 
-def delivery_title(session, identity):
-    private_types = [
+def private_title_types(session, identity):
+    return [
         t.id
         for t in session.scalars(scoped(session, ContentType, identity)).all()
         if any(f["name"] == "title" and f.get("private") for f in t.fields)
     ]
-    return case((Entry.type_id.in_(private_types), Entry.published_slug), else_=Entry.published_title)
+
+
+def delivery_title(session, identity):
+    return case(
+        (Entry.type_id.in_(private_title_types(session, identity)), Entry.published_slug), else_=Entry.published_title
+    )
 
 
 def entry_page(
-    session, identity, type_key=None, status=None, search="", sort="updated_desc", first=20, after=None, filters=None
+    session,
+    identity,
+    type_key=None,
+    status=None,
+    search="",
+    sort="updated_desc",
+    first=20,
+    after=None,
+    filters=None,
+    order_by=None,
+    include_total=True,
 ):
     require(identity)
     if not 1 <= first <= 100 or sort not in {"updated_desc", "updated_asc", "title_asc", "title_desc"}:
         raise CmsError("Use a page size of 1–100 and a supported sort order.")
-    title_attr = delivery_title(session, identity) if identity.get("delivery") else Entry.title
+    if order_by is not None and (not type_key or sort != "updated_desc"):
+        raise CmsError("Field ordering requires a content type; use either sort or orderBy.")
+    title_attr = (
+        delivery_title(session, identity) if identity.get("delivery") and sort.startswith("title") else Entry.title
+    )
     query = scoped(session, Entry, identity)
     if identity.get("delivery"):
         query = query.where(Entry.published_slug.is_not(None), Entry.status != "deleted")
-        if identity["scopes"]:
+        # A named type is checked by get_type below; only untyped lists need a scope subquery.
+        if identity["scopes"] and not type_key:
             query = query.where(
                 Entry.type_id.in_(
                     select(ContentType.id).where(
@@ -136,15 +185,26 @@ def entry_page(
     else:
         query = query.where(Entry.status != "deleted")
     if type_key:
-        query = query.where(Entry.type_id == get_type(session, identity, type_key).id)
+        definition = get_type(session, identity, type_key)
+        query = query.where(Entry.type_id == definition.id)
     if search:
         safe = search[:100].replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        title_match: ColumnElement[bool] = Entry.title.ilike(f"%{safe}%", escape="\\")
+        if identity.get("delivery"):
+            title_match = Entry.published_title.ilike(f"%{safe}%", escape="\\")
+            if type_key:
+                if any(f["name"] == "title" and f.get("private") for f in definition.fields):
+                    title_match = false()
+            else:
+                # Keep the searchable column visible to the index while excluding private titles.
+                title_match = and_(Entry.type_id.not_in(private_title_types(session, identity)), title_match)
         query = query.where(
             or_(
-                title_attr.ilike(f"%{safe}%", escape="\\"),
+                title_match,
                 (Entry.published_slug if identity.get("delivery") else Entry.slug).ilike(f"%{safe}%", escape="\\"),
             )
         )
+    count_query = query
     if filters:
         if not type_key or not isinstance(filters, dict) or len(filters) > 10:
             raise CmsError("Field filters require a content type and at most ten exact-match fields.")
@@ -162,6 +222,7 @@ def entry_page(
             if isinstance(value, str) and len(value) > 10000:
                 raise CmsError("Filter value is too long.")
             target = Entry.published_data if identity.get("delivery") else Entry.data
+            digest = indexed_value(fields[key], value)
             expr = (
                 target[key].as_boolean()
                 if isinstance(value, bool)
@@ -169,8 +230,53 @@ def entry_page(
                 if isinstance(value, (int, float))
                 else target[key].as_string()
             )
-            query = query.where(expr == value)
-    total = session.scalar(select(func.count()).select_from(query.subquery()))
+            comparison = expr == value
+            count_comparison = comparison
+            if digest is not None:
+                candidates = Entry.id.in_(
+                    select(EntryFieldIndex.entry_id).where(
+                        EntryFieldIndex.project_id == identity["project_id"],
+                        EntryFieldIndex.type_id == definition.id,
+                        EntryFieldIndex.snapshot == ("published" if identity.get("delivery") else "draft"),
+                        EntryFieldIndex.field == key,
+                        EntryFieldIndex.value_hash == bytes.fromhex(digest),
+                    )
+                )
+                # Recheck JSON only for indexed candidates; a join misestimated common values and probed per row.
+                comparison = case((candidates, comparison), else_=False)
+                count_comparison = comparison
+                if isinstance(value, str):
+                    raw = value.encode("utf-8", errors="surrogatepass")
+                    exact = EntryFieldIndex.sort_prefix == raw[:SORT_PREFIX_BYTES]
+                    if len(raw) >= SORT_PREFIX_BYTES:
+                        exact = and_(exact, func.coalesce(EntryFieldIndex.sort_key, EntryFieldIndex.sort_prefix) == raw)
+                    # Exact projection values avoid parsing every matched document just to count strings.
+                    exact_candidates = Entry.id.in_(
+                        select(EntryFieldIndex.entry_id).where(
+                            EntryFieldIndex.project_id == identity["project_id"],
+                            EntryFieldIndex.type_id == definition.id,
+                            EntryFieldIndex.snapshot == ("published" if identity.get("delivery") else "draft"),
+                            EntryFieldIndex.field == key,
+                            exact,
+                        )
+                    )
+                    # Separate covering scans avoid projection heap reads and per-match entry probes.
+                    count_comparison = case((candidates, exact_candidates), else_=False)
+            query = query.where(comparison)
+            count_query = count_query.where(count_comparison)
+    total_query = select(func.count()).select_from(count_query.subquery())
+    total = session.scalar(total_query) if include_total else None
+    if order_by is not None:
+        from .ordering import field_page
+
+        items, cursor, has_next = field_page(session, identity, definition, query, order_by, first, after)
+        return {
+            "nodes": [entry_dict(session, identity, record) for record in items],
+            "total": total,
+            "totalQuery": total_query,
+            "endCursor": cursor,
+            "hasNextPage": has_next,
+        }
     attr = (
         title_attr if sort.startswith("title") else Entry.published_at if identity.get("delivery") else Entry.updated_at
     )
@@ -210,6 +316,7 @@ def entry_page(
     return {
         "nodes": [entry_dict(session, identity, e) for e in items],
         "total": total,
+        "totalQuery": total_query,
         "endCursor": cursor,
         "hasNextPage": len(rows) > first,
     }
@@ -681,6 +788,7 @@ def restore_entry(session, identity, id, number, version):
 
 def save_type(session, identity, key, name, fields, version=None, migration=None):
     require(identity, "admin", write=True)
+    session.scalar(select(Project.id).where(Project.id == identity["project_id"]).with_for_update())
     if not NAME.fullmatch(key) or not name.strip() or len(name) > 100:
         raise CmsError("Use a content type key beginning with a lower-case letter and a name of 1–100 characters.")
     validate_fields(fields)
@@ -705,8 +813,9 @@ def save_type(session, identity, key, name, fields, version=None, migration=None
             raise CmsError("Migration drop must be a list of field names.")
         if any(not isinstance(x, str) for x in migration.get("rename", {}).values()):
             raise CmsError("Migration rename destinations must be field names.")
-        if set(migration) - {"rename", "defaults", "drop"}:
-            raise CmsError("Migration supports rename, defaults, and drop.")
+        if set(migration) - {"rename", "defaults", "drop", "steps"}:
+            raise CmsError("Migration supports rename, defaults, drop, and ordered steps.")
+        validate_steps(migration.get("steps", []))
 
         def transform(data):
             data = dict(data)
@@ -719,21 +828,27 @@ def save_type(session, identity, key, name, fields, version=None, migration=None
                 data.pop(k, None)
             for k, value in migration.get("defaults", {}).items():
                 data.setdefault(k, value)
+            data = transform_data(data, migration.get("steps", []), key)
             validate_data(fields, data, session, identity["project_id"])
             return data
 
-        for entry in session.scalars(scoped(session, Entry, identity).where(Entry.type_id == record.id)).all():
-            entry.data = transform(entry.data)
-            if entry.published_data is not None:
-                published = transform(entry.published_data)
-                reserve_website_paths(session, entry, record, entry.published_slug, published, fields=fields)
-                entry.published_data = published
-                entry.published_schema_version = record.version + 1
-            if entry.scheduled_data is not None:
-                entry.scheduled_data = transform(entry.scheduled_data)
-                entry.scheduled_schema_version = record.version + 1
-            entry.updated_at = now()
-            revision(session, identity, entry)
+        eligibility_changed = scalar_fields(record.fields) != scalar_fields(fields)
+        # Revision flushes must project transformed entries using the new schema.
+        with session.no_autoflush:
+            for entry in session.scalars(scoped(session, Entry, identity).where(Entry.type_id == record.id)).all():
+                if eligibility_changed:
+                    setattr(entry, "_scalar_index_fields", scalar_fields(fields))
+                entry.data = transform(entry.data)
+                if entry.published_data is not None:
+                    published = transform(entry.published_data)
+                    reserve_website_paths(session, entry, record, entry.published_slug, published, fields=fields)
+                    entry.published_data = published
+                    entry.published_schema_version = record.version + 1
+                if entry.scheduled_data is not None:
+                    entry.scheduled_data = transform(entry.scheduled_data)
+                    entry.scheduled_schema_version = record.version + 1
+                entry.updated_at = now()
+                revision(session, identity, entry)
         record.version += 1
     else:
         record = ContentType(project_id=identity["project_id"], key=key, name=name, fields=fields)

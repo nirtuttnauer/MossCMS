@@ -30,6 +30,25 @@ def operator(monkeypatch):
     return SimpleNamespace(engine=engine, factory=factory, transaction=transaction, session=session, server=server)
 
 
+def test_reindex_is_explicit_and_workspace_scoped(operator, monkeypatch, capsys):
+    from app import indexing
+
+    monkeypatch.setattr(indexing, "rebuild", MagicMock(return_value=42))
+    monkeypatch.setattr(sys, "argv", ["moss", "reindex", "--project", "workspace"])
+    cli.main()
+    assert indexing.rebuild.call_args.args[-1] == "workspace"
+    assert '"entries": 42' in capsys.readouterr().out
+    operator.engine.dispose.assert_called_once_with()
+
+
+def test_reindex_requires_workspace(operator, monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", ["moss", "reindex"])
+    with pytest.raises(SystemExit):
+        cli.main()
+    assert "--project is required" in capsys.readouterr().err
+    operator.factory.begin.assert_not_called()
+
+
 def test_migrate_disposes_after_success(operator, monkeypatch):
     monkeypatch.setattr(sys, "argv", ["moss", "migrate"])
     calls = MagicMock()

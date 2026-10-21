@@ -1,0 +1,6 @@
+{
+  "streamingPages": 2,
+  "privateFieldsExcluded": true,
+  "tokenScopeEnforced": true,
+  "structuredErrorAndRequestId": true
+}

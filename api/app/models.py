@@ -2,9 +2,25 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, create_engine, event
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    LargeBinary,
+    String,
+    Text,
+    UniqueConstraint,
+    create_engine,
+    event,
+    text,
+)
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
+
+from .indexing import remove_entry, sync_entry
 
 
 def uid():
@@ -86,6 +102,37 @@ class Entry(Base):
     __table_args__ = (
         UniqueConstraint("project_id", "type_id", "slug"),
         UniqueConstraint("project_id", "type_id", "published_slug", name="uq_entries_public_slug"),
+        Index(
+            "ix_entries_draft_search",
+            "title",
+            "slug",
+            postgresql_using="gin",
+            postgresql_ops={"title": "gin_trgm_ops", "slug": "gin_trgm_ops"},
+        ).ddl_if(dialect="postgresql"),
+        Index(
+            "ix_entries_published_search",
+            "published_title",
+            "published_slug",
+            postgresql_using="gin",
+            postgresql_ops={"published_title": "gin_trgm_ops", "published_slug": "gin_trgm_ops"},
+            postgresql_where=text("published_slug IS NOT NULL"),
+        ).ddl_if(dialect="postgresql"),
+        Index(
+            "ix_entries_delivery_page",
+            "project_id",
+            "type_id",
+            "published_at",
+            "id",
+            postgresql_where=text("published_slug IS NOT NULL"),
+            sqlite_where=text("published_slug IS NOT NULL"),
+            postgresql_include=["status"],
+        ),
+        Index(
+            "ix_entries_due_schedule",
+            "scheduled_at",
+            postgresql_where=text("scheduled_at IS NOT NULL"),
+            sqlite_where=text("scheduled_at IS NOT NULL"),
+        ),
     )
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
@@ -111,6 +158,45 @@ class Entry(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
     author_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     __mapper_args__ = {"version_id_col": version}
+
+
+class EntryFieldIndex(Base):
+    __tablename__ = "entry_field_indexes"
+    __table_args__ = (
+        Index("ix_entry_fields_lookup", "project_id", "type_id", "snapshot", "field", "value_hash", "entry_id"),
+        Index("ix_entry_fields_order", "project_id", "type_id", "snapshot", "field", "sort_prefix", "entry_id"),
+        Index(
+            "ix_entry_fields_date_order",
+            "project_id",
+            "type_id",
+            "snapshot",
+            "field",
+            "date_key",
+            "entry_id",
+            postgresql_where=text("date_key IS NOT NULL"),
+            sqlite_where=text("date_key IS NOT NULL"),
+        ),
+        Index(
+            "ix_entry_fields_long",
+            "sort_long",
+            "project_id",
+            "type_id",
+            "snapshot",
+            "field",
+            postgresql_where=text("sort_long IS TRUE"),
+            sqlite_where=text("sort_long IS 1"),
+        ),
+    )
+    entry_id: Mapped[str] = mapped_column(ForeignKey("entries.id", ondelete="CASCADE"), primary_key=True)
+    snapshot: Mapped[str] = mapped_column(String(9), primary_key=True)
+    field: Mapped[str] = mapped_column(String(60), primary_key=True)
+    project_id: Mapped[str] = mapped_column(String(36))
+    type_id: Mapped[str] = mapped_column(String(36))
+    value_hash: Mapped[bytes] = mapped_column(LargeBinary(32))
+    sort_key: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    sort_prefix: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    sort_long: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    date_key: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class Revision(Base):
@@ -241,3 +327,8 @@ class WebsitePath(Base):
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
     entry_id: Mapped[str] = mapped_column(ForeignKey("entries.id"), index=True)
     path: Mapped[str] = mapped_column(String(300))
+
+
+event.listen(Entry, "after_insert", sync_entry)
+event.listen(Entry, "after_update", sync_entry)
+event.listen(Entry, "after_delete", remove_entry)

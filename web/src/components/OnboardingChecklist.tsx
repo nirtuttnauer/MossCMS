@@ -10,6 +10,7 @@ import { DeliveryHandoff } from './DeliveryHandoff'
 type Overview = { total: number; published: number; drafts: number; scheduled: number; types: number; assets: number; members: number }
 
 type Props = {
+  compact?: boolean
   project: Project
   userId: string
   role: string
@@ -29,7 +30,7 @@ function removeStorage(key: string) {
   try { window.localStorage?.removeItem(key) } catch {}
 }
 
-export function OnboardingChecklist({ project, userId, role, types, overview, onChanged }: Props) {
+export function OnboardingChecklist({ compact = false, project, userId, role, types, overview, onChanged }: Props) {
   const dismissKey = `moss-onboarding-dismissed-${userId}-${project.id}`
   const verifyKey = `moss-onboarding-verified-${userId}-${project.id}`
   const generation = useRef(0)
@@ -227,7 +228,7 @@ export function OnboardingChecklist({ project, userId, role, types, overview, on
 
   const tokenDialog = newToken && <Dialog title="Save your delivery token" open onClose={() => setNewToken('')}><p>This token reads only {nextType?.name} content and expires in 90 days. Copy it to your frontend server’s private environment before closing; it will not be shown again.</p><label>New delivery token<input type="password" readOnly value={newToken} autoComplete="off" /></label><Button type="button" onClick={async () => { try { await navigator.clipboard.writeText(newToken); setTokenNotice('Token copied.') } catch { setTokenNotice('Select and copy the token above.') } }}>Copy token</Button>{tokenNotice && <p role="status">{tokenNotice}</p>}{testStatus.error && <p role="alert">{testStatus.error}</p>}<Button type="button" variant="outline" onClick={() => setNewToken('')}>I saved this token</Button></Dialog>
 
-  if (dismissed || allDone && !expanded) {
+  if (dismissed || (allDone || compact) && !expanded) {
     return (
       <div className="onboarding-resumer" aria-label="Onboarding checklist">
         <Button

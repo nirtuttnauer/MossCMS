@@ -110,3 +110,14 @@ test('StrictMode cleanup leaves no pending editors or unload listeners', () => {
   expect(added).toHaveLength(2)
   expect(removed).toEqual(added)
 })
+
+test('configuration guards use their own recovery message without changing editor prompts', () => {
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+  const settings = renderHook(() => useUnsavedChanges(true, 'Discard unsaved settings?'))
+  expect(confirmNavigation()).toBe(false)
+  expect(confirm).toHaveBeenLastCalledWith('Discard unsaved settings?')
+  settings.unmount()
+  renderHook(() => useUnsavedChanges(true))
+  expect(confirmNavigation()).toBe(false)
+  expect(confirm).toHaveBeenLastCalledWith('Discard unsaved changes? Your saved draft and live content will be kept.')
+})

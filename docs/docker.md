@@ -47,6 +47,8 @@ The optional example website remains a separate local build; see [website setup]
 
 ## Upgrade a published image
 
+To add optional OTLP tracing and histogram metrics, use the [OpenTelemetry guide](observability.md) and `compose.observability.yaml`. The overlay includes a pinned local Collector; ordinary Compose remains telemetry-disabled by default.
+
 Stop writers and [back up database and media](deployment-recovery.md#backup-with-writers-stopped). Retain the old image and its matching backup/configuration. Set `MOSS_IMAGE` in `.env` to the new published version or digest, then:
 
 ```sh

@@ -1,0 +1,79 @@
+{
+  "durationSeconds": 61.161,
+  "requestedSeconds": 60,
+  "readers": 20,
+  "writers": 3,
+  "operations": {
+    "search": {
+      "requests": 328,
+      "requestsPerSecond": 5.363,
+      "p50Ms": 413.753,
+      "p95Ms": 791.811,
+      "p99Ms": 1107.837
+    },
+    "list": {
+      "requests": 326,
+      "requestsPerSecond": 5.33,
+      "p50Ms": 358.482,
+      "p95Ms": 712.258,
+      "p99Ms": 1022.518
+    },
+    "etag": {
+      "requests": 325,
+      "requestsPerSecond": 5.314,
+      "p50Ms": 359.715,
+      "p95Ms": 655.506,
+      "p99Ms": 886.757
+    },
+    "generated": {
+      "requests": 324,
+      "requestsPerSecond": 5.298,
+      "p50Ms": 725.254,
+      "p95Ms": 1111.464,
+      "p99Ms": 1221.075
+    },
+    "filter": {
+      "requests": 328,
+      "requestsPerSecond": 5.363,
+      "p50Ms": 1755.045,
+      "p95Ms": 2185.675,
+      "p99Ms": 2271.039
+    },
+    "save": {
+      "requests": 130,
+      "requestsPerSecond": 2.126,
+      "p50Ms": 374.16,
+      "p95Ms": 632.877,
+      "p99Ms": 1008.821
+    }
+  },
+  "errors": {},
+  "httpStatuses": {
+    "200": 1322,
+    "304": 309
+  },
+  "initialRequests": [
+    {
+      "phase": "first_after_start",
+      "operation": "list",
+      "milliseconds": 46.22229199958383
+    },
+    {
+      "phase": "first_after_start",
+      "operation": "generated",
+      "milliseconds": 42.027458002849016
+    },
+    {
+      "phase": "after_warmup",
+      "operation": "list",
+      "milliseconds": 27.8575419979461
+    },
+    {
+      "phase": "after_warmup",
+      "operation": "generated",
+      "milliseconds": 38.050625000323635
+    }
+  ],
+  "cacheNote": "Initial and warmed process requests are separate; database/OS caches are not forcibly evicted. ETag measures conditional responses, not a CDN or server response cache.",
+  "databaseBytes": 175724211
+}
