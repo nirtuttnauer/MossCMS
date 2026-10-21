@@ -1,0 +1,9 @@
+{
+  "collectorStoppedThroughoutRequests": true,
+  "healthRequests": 20,
+  "allHttp200": true,
+  "readyHttp200": true,
+  "requestLoopSeconds": 0.019146541017107666,
+  "manualForceFlushUsed": false,
+  "lifespanShutdownSeconds": 3.4181417920044623
+}
