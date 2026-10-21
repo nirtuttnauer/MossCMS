@@ -4,7 +4,9 @@
 
 # MossCMS
 
-A self-hosted content service with a GraphQL API and a React admin. Define your data, publish entries, and consume them from any frontend. One Docker image serves the API and admin from the same origin, backed by PostgreSQL.
+A self-hosted, GraphQL-first CMS for content-driven websites and small editorial teams. Model your content, edit it in a React admin, and deliver published entries to your own frontend.
+
+One Docker image serves the API and admin from the same origin. Use PostgreSQL or the optional persistent SQLite mode; store media locally or in S3-compatible storage. Drafts, live content, and scheduled revisions remain separate so editing does not silently change what visitors see.
 
 [MIT licensed](LICENSE). Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -12,104 +14,45 @@ A self-hosted content service with a GraphQL API and a React admin. Define your 
 
 ![MossCMS content library and getting-started checklist](docs/acceptance-2026-10-11/first-use-three-ready.jpg)
 
+*Actual admin screenshot from the checked-in first-use walkthrough, using sample content.*
+
 | Build | Edit | Deliver |
 | --- | --- | --- |
 | Visual content schemas, nested fields, locales, and references | Markdown, media, autosave, and revision recovery | Schema-derived GraphQL and scoped delivery tokens |
 | Separate workspaces with their own teams and schemas | Independent drafts, live content, and scheduled revisions | Published content with private fields removed |
 | Local or S3-compatible asset storage | Role-based access and advisory SEO checks | An example website with saved draft previews |
 
-[Start locally](#start) · [CMS comparison](#cms-comparison) · [How it fits together](#how-it-fits-together) · [First content walkthrough](#your-first-content) · [Delivery API](#graphql-for-your-frontends) · [Example website](#example-website-frontend) · [Production setup](#storage-and-production)
+[Start locally](#start) · [CMS comparison](#cms-comparison) · [Architecture](#how-it-fits-together) · [First content](#your-first-content) · [Delivery API](#graphql-for-your-frontends) · [Development](#local-development-and-checks) · [Status](#status-and-scope)
+
+## Status and scope
+
+MossCMS is an early-stage project with implemented editorial and delivery workflows. The feature descriptions below refer to the current `main` code. Tests and checked-in acceptance reports describe specific verified paths; they do not establish that every deployment, OAuth provider, or storage backend is qualified.
+
+The [query-performance](https://github.com/nirtuttnauer/MossCMS/pull/3), [delivery-client](https://github.com/nirtuttnauer/MossCMS/pull/4), [observability](https://github.com/nirtuttnauer/MossCMS/pull/5), [workspace-portability](https://github.com/nirtuttnauer/MossCMS/pull/6), and [editor-workflow](https://github.com/nirtuttnauer/MossCMS/pull/7) changes were integrated into `main` on 21 October 2026. Their workflow guides describe the implemented paths and remaining limits.
+
+Self-hosting means owning HTTPS, access configuration, backups, upgrades, and recovery. Start with the [operator guide](docs/deployment-recovery.md) before exposing an instance beyond your development machine. SQLite is intended for one app instance; changing database backends does not migrate your data.
 
 <details>
 <summary>Browse the full README</summary>
 
 - **Getting started:** [Start](#start), [architecture](#how-it-fits-together), [first content](#your-first-content), [example website](#example-website-frontend).
-- **Choosing a CMS:** [Feature comparison](#cms-comparison), [pricing and limits](#pricing-and-limits), [MossCMS limitations](#current-mosscms-limitations), [competitive roadmap](#competitive-roadmap).
+- **Choosing a CMS:** [Feature comparison](#cms-comparison), [pricing and limits](docs/cms-comparison.md#pricing-and-limits), [MossCMS limitations](docs/cms-comparison.md#current-mosscms-limitations), [competitive roadmap](docs/cms-comparison.md#competitive-roadmap).
 - **Content and access:** [Admin and teams](#admin-and-teams), [OAuth](#oauth-sign-in), [data modeling](#define-data), [publishing](#draft-live-and-scheduled-content), [SEO audit](#seo-audit).
 - **Integration:** [GraphQL](#graphql-for-your-frontends), [documentation guides](#documentation).
 - **Operations:** [Storage and production](#storage-and-production), [backup, restore, and upgrades](#backup-restore-and-upgrades).
-- **Contributing:** [Code layout](#code-layout), [development and checks](#local-development-and-checks), [local sign-in bypass](#temporarily-skip-sign-in), [product plan](#product-plan).
+- **Contributing:** [Code layout](#code-layout), [development and checks](#local-development-and-checks), [local sign-in bypass](#temporarily-skip-sign-in), [roadmap and evidence](#roadmap-and-evidence).
 
 </details>
 
 ## CMS comparison
 
-Our ambition is to make MossCMS the best CMS. Today, our focus is self-hosted headless publishing: visual schemas, predictable publication, workspace isolation, and a frontend-independent GraphQL API. The comparison below shows both what we offer and where competing projects offer more.
+<a id="pricing-and-limits"></a>
+<a id="current-mosscms-limitations"></a>
+<a id="competitive-roadmap"></a>
 
-**Documentation checked on 12 October 2026.** MossCMS reflects this checkout; competitors reflect their linked documentation, including optional features. **Built in** means shipped with the product, sometimes requiring configuration. **Plugin**, **code**, and named **paid plans** identify additional requirements. These are feature comparisons, not performance or usability benchmarks. Directus availability also depends on the version and [license](https://directus.com/license). WordPress refers to self-hosted WordPress.org.
+The [dated CMS comparison](docs/cms-comparison.md) retains the full feature tables, hosting and license costs, quotas, MossCMS limitations and competitive roadmap. Competitor pricing and feature assumptions are dated 12 October 2026; check vendor links for current terms. The performance evidence below measures MossCMS on its stated local workloads, without claiming a matched competitor trial.
 
-| Feature | MossCMS | Strapi 5 | Directus | Payload | WordPress |
-| --- | --- | --- | --- | --- | --- |
-| Content modeling | Visual schemas, nested fields, references | [Visual builder; development only](https://docs.strapi.io/cms/features/content-type-builder) | [Visual database collections and relations](https://directus.com/docs/guides/data-model/collections) | [TypeScript collection configuration](https://payloadcms.com/docs/configuration/collections) | [Custom post types through code/plugins](https://developer.wordpress.org/plugins/post-types/registering-custom-post-types/) |
-| GraphQL content API | Built in; schema-derived public fields | [Official plugin](https://docs.strapi.io/cms/api/graphql) | [Built in](https://directus.com/docs/api) | [Built in](https://payloadcms.com/docs/getting-started/what-is-payload) | [WPGraphQL plugin](https://www.wpgraphql.com/docs/introduction) |
-| REST content API | Not shipped; content uses GraphQL | [Built in](https://docs.strapi.io/cms/intro) | Built in | Built in | [Built in](https://developer.wordpress.org/rest-api/) |
-| Drafts and publication | Independent working draft and live snapshot | [Separate draft and published versions](https://docs.strapi.io/cms/features/draft-and-publish) | [Drafts and named content versions](https://directus.com/docs/guides/content/content-versioning) | [Configurable drafts and autosave](https://payloadcms.com/docs/versions/drafts) | [Draft, pending review, and published states](https://wordpress.org/documentation/article/post-status/) |
-| Revision history and restore | Built in; restore into a draft | [Growth / Enterprise](https://docs.strapi.io/cms/features/content-history) | Built in; configure collection tracking | [Built in; enable versions](https://payloadcms.com/docs/versions/overview) | [Built in for supported post types](https://wordpress.org/documentation/article/revisions/) |
-| Scheduled publication | Captured revision; failure queue and retry | [Scheduled Releases: Growth / Enterprise](https://docs.strapi.io/cms/features/releases) | [Configure scheduled Flows](https://directus.com/docs/guides/flows/triggers) | Built in; enable `schedulePublish` | [Built in for posts](https://wordpress.org/documentation/article/page-post-settings-sidebar/) |
-| Localized content | Locale maps on individual fields | [Built-in internationalization](https://docs.strapi.io/cms/features/internationalization) | [Translation collections and editor](https://directus.com/docs/guides/content/translations) | [Field-level localization](https://payloadcms.com/docs/configuration/localization) | [Plugins or separate sites](https://developer.wordpress.org/advanced-administration/wordpress/multilingual/) |
-| Team permissions | Three workspace roles; private delivery fields | [Configurable admin roles and permissions](https://docs.strapi.io/cms/features/rbac) | [Policies with item/field rules](https://directus.com/docs/guides/auth/access-control) | [Code-defined document/field access](https://payloadcms.com/docs/access-control/overview) | [Roles and extensible capabilities](https://wordpress.org/documentation/article/roles-and-capabilities/) |
-| Review and approval workflows | No approval stages; editors can publish | [Review Workflows: Enterprise](https://docs.strapi.io/cms/features/review-workflows) | Configure policies and [Flows](https://directus.com/docs/guides/flows) | Custom code or [Enterprise workflows](https://payloadcms.com/enterprise/publishing-workflows) | Pending review; extend with plugins/code |
-| Website editing | Separate frontend; example site with saved draft previews | Headless frontend integration | Headless frontend integration | Next.js integration and live preview | [Block themes and Site Editor](https://wordpress.org/documentation/article/site-editor/) |
-
-### Pricing and limits
-
-**Public USD prices checked on 12 October 2026.** Billing periods are stated explicitly; taxes, overages, domains, third-party plugins, and frontend hosting may add costs. For self-hosting, budget for compute, database, storage, bandwidth, backups, and maintenance. A $0 software license does not mean a $0 deployment.
-
-| Product | Self-hosted software | Managed hosting / paid plans | Important quotas and restrictions |
-| --- | --- | --- | --- |
-| **MossCMS** | **$0, MIT; no per-seat fee or license cap on total entries, workspaces, or content types** | No managed MossCMS plan; use your own infrastructure | Capacity depends on your infrastructure and workload; technical limits and missing features are listed below |
-| **Strapi** | [Community: $0; no entry/API-call license quotas](https://strapi.io/pricing-cms) | CMS Growth: $45/month for 3 seats, then $15/additional seat/month. [Cloud hosting](https://strapi.io/pricing-cloud): Starter $35, Pro $90, Business $450 per project/month on monthly billing; CMS upgrades are separate | Growth gates history/releases; Enterprise gates review workflows. Cloud Starter includes 100k API requests/month, 50 GB assets, 50 GB asset bandwidth/month; sleeps when idle and has no included backups |
-| **Directus** | [Core: $0; qualifying Open Innovation Grant: $0](https://directus.com/pricing) | Team: $599/month, or $499/month with annual commitment. Cloud adds $99/month on Core/Team/Grant; Enterprise is custom | Core: 3 Studio seats, 25 collections, 5 Flows. Team: 10 SSO seats, 50 collections, 20 Flows; extra seats $50/month. Grant removes feature/cap limits for organizations under $5M annual revenue **and** fewer than 50 employees; current license terms apply |
-| **Payload** | [$0 open-source core; bring your own hosting](https://payloadcms.com/get-started) | Enterprise features/support: contact sales. [Payload Cloud is paused for new projects](https://payloadcms.com/payload-has-joined-figma) | Infrastructure/provider limits apply; modeling and permissions require code. Enterprise workflows/visual editing are separate from the free core |
-| **WordPress** | [$0 WordPress.org software](https://wordpress.org/about/); host/provider and paid extensions set costs | [WordPress.com hosting example](https://wordpress.com/pricing/): Personal $9/month or $4/month billed annually; Business $40/month or $25/month billed annually | WordPress.com Personal includes 6 GB storage; Business 50 GB. GraphQL and multilingual content need plugins/configuration. WordPress.com pricing is a hosting offering, separate from WordPress.org software |
-| **Sanity** | Studio can be [self-hosted](https://www.sanity.io/docs/studio/deployment); content uses the managed Content Lake | [Free: $0; Growth: $15/billable seat/month; Enterprise: custom](https://www.sanity.io/pricing). Growth increased-quota add-on: **+$299/month** | Free: 20 seats, 10k documents, 2 public datasets. Growth: 50 seats, **25k documents**, 2 datasets; add-on raises documents to **50k total**. Growth includes 250k API requests/month, 1M CDN requests/month, 100 GB assets, and 100 GB bandwidth/month; metered overages apply to eligible usage |
-
-**Sanity's document quota remains a limit on paid Growth.** Drafts and release versions count as separate documents across datasets. At the document cap, new documents and drafts are blocked; ordinary per-request overage payments do not lift that cap. Growth needs the quota add-on, then Enterprise for a higher document allowance. See [Sanity's document-quota rules](https://www.sanity.io/docs/platform-management/plans-and-payments#document-quota).
-
-For example, **10 billable Sanity Growth seats cost $150/month**; with the 50k-document quota add-on that becomes **$449/month**, before other usage costs. MossCMS adds no seat or total-entry license charge as content grows; infrastructure and maintenance still cost money, and comparable workload capacity has not been benchmarked.
-
-Sanity also sets a useful feature benchmark: real-time editing, multiplayer presence, and visual editing are included in its [Studio offering](https://www.sanity.io/studio). MossCMS currently uses optimistic edit conflict detection and saved revision previews; it does not offer simultaneous collaborative editing or an in-place visual website editor.
-
-### Current MossCMS limitations
-
-- **Editorial features:** three fixed workspace roles; no custom per-field team permissions, approval stages, grouped releases, real-time collaboration, or general plugin marketplace. Rich text is Markdown; there is no visual site builder. Content APIs use GraphQL; no REST content API is shipped.
-- **Queries:** at most 100 entries per page, depth 12, 200 expanded selections, and 30,000 query characters. These are request limits, not caps on the total content stored. See [delivery API](#graphql-for-your-frontends) and [query limits](api/app/query_limits.py).
-- **Schemas and media:** 1–40 fields per object, at most five nesting levels, 1,000 items per list value, and 100,000 characters per text/rich-text value. Uploads default to 20 MiB per file. See [schema validation](api/app/schema.py), [configuration](api/app/config.py), and [image limits](docs/images.md).
-- **Operations:** SQLite is intended for one app instance; use PostgreSQL for multiple instances or heavy writes. Scheduling requires a running CMS. You operate backups, upgrades, monitoring, and recovery; this project offers no managed hosting or contractual uptime SLA. [Local 100k-entry benchmark and recovery results](docs/benchmarks/RESULTS-2026-10-12.md) are available; larger cloud deployments and competitor performance comparisons remain unverified. See [production setup](#storage-and-production).
-- **Example frontend:** the example website caps its bulk load at 2,000 entries. For larger collections, use the [typed streaming delivery client](docs/delivery-client.md), which reads pages without a total-entry cap. Backend request bounds still apply.
-
-**Where MossCMS stands out today**
-
-- **Publication behavior is explicit.** Draft saves preserve live content and captured schedules. Failed schedules preserve the previous live snapshot and expose recovery actions. See the [publication contract](docs/publication-contract.md).
-- **Workspaces and delivery boundaries are built in.** Each workspace has its own schemas, content, and memberships. Expiring delivery tokens are scoped to content types; the delivery endpoint exposes only published content with private fields removed. See [teams](#admin-and-teams) and [delivery](#graphql-for-your-frontends).
-- **The core ships together under MIT.** One application image serves the API and admin. Visual modeling, revisions, scheduling, localization, and local/S3 media are included without a paid feature tier. PostgreSQL is separate; SQLite is available for a single app instance. See [setup](#start) and [storage](#storage-and-production).
-
-These are reasons to consider MossCMS; several competitors offer overlapping capabilities. The combination and its fit for your team matter more than a count of checkmarks.
-
-### Competitive roadmap
-
-The goal is to lead on editing quality, dependable team publishing, and predictable cost as content grows. Start by proving capacity and making adoption easy, then add the permissions and publishing controls teams need. Keep planned core features MIT licensed without per-seat or total-entry license charges; infrastructure still has costs.
-
-Implementation has started; statuses below identify verified local slices and proposed work, without promising delivery dates. The [detailed competitive plan](docs/planning/COMPETITIVE-ROADMAP-2026-10-12.md) defines scope, dependencies and acceptance gates; the [implementation record](docs/planning/COMPETITIVE-IMPLEMENTATION-2026-10-12.md) links actual evidence and remaining work. Retain the existing review/integration process before shipping changes. P0 establishes trust, P1 improves adoption and publishing, and P2 expands validated workflows.
-
-| Order | Priority | Improvement | Status | Competitive objective |
-| --- | --- | --- | --- | --- |
-| 1 | P0 | Capacity, cost, and recovery evidence | Local baseline verified | Publish reproducible 50k/100k workloads, recovery checks and an editable operating-cost model |
-| 2 | P1 | Safe content import/export; first Sanity adapter | Admin UI, CLI round trip, and transforms implemented; Sanity adapter planned | Let teams move in and out without silent content loss |
-| 3 | P1 | Typed integration, REST delivery, and a Next.js starter | Typed client verified; REST/starter planned | Make a working frontend easy to connect |
-| 4 | P1 | Visual rich-text editing with source compatibility | Planned | Make everyday writing comfortable for more editors |
-| 5 | P1 | Preview beside the editor and field navigation | Planned | Help editors see and correct actual website content |
-| 6 | P1 | Configurable content and field permissions | Planned | Separate authoring, publishing, and restricted content access |
-| 7 | P1 | Revision-bound reviews and approvals | Planned | Ensure the approved revision is the revision published |
-| 8 | P1 | Coordinated immediate and scheduled releases | Planned | Publish related entries together and preserve live content on failure |
-| 9 | P2 | Comments, assignments, and editing presence | Planned | Reduce review friction and overlapping edits |
-| 10 | P2 | Extension contract and automation recipes | Planned | Support useful integrations with reliable events and retries |
-| 11 | P2 | Translation and media library workflows | Planned | Help editors manage larger multilingual libraries |
-| 12 | P2 | Query, cache, and worker scaling | Automatic filtering/sorting; 30-minute 100k validation | Covering filter counts and scoped types reduce work; combined queries and repeated trials remain |
-
-Simultaneous text editing, a full site builder, a plugin marketplace, and managed hosting/CDN are later investments with explicit pilot-demand and operating-cost gates. The first slice delivered [capacity/recovery evidence](docs/benchmarks/RESULTS-2026-10-12.md), [portable workspace import/export](docs/portable-content-format.md), and a [typed delivery client](docs/delivery-client.md). The migration CLI now verifies a 1k-entry round trip and supports ordered field transforms; source CMS adapters and remaining integration work are next. The [automatic-indexing follow-up](docs/benchmarks/RESULTS-AUTOMATIC-INDEXING-2026-10-12.md) meets the proposed 50k list target in a short local sample and records the added storage cost; the latest 30-minute 100k results are linked below.
-
-### Performance evidence
+## Performance evidence
 
 ![MossCMS p95 latency at 50,000 entries, including compact indexes and request-local lookups](docs/benchmarks/performance-50000-2026-10-13.png)
 
@@ -171,7 +114,7 @@ docker compose exec app python -m app.cli seed --project YOUR_WORKSPACE_ID
 
 ### Run a published Docker Hub image
 
-The image repository is `nirtuttnauer/mosscms`. Images include the API and built admin, with PostgreSQL supplied by Compose. After the [first Docker Hub publication](docs/docker.md#publish-to-docker-hub), run these commands from the cloned repository to start without building locally:
+The configured image repository is `nirtuttnauer/mosscms`. Registry publication depends on repository configuration; the source-build quickstart above does not require a published image. Images include the API and built admin, with the database mode selected by Compose. Once an image has been [published to Docker Hub](docs/docker.md#publish-to-docker-hub), run these commands from the cloned repository to start without building locally:
 
 ```sh
 python3 scripts/configure.py
@@ -181,7 +124,7 @@ docker compose up --no-build -d --wait app
 
 Open [localhost:8001](http://localhost:8001) and use `MOSS_SETUP_TOKEN` from `.env` to create the first administrator. Database and uploaded files persist in the same named volumes as a local build.
 
-Compose defaults to `nirtuttnauer/mosscms:latest`. Set `MOSS_IMAGE` in `.env` to a published version (for example, `nirtuttnauer/mosscms:1.2.3`) or digest for a repeatable deployment. `latest` tracks `main`; version tags are published from Git tags such as `v1.2.3`. The publishing workflow builds Linux AMD64 and ARM64 images. Use `MOSS_PORT` to change the host port; the container listens on 8001.
+Compose defaults to `nirtuttnauer/mosscms:latest`. Set `MOSS_IMAGE` in `.env` to an existing published tag or digest for a repeatable deployment. When registry publishing is configured, the workflow updates `latest` from `main` and creates version tags from matching Git tags. Git tags use a `vMAJOR.MINOR.PATCH` pattern; image tags omit the leading `v`. Its build targets are Linux AMD64 and ARM64. Use `MOSS_PORT` to change the host port; the container listens on 8001.
 
 To build from your checkout, keep using `docker compose up --build -d`. To avoid replacing a locally cached release tag, use `MOSS_IMAGE=mosscms:local docker compose up --build -d`. The optional example website is built separately with `docker compose --profile website up --build -d example-site`.
 
@@ -199,7 +142,7 @@ flowchart LR
         Editorial["Editorial GraphQL<br/>/graphql"] --> Content["Content, permissions<br/>and publication workers"]
         Delivery["Delivery GraphQL<br/>/delivery/graphql"] --> Content
     end
-    Content --> Database[("PostgreSQL<br/>content, accounts, revisions")]
+    Content --> Database[("PostgreSQL or SQLite<br/>content, accounts, revisions")]
     Content --> Media["Media storage<br/>local volume or private S3"]
 ```
 
@@ -461,7 +404,7 @@ Use **SEO audit** to review draft and live records separately, inspect detected 
 
 ## Local development and checks
 
-Install **Python 3.12+ with uv** and **Node.js 22+ with npm**. Generate `.env` with `python3 scripts/configure.py` first. In separate terminals, starting from the repository root:
+Install **Python 3.12+ with uv** and **Node.js 22.12+ with npm**. The Node minimum follows Vite's checked-in engine requirement. Generate `.env` with `python3 scripts/configure.py` first. In separate terminals, starting from the repository root:
 
 ```sh
 cd api
@@ -544,9 +487,13 @@ If an older bypass setup left the workspace without members, recover only that w
 | Measure latency, GraphQL failures and database bottlenecks | [OpenTelemetry setup and performance queries](docs/observability.md) |
 | Contribute or understand implementation boundaries | [Contributing](CONTRIBUTING.md), [maintainability review](docs/maintainability-review.md) |
 
-## Product plan
+<a id="product-plan"></a>
 
-[Competitive roadmap](docs/planning/COMPETITIVE-ROADMAP-2026-10-12.md) · [PRD](docs/PRD.md) · [Tasks and acceptance criteria](docs/planning/TASKS.md) · [Implementation ledger](docs/planning/IMPLEMENTATION.md) · [Release evidence](docs/release-acceptance-2026-10-08.md)
+## Roadmap and evidence
+
+[Competitive roadmap](docs/planning/COMPETITIVE-ROADMAP-2026-10-12.md) · [Implementation follow-ups](docs/planning/COMPETITIVE-IMPLEMENTATION-2026-10-12.md) · [Scaling plan](docs/planning/PERFORMANCE-SCALING-2026-10-12.md)
+
+[Open issues](https://github.com/nirtuttnauer/MossCMS/issues) and [pull requests](https://github.com/nirtuttnauer/MossCMS/pulls) track ongoing work. The [PRD](docs/PRD.md) and [task breakdown](docs/planning/TASKS.md) preserve product intent; the [implementation ledger](docs/planning/IMPLEMENTATION.md) and [release evidence](docs/release-acceptance-2026-10-08.md) are historical checkpoints. Use the current code, tests, and workflow guides to determine what a particular checkout supports.
 
 <details>
 <summary>Planning history</summary>
