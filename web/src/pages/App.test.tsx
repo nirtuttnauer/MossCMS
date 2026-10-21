@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { getContext, gql, rest, type ContentType, type Me } from '../lib/api'
@@ -100,7 +100,9 @@ describe('App workspace and navigation boundaries', () => {
   it.each(['hashchange', 'popstate'])('keeps a dirty editor and its workspace when %s navigation is canceled', async event => {
     vi.spyOn(window, 'confirm').mockReturnValue(false)
     render(<App />)
-    fireEvent.click(await screen.findByRole('button', { name: 'New entry' }))
+    // Scope to the header action; the empty state also offers creation after loading.
+    const heading = await screen.findByRole('heading', { name: 'Content', level: 1 })
+    fireEvent.click(within(heading.closest<HTMLElement>('.page-heading')!).getByRole('button', { name: 'New entry' }))
     fireEvent.change(await screen.findByLabelText('Title'), { target: { value: 'Unsaved wording' } })
     const editorHash = location.hash
     navigate('#content?workspace=b', event)
