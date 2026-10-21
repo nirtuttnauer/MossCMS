@@ -1,0 +1,89 @@
+{
+  "durationSeconds": 1801.124,
+  "requestedSeconds": 1800,
+  "readers": 20,
+  "writers": 3,
+  "operations": {
+    "search": {
+      "requests": 51128,
+      "requestsPerSecond": 28.387,
+      "p50Ms": 111.546,
+      "p95Ms": 197.383,
+      "p99Ms": 269.82
+    },
+    "list": {
+      "requests": 51124,
+      "requestsPerSecond": 28.385,
+      "p50Ms": 131.415,
+      "p95Ms": 225.272,
+      "p99Ms": 299.517
+    },
+    "generated": {
+      "requests": 51126,
+      "requestsPerSecond": 28.386,
+      "p50Ms": 139.435,
+      "p95Ms": 236.17,
+      "p99Ms": 315.026
+    },
+    "etag": {
+      "requests": 51126,
+      "requestsPerSecond": 28.386,
+      "p50Ms": 130.682,
+      "p95Ms": 224.128,
+      "p99Ms": 299.094
+    },
+    "filter": {
+      "requests": 51128,
+      "requestsPerSecond": 28.387,
+      "p50Ms": 149.69,
+      "p95Ms": 248.4,
+      "p99Ms": 330.247
+    },
+    "save": {
+      "requests": 4577,
+      "requestsPerSecond": 2.541,
+      "p50Ms": 166.042,
+      "p95Ms": 291.043,
+      "p99Ms": 417.291
+    }
+  },
+  "errors": {},
+  "httpStatuses": {
+    "200": 204522,
+    "304": 51110
+  },
+  "initialRequests": [
+    {
+      "phase": "first_after_start",
+      "operation": "list",
+      "milliseconds": 36.33195799193345
+    },
+    {
+      "phase": "first_after_start",
+      "operation": "generated",
+      "milliseconds": 13.002583989873528
+    },
+    {
+      "phase": "after_warmup",
+      "operation": "list",
+      "milliseconds": 11.469876015326008
+    },
+    {
+      "phase": "after_warmup",
+      "operation": "generated",
+      "milliseconds": 41.743333014892414
+    }
+  ],
+  "cacheNote": "Initial and warmed process requests are separate; database/OS caches are not forcibly evicted. ETag measures conditional responses, not a CDN or server response cache.",
+  "liveAndScheduledSnapshotsPreserved": true,
+  "databaseBytes": 619648691,
+  "scalarIndexStorage": {
+    "table_bytes": 82370560,
+    "index_bytes": 163495936,
+    "rows": 480000
+  },
+  "searchIndexStorage": {
+    "draft_bytes": 11083776,
+    "published_bytes": 7938048
+  }
+}

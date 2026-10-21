@@ -1,0 +1,23 @@
+{
+  "startedAt": "2026-10-12T22:25:14.177156+00:00",
+  "sourceCommit": "03b0cdf348baaaafdf8959f129c8b04409abecab",
+  "sourceSnapshotSha256": "bbb4e4fdb78a2c00590dcb432682826f85a7a50c990fb9215384524c3b5eb1e3",
+  "host": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "architecture": "arm64",
+  "resourceLimits": {
+    "app": "2 CPUs / 4 GiB",
+    "db": "2 CPUs / 4 GiB"
+  },
+  "conditions": "Local Docker Desktop; shared host; container CPU/memory caps are not dedicated cloud hardware",
+  "runs": [],
+  "complete": false,
+  "imageId": "sha256:4baecdbb213c35560e1368fe75525e5c8f2484493bdd7bf864c56603a4331c29",
+  "docker": {
+    "ServerVersion": "29.8.2",
+    "Architecture": "aarch64",
+    "NCPU": 18,
+    "MemTotal": 8317267968,
+    "KernelVersion": "7.0.14-linuxkit"
+  },
+  "finishedAt": "2026-10-12T22:33:02.263208+00:00"
+}

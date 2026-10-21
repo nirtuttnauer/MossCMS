@@ -216,6 +216,9 @@ def create_app(settings=None):
             try:
                 bounded_query(body.query)
                 definitions = session.scalars(scoped(session, ContentType, c)).all()
+                c["type_records"] = {definition.key: definition for definition in definitions}
+                c["entry_records"] = {}
+                c["asset_records"] = {}
                 schema = generated_schema(definitions, delivery, c.get("scopes"))
                 result = schema.execute_sync(
                     body.query, variable_values=body.variables, operation_name=body.operationName, context_value=c

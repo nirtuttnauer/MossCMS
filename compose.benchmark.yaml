@@ -1,0 +1,64 @@
+# Disposable benchmark only; independent of the normal Compose file and .env.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: benchmark
+      POSTGRES_PASSWORD: fixture-only-benchmark-password
+      POSTGRES_DB: moss_benchmark_fixture
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U benchmark -d moss_benchmark_fixture"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    cpus: 2
+    mem_limit: 4g
+    volumes:
+      - database:/var/lib/postgresql/data
+  app:
+    image: ${MOSS_BENCHMARK_IMAGE:?Use scripts/run_benchmark.py}
+    environment: &benchmark_environment
+      DATABASE_URL: postgresql+psycopg://benchmark:fixture-only-benchmark-password@db/${MOSS_BENCHMARK_DATABASE:-moss_benchmark_fixture}
+      MOSS_BENCHMARK_DATABASE_URL: postgresql+psycopg://benchmark:fixture-only-benchmark-password@db/${MOSS_BENCHMARK_DATABASE:-moss_benchmark_fixture}
+      MOSS_ENV: development
+      MOSS_USE_SQLITE: "false"
+      MOSS_SKIP_AUTH: "false"
+      MOSS_SECRET_KEY: fixture-only-benchmark-secret-000000000000
+      MOSS_SETUP_TOKEN: fixture-only-benchmark-setup-token
+      MOSS_PUBLIC_URL: http://app:8001
+      MOSS_ORIGINS: http://app:8001
+      MOSS_STORAGE_DIR: /data
+      PYTHONPATH: /app
+    depends_on:
+      db:
+        condition: service_healthy
+    cpus: 2
+    mem_limit: 4g
+    read_only: true
+    tmpfs: [/tmp]
+    volumes:
+      - ${MOSS_BENCHMARK_MEDIA:-media}:/data
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
+  benchmark:
+    image: ${MOSS_BENCHMARK_IMAGE:?Use scripts/run_benchmark.py}
+    environment: *benchmark_environment
+    user: "0:0"
+    entrypoint: [python, /bench/benchmark.py]
+    volumes:
+      - ./scripts:/bench:ro
+      - ${MOSS_BENCHMARK_RESULTS:?Use scripts/run_benchmark.py}:/results
+      - ${MOSS_BENCHMARK_MEDIA:-media}:/data
+  delivery-client:
+    image: node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+    command: [node, /workspace/ci/delivery_client_smoke.mjs]
+    volumes:
+      - ./shared:/workspace/shared:ro
+      - ./ci/delivery_client_smoke.mjs:/workspace/ci/delivery_client_smoke.mjs:ro
+      - ${MOSS_BENCHMARK_RESULTS:?Use scripts/run_benchmark.py}:/results
+volumes:
+  database:
+  media:
+  recovered_media:

@@ -5,12 +5,13 @@ from pathlib import Path
 import boto3
 from fastapi import APIRouter, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, RedirectResponse
+from sqlalchemy import select
 
 from .accounts import context
 from .graphql import asset_node
 from .images import RASTER_MIMES, process_image
 from .media_links import MEDIA_TTL_SECONDS, valid_media_signature
-from .models import Asset, uid
+from .models import Asset, Project, uid
 from .security import audit, require
 
 router = APIRouter()
@@ -26,6 +27,7 @@ def upload(request: Request, file: UploadFile, imagesOnly: bool = Form(False)):
     with request.app.state.db.begin() as session:
         c = context(request, session)
         require(c, "editor", write=True)
+        session.scalar(select(Project.id).where(Project.id == c["project_id"]).with_for_update())
         data = file.file.read(settings.max_upload + 1)
         if not data or len(data) > settings.max_upload:
             raise HTTPException(413, "Upload a file of 1 byte to 20 MiB.")

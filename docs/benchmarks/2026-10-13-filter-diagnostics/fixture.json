@@ -1,0 +1,17 @@
+{
+  "entries": 100000,
+  "revisions": 300000,
+  "workspaces": 3,
+  "workspaceMix": "80% / 10% / 10%",
+  "liveEntries": 60000,
+  "scheduledEntries": 40000,
+  "assets": 3,
+  "upgrade": {
+    "from": "0008",
+    "to": "0013",
+    "seconds": 24.70942488599394,
+    "recordsPreserved": true
+  },
+  "seed": "index-based-v1",
+  "python": "3.12.15"
+}

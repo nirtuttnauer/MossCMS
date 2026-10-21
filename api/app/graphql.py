@@ -2,6 +2,8 @@
 
 from datetime import date
 from enum import Enum
+from functools import lru_cache
+import json
 from typing import Any, cast
 
 import strawberry
@@ -83,9 +85,28 @@ class EntryNode:
 @strawberry.type
 class EntryPage:
     nodes: list[EntryNode]
-    total: int
     end_cursor: str | None
     has_next_page: bool
+    total_query: strawberry.Private[Any]
+    total_value: strawberry.Private[int | None] = None
+
+    @strawberry.field
+    def total(self, info: strawberry.Info) -> int:
+        if self.total_value is None:
+            self.total_value = int(info.context["session"].scalar(self.total_query))
+        return self.total_value
+
+
+@strawberry.enum
+class OrderDirection(Enum):
+    ASC = "asc"
+    DESC = "desc"
+
+
+@strawberry.input
+class EntryOrderBy:
+    field: str
+    direction: OrderDirection = OrderDirection.ASC
 
 
 @strawberry.type
@@ -230,12 +251,25 @@ class Query:
         first: int = 20,
         after: str | None = None,
         filters: JSON | None = None,
+        order_by: EntryOrderBy | None = None,
     ) -> EntryPage:
         c = info.context
-        page = content.entry_page(c["session"], c, type_key, status, search, sort, first, after, filters)
+        page = content.entry_page(
+            c["session"],
+            c,
+            type_key,
+            status,
+            search,
+            sort,
+            first,
+            after,
+            filters,
+            order_by={"field": order_by.field, "direction": order_by.direction.value} if order_by else None,
+            include_total=False,
+        )
         return EntryPage(
             nodes=[EntryNode.from_dict(d) for d in page["nodes"]],
-            total=page["total"],
+            total_query=page["totalQuery"],
             end_cursor=page["endCursor"],
             has_next_page=page["hasNextPage"],
         )
@@ -566,6 +600,20 @@ class Mutation:
 
 
 def generated_schema(definitions, delivery=False, scopes=None):
+    # Cache only immutable schema shapes; resolvers always use the current request context.
+    signature = tuple(
+        (
+            definition.key,
+            json.dumps(public_fields(definition.fields) if delivery else definition.fields, sort_keys=True),
+        )
+        for definition in sorted(definitions, key=lambda record: record.key)
+        if not delivery or not scopes or definition.key in scopes
+    )
+    return cached_generated_schema(signature, delivery)
+
+
+@lru_cache(maxsize=128)
+def cached_generated_schema(definitions: tuple[tuple[str, str], ...], delivery: bool):
     attributes = {}
 
     def field_type(f: dict, name: str) -> Any:
@@ -615,7 +663,10 @@ def generated_schema(definitions, delivery=False, scopes=None):
             except CmsError:
                 return None
         if kind == "asset":
-            asset = c["session"].get(Asset, raw)
+            cached = c.setdefault("asset_records", {})
+            if raw not in cached:
+                cached[raw] = c["session"].get(Asset, raw)
+            asset = cached[raw]
             return asset_node(asset, c["settings"]) if asset and asset.project_id == c["project_id"] else None
         return raw
 
@@ -653,7 +704,7 @@ def generated_schema(definitions, delivery=False, scopes=None):
     def make_list(key, typ):
         def resolver(self, info: strawberry.Info, first: int = 20, after: str | None = None, locale: str = "en"):
             c = info.context
-            page = content.entry_page(c["session"], c, key, first=first, after=after)
+            page = content.entry_page(c["session"], c, key, first=first, after=after, include_total=False)
             return [
                 typ(_data={**row["data"], "_entryId": row["id"], "_entrySlug": row["slug"]}) for row in page["nodes"]
             ]
@@ -661,12 +712,10 @@ def generated_schema(definitions, delivery=False, scopes=None):
         resolver.__annotations__["return"] = list[typ]  # type: ignore[valid-type]
         return strawberry.field(resolver=resolver)
 
-    for definition in definitions:
-        if delivery and scopes and definition.key not in scopes:
-            continue
-        name = "Cms" + definition.key[0].upper() + definition.key[1:]
-        fields = public_fields(definition.fields) if delivery else definition.fields
+    for key, encoded_fields in definitions:
+        name = "Cms" + key[0].upper() + key[1:]
+        fields = json.loads(encoded_fields)
         typ = object_type(fields, name, root=True)
-        attributes["all" + name] = make_list(definition.key, typ)
+        attributes["all" + name] = make_list(key, typ)
     query = strawberry.type(type("ProjectQuery", (Query,), attributes))
     return SafeSchema(query=query, mutation=None if delivery else Mutation)

@@ -1,0 +1,535 @@
+{
+  "startedAt": "2026-10-12T00:03:20.878127+00:00",
+  "sourceCommit": "03b0cdf348baaaafdf8959f129c8b04409abecab",
+  "sourceSnapshotSha256": "01a491db170a6ea8eb7b3f5f55f0de2859251ecda201a9476015f0af1590bfe7",
+  "host": "macOS-27.0.1-arm64-arm-64bit",
+  "architecture": "arm64",
+  "resourceLimits": {
+    "app": "2 CPUs / 4 GiB",
+    "db": "2 CPUs / 4 GiB"
+  },
+  "conditions": "Local Docker Desktop; shared host; container CPU/memory caps are not dedicated cloud hardware",
+  "runs": [
+    {
+      "size": 1000,
+      "fixture": {
+        "entries": 1000,
+        "revisions": 3000,
+        "workspaces": 3,
+        "workspaceMix": "80% / 10% / 10%",
+        "liveEntries": 600,
+        "scheduledEntries": 400,
+        "assets": 3,
+        "upgrade": {
+          "from": "0008",
+          "to": "0009",
+          "seconds": 0.008548709000024246,
+          "recordsPreserved": true
+        },
+        "seed": "index-based-v1",
+        "python": "3.12.15"
+      },
+      "checks": {
+        "delivery": true,
+        "privateFieldsExcluded": true,
+        "workspaceIsolation": true,
+        "scopeIsolation": true,
+        "draftExcluded": true,
+        "media": true
+      },
+      "load": {
+        "durationSeconds": 60.783,
+        "requestedSeconds": 60,
+        "readers": 20,
+        "writers": 3,
+        "operations": {
+          "search": {
+            "requests": 892,
+            "requestsPerSecond": 14.675,
+            "p50Ms": 144.187,
+            "p95Ms": 233.007,
+            "p99Ms": 307.247
+          },
+          "list": {
+            "requests": 890,
+            "requestsPerSecond": 14.642,
+            "p50Ms": 183.886,
+            "p95Ms": 269.48,
+            "p99Ms": 327.854
+          },
+          "filter": {
+            "requests": 894,
+            "requestsPerSecond": 14.708,
+            "p50Ms": 195.115,
+            "p95Ms": 281.103,
+            "p99Ms": 350.641
+          },
+          "etag": {
+            "requests": 887,
+            "requestsPerSecond": 14.593,
+            "p50Ms": 182.918,
+            "p95Ms": 279.206,
+            "p99Ms": 339.97
+          },
+          "generated": {
+            "requests": 893,
+            "requestsPerSecond": 14.692,
+            "p50Ms": 621.644,
+            "p95Ms": 798.888,
+            "p99Ms": 879.764
+          },
+          "save": {
+            "requests": 148,
+            "requestsPerSecond": 2.435,
+            "p50Ms": 208.337,
+            "p95Ms": 308.026,
+            "p99Ms": 350.967
+          }
+        },
+        "errors": {},
+        "httpStatuses": {
+          "200": 3585,
+          "304": 871
+        },
+        "initialRequests": [
+          {
+            "phase": "first_after_start",
+            "operation": "list",
+            "milliseconds": 25.649332998000318
+          },
+          {
+            "phase": "first_after_start",
+            "operation": "generated",
+            "milliseconds": 23.55416700083879
+          },
+          {
+            "phase": "after_warmup",
+            "operation": "list",
+            "milliseconds": 8.847083998261951
+          },
+          {
+            "phase": "after_warmup",
+            "operation": "generated",
+            "milliseconds": 18.346499997278443
+          }
+        ],
+        "cacheNote": "Initial and warmed process requests are separate; database/OS caches are not forcibly evicted. ETag measures conditional responses, not a CDN or server response cache.",
+        "databaseBytes": 12588723
+      },
+      "resources": {
+        "app": {
+          "peakMemoryBytes": 141033472,
+          "peakCpuPercent": 114.85,
+          "samples": 6
+        },
+        "db": {
+          "peakMemoryBytes": 96364134,
+          "peakCpuPercent": 19.17,
+          "samples": 6
+        }
+      }
+    },
+    {
+      "size": 10000,
+      "fixture": {
+        "entries": 10000,
+        "revisions": 30000,
+        "workspaces": 3,
+        "workspaceMix": "80% / 10% / 10%",
+        "liveEntries": 6000,
+        "scheduledEntries": 4000,
+        "assets": 3,
+        "upgrade": {
+          "from": "0008",
+          "to": "0009",
+          "seconds": 0.008379041002626764,
+          "recordsPreserved": true
+        },
+        "seed": "index-based-v1",
+        "python": "3.12.15"
+      },
+      "checks": {
+        "delivery": true,
+        "privateFieldsExcluded": true,
+        "workspaceIsolation": true,
+        "scopeIsolation": true,
+        "draftExcluded": true,
+        "media": true
+      },
+      "load": {
+        "durationSeconds": 60.993,
+        "requestedSeconds": 60,
+        "readers": 20,
+        "writers": 3,
+        "operations": {
+          "search": {
+            "requests": 845,
+            "requestsPerSecond": 13.854,
+            "p50Ms": 154.521,
+            "p95Ms": 258.128,
+            "p99Ms": 324.204
+          },
+          "list": {
+            "requests": 846,
+            "requestsPerSecond": 13.871,
+            "p50Ms": 190.449,
+            "p95Ms": 298.95,
+            "p99Ms": 392.827
+          },
+          "etag": {
+            "requests": 845,
+            "requestsPerSecond": 13.854,
+            "p50Ms": 188.869,
+            "p95Ms": 295.564,
+            "p99Ms": 369.665
+          },
+          "filter": {
+            "requests": 848,
+            "requestsPerSecond": 13.903,
+            "p50Ms": 247.189,
+            "p95Ms": 348.865,
+            "p99Ms": 426.534
+          },
+          "generated": {
+            "requests": 850,
+            "requestsPerSecond": 13.936,
+            "p50Ms": 606.381,
+            "p95Ms": 809.165,
+            "p99Ms": 892.152
+          },
+          "save": {
+            "requests": 148,
+            "requestsPerSecond": 2.427,
+            "p50Ms": 209.237,
+            "p95Ms": 336.777,
+            "p99Ms": 433.461
+          }
+        },
+        "errors": {},
+        "httpStatuses": {
+          "200": 3405,
+          "304": 829
+        },
+        "initialRequests": [
+          {
+            "phase": "first_after_start",
+            "operation": "list",
+            "milliseconds": 29.746917000011308
+          },
+          {
+            "phase": "first_after_start",
+            "operation": "generated",
+            "milliseconds": 26.44045800116146
+          },
+          {
+            "phase": "after_warmup",
+            "operation": "list",
+            "milliseconds": 12.37220800248906
+          },
+          {
+            "phase": "after_warmup",
+            "operation": "generated",
+            "milliseconds": 22.102582999650622
+          }
+        ],
+        "cacheNote": "Initial and warmed process requests are separate; database/OS caches are not forcibly evicted. ETag measures conditional responses, not a CDN or server response cache.",
+        "databaseBytes": 42194611
+      },
+      "resources": {
+        "app": {
+          "peakMemoryBytes": 150890086,
+          "peakCpuPercent": 117.93,
+          "samples": 6
+        },
+        "db": {
+          "peakMemoryBytes": 130547712,
+          "peakCpuPercent": 107.84,
+          "samples": 6
+        }
+      }
+    },
+    {
+      "size": 50000,
+      "fixture": {
+        "entries": 50000,
+        "revisions": 150000,
+        "workspaces": 3,
+        "workspaceMix": "80% / 10% / 10%",
+        "liveEntries": 30000,
+        "scheduledEntries": 20000,
+        "assets": 3,
+        "upgrade": {
+          "from": "0008",
+          "to": "0009",
+          "seconds": 0.010981209001329262,
+          "recordsPreserved": true
+        },
+        "seed": "index-based-v1",
+        "python": "3.12.15"
+      },
+      "checks": {
+        "delivery": true,
+        "privateFieldsExcluded": true,
+        "workspaceIsolation": true,
+        "scopeIsolation": true,
+        "draftExcluded": true,
+        "media": true
+      },
+      "load": {
+        "durationSeconds": 61.161,
+        "requestedSeconds": 60,
+        "readers": 20,
+        "writers": 3,
+        "operations": {
+          "search": {
+            "requests": 328,
+            "requestsPerSecond": 5.363,
+            "p50Ms": 413.753,
+            "p95Ms": 791.811,
+            "p99Ms": 1107.837
+          },
+          "list": {
+            "requests": 326,
+            "requestsPerSecond": 5.33,
+            "p50Ms": 358.482,
+            "p95Ms": 712.258,
+            "p99Ms": 1022.518
+          },
+          "etag": {
+            "requests": 325,
+            "requestsPerSecond": 5.314,
+            "p50Ms": 359.715,
+            "p95Ms": 655.506,
+            "p99Ms": 886.757
+          },
+          "generated": {
+            "requests": 324,
+            "requestsPerSecond": 5.298,
+            "p50Ms": 725.254,
+            "p95Ms": 1111.464,
+            "p99Ms": 1221.075
+          },
+          "filter": {
+            "requests": 328,
+            "requestsPerSecond": 5.363,
+            "p50Ms": 1755.045,
+            "p95Ms": 2185.675,
+            "p99Ms": 2271.039
+          },
+          "save": {
+            "requests": 130,
+            "requestsPerSecond": 2.126,
+            "p50Ms": 374.16,
+            "p95Ms": 632.877,
+            "p99Ms": 1008.821
+          }
+        },
+        "errors": {},
+        "httpStatuses": {
+          "200": 1322,
+          "304": 309
+        },
+        "initialRequests": [
+          {
+            "phase": "first_after_start",
+            "operation": "list",
+            "milliseconds": 46.22229199958383
+          },
+          {
+            "phase": "first_after_start",
+            "operation": "generated",
+            "milliseconds": 42.027458002849016
+          },
+          {
+            "phase": "after_warmup",
+            "operation": "list",
+            "milliseconds": 27.8575419979461
+          },
+          {
+            "phase": "after_warmup",
+            "operation": "generated",
+            "milliseconds": 38.050625000323635
+          }
+        ],
+        "cacheNote": "Initial and warmed process requests are separate; database/OS caches are not forcibly evicted. ETag measures conditional responses, not a CDN or server response cache.",
+        "databaseBytes": 175724211
+      },
+      "resources": {
+        "app": {
+          "peakMemoryBytes": 177104486,
+          "peakCpuPercent": 45.12,
+          "samples": 6
+        },
+        "db": {
+          "peakMemoryBytes": 233727590,
+          "peakCpuPercent": 199.43,
+          "samples": 6
+        }
+      }
+    },
+    {
+      "size": 100000,
+      "fixture": {
+        "entries": 100000,
+        "revisions": 300000,
+        "workspaces": 3,
+        "workspaceMix": "80% / 10% / 10%",
+        "liveEntries": 60000,
+        "scheduledEntries": 40000,
+        "assets": 3,
+        "upgrade": {
+          "from": "0008",
+          "to": "0009",
+          "seconds": 0.012851041999965673,
+          "recordsPreserved": true
+        },
+        "seed": "index-based-v1",
+        "python": "3.12.15"
+      },
+      "checks": {
+        "delivery": true,
+        "privateFieldsExcluded": true,
+        "workspaceIsolation": true,
+        "scopeIsolation": true,
+        "draftExcluded": true,
+        "media": true
+      },
+      "load": {
+        "durationSeconds": 1802.294,
+        "requestedSeconds": 1800,
+        "readers": 20,
+        "writers": 3,
+        "operations": {
+          "search": {
+            "requests": 3310,
+            "requestsPerSecond": 1.837,
+            "p50Ms": 1289.889,
+            "p95Ms": 2000.401,
+            "p99Ms": 2424.813
+          },
+          "list": {
+            "requests": 3307,
+            "requestsPerSecond": 1.835,
+            "p50Ms": 1397.129,
+            "p95Ms": 2199.612,
+            "p99Ms": 2608.357
+          },
+          "etag": {
+            "requests": 3305,
+            "requestsPerSecond": 1.834,
+            "p50Ms": 1395.771,
+            "p95Ms": 2177.244,
+            "p99Ms": 2584.006
+          },
+          "generated": {
+            "requests": 3306,
+            "requestsPerSecond": 1.834,
+            "p50Ms": 2088.806,
+            "p95Ms": 3000.86,
+            "p99Ms": 3507.627
+          },
+          "filter": {
+            "requests": 3310,
+            "requestsPerSecond": 1.837,
+            "p50Ms": 4989.452,
+            "p95Ms": 5930.162,
+            "p99Ms": 6410.302
+          },
+          "save": {
+            "requests": 2745,
+            "requestsPerSecond": 1.523,
+            "p50Ms": 901.996,
+            "p95Ms": 1701.465,
+            "p99Ms": 2218.708
+          }
+        },
+        "errors": {},
+        "httpStatuses": {
+          "200": 13249,
+          "304": 3289
+        },
+        "initialRequests": [
+          {
+            "phase": "first_after_start",
+            "operation": "list",
+            "milliseconds": 64.83049999951618
+          },
+          {
+            "phase": "first_after_start",
+            "operation": "generated",
+            "milliseconds": 65.49645800259896
+          },
+          {
+            "phase": "after_warmup",
+            "operation": "list",
+            "milliseconds": 50.855875000706874
+          },
+          {
+            "phase": "after_warmup",
+            "operation": "generated",
+            "milliseconds": 64.40058299995144
+          }
+        ],
+        "cacheNote": "Initial and warmed process requests are separate; database/OS caches are not forcibly evicted. ETag measures conditional responses, not a CDN or server response cache.",
+        "databaseBytes": 346035891
+      },
+      "resources": {
+        "app": {
+          "peakMemoryBytes": 177838489,
+          "peakCpuPercent": 52.14,
+          "samples": 156
+        },
+        "db": {
+          "peakMemoryBytes": 335649177,
+          "peakCpuPercent": 217.49,
+          "samples": 156
+        }
+      },
+      "recovery": {
+        "seconds": 37.871173082999576,
+        "fingerprintsMatch": true,
+        "afterRestore": {
+          "delivery": true,
+          "privateFieldsExcluded": true,
+          "workspaceIsolation": true,
+          "scopeIsolation": true,
+          "draftExcluded": true,
+          "media": true
+        },
+        "afterRestart": {
+          "delivery": true,
+          "privateFieldsExcluded": true,
+          "workspaceIsolation": true,
+          "scopeIsolation": true,
+          "draftExcluded": true,
+          "media": true
+        },
+        "backupBytes": 18035060,
+        "capturedSchedule": {
+          "capturedRevisionPublished": true,
+          "laterDraftPreserved": true,
+          "publicationEvents": 1
+        },
+        "afterSecondRestart": {
+          "capturedRevisionPublished": true,
+          "laterDraftPreserved": true,
+          "publicationEvents": 1
+        },
+        "backupCapturedAtUtc": "2026-10-12T00:38:20+00:00",
+        "verificationCompletedAtUtc": "2026-10-12T00:39:03.025957+00:00",
+        "backupAgeAtVerificationSeconds": 43.026,
+        "backupAgeProvenance": "Backup filename timestamp from captured operator output; verification artifact modification time preserved at readback."
+      }
+    }
+  ],
+  "complete": true,
+  "imageId": "sha256:c7e54f51e8131bdf76f0635888410429bcc42e2e3efae474bc66d474287067af",
+  "docker": {
+    "ServerVersion": "29.8.2",
+    "Architecture": "aarch64",
+    "NCPU": 18,
+    "MemTotal": 8317267968,
+    "KernelVersion": "7.0.14-linuxkit"
+  },
+  "finishedAt": "2026-10-12T00:39:04.079498+00:00"
+}

@@ -1,0 +1,164 @@
+[
+  {
+    "at": 1791767757.6077352,
+    "containers": [
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "36.55%",
+        "Container": "5d633fa5f599a665dfbad60cc471b851bea27177b0666a7a0ffee5e360e8f462",
+        "ID": "5d633fa5f599",
+        "MemPerc": "3.15%",
+        "MemUsage": "128.9MiB / 4GiB",
+        "Name": "moss-benchmark-oytur-8x-app-1",
+        "NetIO": "6.41MB / 1.75MB",
+        "PIDs": "30"
+      },
+      {
+        "BlockIO": "0B / 1.33GB",
+        "CPUPerc": "48.53%",
+        "Container": "6d0673174af79483f66d4309e5c864f47e60077c6fcae3c759e185b92f8efc18",
+        "ID": "6d0673174af7",
+        "MemPerc": "5.30%",
+        "MemUsage": "217.1MiB / 4GiB",
+        "Name": "moss-benchmark-oytur-8x-db-1",
+        "NetIO": "1.19GB / 2.53GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791767769.648489,
+    "containers": [
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "38.16%",
+        "Container": "5d633fa5f599a665dfbad60cc471b851bea27177b0666a7a0ffee5e360e8f462",
+        "ID": "5d633fa5f599",
+        "MemPerc": "3.39%",
+        "MemUsage": "138.8MiB / 4GiB",
+        "Name": "moss-benchmark-oytur-8x-app-1",
+        "NetIO": "78.8MB / 16.2MB",
+        "PIDs": "30"
+      },
+      {
+        "BlockIO": "0B / 1.35GB",
+        "CPUPerc": "198.46%",
+        "Container": "6d0673174af79483f66d4309e5c864f47e60077c6fcae3c759e185b92f8efc18",
+        "ID": "6d0673174af7",
+        "MemPerc": "5.71%",
+        "MemUsage": "233.7MiB / 4GiB",
+        "Name": "moss-benchmark-oytur-8x-db-1",
+        "NetIO": "1.2GB / 2.6GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791767780.683468,
+    "containers": [
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "69.16%",
+        "Container": "5d633fa5f599a665dfbad60cc471b851bea27177b0666a7a0ffee5e360e8f462",
+        "ID": "5d633fa5f599",
+        "MemPerc": "3.41%",
+        "MemUsage": "139.8MiB / 4GiB",
+        "Name": "moss-benchmark-oytur-8x-app-1",
+        "NetIO": "151MB / 29.4MB",
+        "PIDs": "29"
+      },
+      {
+        "BlockIO": "0B / 1.36GB",
+        "CPUPerc": "197.68%",
+        "Container": "6d0673174af79483f66d4309e5c864f47e60077c6fcae3c759e185b92f8efc18",
+        "ID": "6d0673174af7",
+        "MemPerc": "5.71%",
+        "MemUsage": "234MiB / 4GiB",
+        "Name": "moss-benchmark-oytur-8x-db-1",
+        "NetIO": "1.2GB / 2.68GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791767791.717184,
+    "containers": [
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "82.78%",
+        "Container": "5d633fa5f599a665dfbad60cc471b851bea27177b0666a7a0ffee5e360e8f462",
+        "ID": "5d633fa5f599",
+        "MemPerc": "3.41%",
+        "MemUsage": "139.7MiB / 4GiB",
+        "Name": "moss-benchmark-oytur-8x-app-1",
+        "NetIO": "237MB / 45.5MB",
+        "PIDs": "30"
+      },
+      {
+        "BlockIO": "0B / 1.36GB",
+        "CPUPerc": "196.58%",
+        "Container": "6d0673174af79483f66d4309e5c864f47e60077c6fcae3c759e185b92f8efc18",
+        "ID": "6d0673174af7",
+        "MemPerc": "5.74%",
+        "MemUsage": "235.1MiB / 4GiB",
+        "Name": "moss-benchmark-oytur-8x-db-1",
+        "NetIO": "1.2GB / 2.77GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791767802.746942,
+    "containers": [
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "92.32%",
+        "Container": "5d633fa5f599a665dfbad60cc471b851bea27177b0666a7a0ffee5e360e8f462",
+        "ID": "5d633fa5f599",
+        "MemPerc": "3.41%",
+        "MemUsage": "139.7MiB / 4GiB",
+        "Name": "moss-benchmark-oytur-8x-app-1",
+        "NetIO": "334MB / 63.2MB",
+        "PIDs": "29"
+      },
+      {
+        "BlockIO": "0B / 1.37GB",
+        "CPUPerc": "198.24%",
+        "Container": "6d0673174af79483f66d4309e5c864f47e60077c6fcae3c759e185b92f8efc18",
+        "ID": "6d0673174af7",
+        "MemPerc": "5.77%",
+        "MemUsage": "236.2MiB / 4GiB",
+        "Name": "moss-benchmark-oytur-8x-db-1",
+        "NetIO": "1.2GB / 2.86GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791767814.7801442,
+    "containers": [
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "62.06%",
+        "Container": "5d633fa5f599a665dfbad60cc471b851bea27177b0666a7a0ffee5e360e8f462",
+        "ID": "5d633fa5f599",
+        "MemPerc": "3.41%",
+        "MemUsage": "139.5MiB / 4GiB",
+        "Name": "moss-benchmark-oytur-8x-app-1",
+        "NetIO": "435MB / 81.8MB",
+        "PIDs": "29"
+      },
+      {
+        "BlockIO": "0B / 1.38GB",
+        "CPUPerc": "198.75%",
+        "Container": "6d0673174af79483f66d4309e5c864f47e60077c6fcae3c759e185b92f8efc18",
+        "ID": "6d0673174af7",
+        "MemPerc": "5.78%",
+        "MemUsage": "236.8MiB / 4GiB",
+        "Name": "moss-benchmark-oytur-8x-db-1",
+        "NetIO": "1.2GB / 2.96GB",
+        "PIDs": "24"
+      }
+    ]
+  }
+]

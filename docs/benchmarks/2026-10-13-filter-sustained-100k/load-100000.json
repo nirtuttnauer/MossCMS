@@ -1,0 +1,85 @@
+{
+  "durationSeconds": 1800.69,
+  "requestedSeconds": 1800,
+  "readers": 20,
+  "writers": 3,
+  "operations": {
+    "list": {
+      "requests": 40070,
+      "requestsPerSecond": 22.253,
+      "p50Ms": 118.958,
+      "p95Ms": 220.109,
+      "p99Ms": 304.152
+    },
+    "search": {
+      "requests": 40071,
+      "requestsPerSecond": 22.253,
+      "p50Ms": 236.69,
+      "p95Ms": 406.631,
+      "p99Ms": 501.105
+    },
+    "generated": {
+      "requests": 40067,
+      "requestsPerSecond": 22.251,
+      "p50Ms": 140.755,
+      "p95Ms": 239.977,
+      "p99Ms": 301.271
+    },
+    "etag": {
+      "requests": 40070,
+      "requestsPerSecond": 22.253,
+      "p50Ms": 140.001,
+      "p95Ms": 245.49,
+      "p99Ms": 305.025
+    },
+    "filter": {
+      "requests": 40068,
+      "requestsPerSecond": 22.251,
+      "p50Ms": 198.05,
+      "p95Ms": 307.396,
+      "p99Ms": 391.42
+    },
+    "save": {
+      "requests": 4565,
+      "requestsPerSecond": 2.535,
+      "p50Ms": 174.441,
+      "p95Ms": 305.101,
+      "p99Ms": 416.297
+    }
+  },
+  "errors": {},
+  "httpStatuses": {
+    "200": 160292,
+    "304": 40054
+  },
+  "initialRequests": [
+    {
+      "phase": "first_after_start",
+      "operation": "list",
+      "milliseconds": 42.55862500576768
+    },
+    {
+      "phase": "first_after_start",
+      "operation": "generated",
+      "milliseconds": 40.67512499750592
+    },
+    {
+      "phase": "after_warmup",
+      "operation": "list",
+      "milliseconds": 23.560125002404675
+    },
+    {
+      "phase": "after_warmup",
+      "operation": "generated",
+      "milliseconds": 7.91279199620476
+    }
+  ],
+  "cacheNote": "Initial and warmed process requests are separate; database/OS caches are not forcibly evicted. ETag measures conditional responses, not a CDN or server response cache.",
+  "liveAndScheduledSnapshotsPreserved": true,
+  "databaseBytes": 600807091,
+  "scalarIndexStorage": {
+    "table_bytes": 82370560,
+    "index_bytes": 163495936,
+    "rows": 480000
+  }
+}
