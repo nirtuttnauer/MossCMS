@@ -28,6 +28,7 @@ from .indexing import SORT_PREFIX_BYTES, indexed_value, scalar_fields
 from .outbox import emit
 from .schema import NAME, public_data, reference_targets, validate_data, validate_fields
 from .security import CmsError, audit, require
+from .transforms import transform_data, validate_steps
 
 
 def slugify(value):
@@ -812,8 +813,9 @@ def save_type(session, identity, key, name, fields, version=None, migration=None
             raise CmsError("Migration drop must be a list of field names.")
         if any(not isinstance(x, str) for x in migration.get("rename", {}).values()):
             raise CmsError("Migration rename destinations must be field names.")
-        if set(migration) - {"rename", "defaults", "drop"}:
-            raise CmsError("Migration supports rename, defaults, and drop.")
+        if set(migration) - {"rename", "defaults", "drop", "steps"}:
+            raise CmsError("Migration supports rename, defaults, drop, and ordered steps.")
+        validate_steps(migration.get("steps", []))
 
         def transform(data):
             data = dict(data)
@@ -826,6 +828,7 @@ def save_type(session, identity, key, name, fields, version=None, migration=None
                 data.pop(k, None)
             for k, value in migration.get("defaults", {}).items():
                 data.setdefault(k, value)
+            data = transform_data(data, migration.get("steps", []), key)
             validate_data(fields, data, session, identity["project_id"])
             return data
 
