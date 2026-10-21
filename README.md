@@ -99,7 +99,7 @@ docker compose up --no-build -d --wait app
 
 Open [localhost:8001](http://localhost:8001) and use `MOSS_SETUP_TOKEN` from `.env` to create the first administrator. Database and uploaded files persist in the same named volumes as a local build.
 
-Compose defaults to `nirtuttnauer/mosscms:latest`. Set `MOSS_IMAGE` in `.env` to an existing published tag or digest for a repeatable deployment. When registry publishing is configured, the workflow updates `latest` from `main` and creates version tags from matching Git tags. Its build targets are Linux AMD64 and ARM64. Use `MOSS_PORT` to change the host port; the container listens on 8001.
+Compose defaults to `nirtuttnauer/mosscms:latest`. Set `MOSS_IMAGE` in `.env` to an existing published tag or digest for a repeatable deployment. When registry publishing is configured, the workflow updates `latest` from `main` and creates version tags from matching Git tags. Git tags use a `vMAJOR.MINOR.PATCH` pattern; image tags omit the leading `v`. Its build targets are Linux AMD64 and ARM64. Use `MOSS_PORT` to change the host port; the container listens on 8001.
 
 To build from your checkout, keep using `docker compose up --build -d`. To avoid replacing a locally cached release tag, use `MOSS_IMAGE=mosscms:local docker compose up --build -d`. The optional example website is built separately with `docker compose --profile website up --build -d example-site`.
 
@@ -453,6 +453,15 @@ If an older bypass setup left the workspace without members, recover only that w
 | Build a frontend or inspect SEO findings | [Example website](example-site/README.md), [SEO audit](docs/seo-audit.md) |
 | Contribute or understand implementation boundaries | [Contributing](CONTRIBUTING.md), [maintainability review](docs/maintainability-review.md) |
 
+<a id="product-plan"></a>
+
 ## Roadmap and evidence
 
 [Open issues](https://github.com/nirtuttnauer/MossCMS/issues) and [pull requests](https://github.com/nirtuttnauer/MossCMS/pulls) track ongoing work. The [PRD](docs/PRD.md) and [task breakdown](docs/planning/TASKS.md) preserve product intent; the [implementation ledger](docs/planning/IMPLEMENTATION.md) and [release evidence](docs/release-acceptance-2026-10-08.md) are historical checkpoints. Use the current code, tests, and workflow guides to determine what a particular checkout supports.
+
+<details>
+<summary>Planning history</summary>
+
+The [PRD](docs/PRD.md) retains the 7 October baseline and records the approved release scope. The [task breakdown](docs/planning/TASKS.md) includes acceptance criteria and dependencies. All 34 baseline tasks were approved on 8 October 2026 and implemented sequentially on feature branches integrated into local `main`. The [implementation ledger](docs/planning/IMPLEMENTATION.md) and [release evidence](docs/release-acceptance-2026-10-08.md) record the result. The original Markdown/JSON plan preserves the historical proposal snapshot; consult the implementation and acceptance documents for delivered behavior.
+
+</details>
