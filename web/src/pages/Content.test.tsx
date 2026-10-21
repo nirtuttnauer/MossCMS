@@ -407,3 +407,15 @@ test('a delayed search preserves navigation to another workspace before the old 
   await waitFor(() => expect(vi.mocked(gql).mock.calls.some(([, variables]) => variables?.search === 'pending search')).toBe(true))
   expect(location.hash).toBe(destination)
 })
+
+test('schema field sort reaches GraphQL and resets when switching to all content', async () => {
+  setup()
+  await screen.findByRole('button',{name:'Edit'})
+  fireEvent.change(screen.getByLabelText('Content type'), {target:{value:'article'}})
+  fireEvent.change(screen.getByLabelText('Sort entries'), {target:{value:'field:title:desc'}})
+  await waitFor(() => expect(vi.mocked(gql).mock.calls.some(([query, variables]) => query.includes('orderBy:$orderBy') && (variables as any)?.orderBy?.field === 'title' && (variables as any)?.orderBy?.direction === 'DESC')).toBe(true))
+  expect(location.hash).toContain('sort=field%3Atitle%3Adesc')
+  fireEvent.change(screen.getByLabelText('Content type'), {target:{value:''}})
+  await waitFor(() => expect((screen.getByLabelText('Sort entries') as HTMLSelectElement).value).toBe('updated_desc'))
+  expect(location.hash).not.toContain('field%3A')
+})

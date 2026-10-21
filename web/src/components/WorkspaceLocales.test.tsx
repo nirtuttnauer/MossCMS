@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from 'vitest'
+import { afterEach, expect, it, test, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { WorkspaceLocales } from './WorkspaceLocales'
 import { rest } from '../lib/api'
@@ -110,4 +110,18 @@ it('clears old messages on retries and preserves inputs when a later save fails'
   expect((screen.getByLabelText('Default locale') as HTMLInputElement).value).toBe('he')
   expect((screen.getByLabelText('Suggested locales') as HTMLInputElement).value).toBe('he, en')
   expect(onChanged).toHaveBeenCalledTimes(1)
+})
+
+test('locale edits protect navigation until saved and ignore unrelated account refreshes', async () => {
+  const { confirmNavigation } = await import('../lib/unsaved')
+  vi.spyOn(window, 'confirm').mockReturnValue(false)
+  vi.mocked(rest).mockResolvedValue({})
+  const view = render(<WorkspaceLocales project={{ ...project, locales: ['en', 'he'] }} onChanged={vi.fn()} />)
+  fireEvent.change(screen.getByLabelText('Default locale'), { target: { value: 'he' } })
+  view.rerender(<WorkspaceLocales project={{ ...project, locales: ['en', 'he'] }} onChanged={vi.fn()} />)
+  expect((screen.getByLabelText('Default locale') as HTMLInputElement).value).toBe('he')
+  expect(confirmNavigation()).toBe(false)
+  fireEvent.click(screen.getByRole('button', { name: 'Save locales' }))
+  await screen.findByText('Locale defaults saved. Existing translations are preserved.')
+  expect(confirmNavigation()).toBe(true)
 })

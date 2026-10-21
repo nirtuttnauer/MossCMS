@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Button } from './ui/button'
 import { message, rest, type Project } from '../lib/api'
 import { LOCALE_PATTERN } from '../lib/locales'
+import { useUnsavedChanges } from '../lib/unsaved'
 
 export function WorkspaceLocales({ project, onChanged }: {
   project: Project & { defaultLocale?: string; locales?: string[] }
@@ -12,10 +13,14 @@ export function WorkspaceLocales({ project, onChanged }: {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [saved, setSaved] = useState({ defaultLocale, locales })
+  useUnsavedChanges(project.role === 'admin' && (busy || defaultLocale !== saved.defaultLocale || locales !== saved.locales), 'Discard unsaved locale changes? Saved settings will be kept.')
+  const configuredLocales = (project.locales || ['en']).join(', ')
   useEffect(() => {
     setDefaultLocale(project.defaultLocale || 'en')
-    setLocales((project.locales || ['en']).join(', '))
-  }, [project.defaultLocale, project.locales])
+    setLocales(configuredLocales)
+    setSaved({ defaultLocale: project.defaultLocale || 'en', locales: configuredLocales })
+  }, [project.defaultLocale, configuredLocales])
   if (project.role !== 'admin') return null
   async function save(event: FormEvent) {
     event.preventDefault()
@@ -38,6 +43,7 @@ export function WorkspaceLocales({ project, onChanged }: {
         defaultLocale,
         locales: suggestions,
       })
+      setSaved({ defaultLocale, locales })
       setNotice('Locale defaults saved. Existing translations are preserved.')
       onChanged()
     } catch (reason) {

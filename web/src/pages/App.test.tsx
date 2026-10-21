@@ -113,3 +113,14 @@ describe('App workspace and navigation boundaries', () => {
     expect(screen.queryByText('Loading workspace…')).toBeNull()
   })
 })
+
+it('overview publication metrics open the corresponding publishing status', async () => {
+  history.replaceState(null, '', '/#overview?workspace=a')
+  render(<App />)
+  const published = (await screen.findByText('Published', { selector: '.stat-top span' })).closest('a')!
+  expect(published.getAttribute('href')).toBe('#content?status=published')
+  expect(screen.getByText('Drafts', { selector: '.stat-top span' }).closest('a')!.getAttribute('href')).toBe('#content?status=draft')
+  navigate(published.getAttribute('href')!)
+  await waitFor(() => expect((screen.getByLabelText('Publishing status') as HTMLSelectElement).value).toBe('published'))
+  expect(vi.mocked(gql).mock.calls.some(([, variables]) => variables?.status === 'published')).toBe(true)
+})
