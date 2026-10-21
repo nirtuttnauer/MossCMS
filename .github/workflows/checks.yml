@@ -20,11 +20,25 @@ jobs:
         run: |
           uv run ruff check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
           uv run ruff format --check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
+          uv run ruff check --config pyproject.toml ../ci/telemetry_smoke.py
+          uv run ruff format --check --config pyproject.toml ../ci/telemetry_smoke.py
         working-directory: api
       - run: uv run mypy app
         working-directory: api
       - run: uv run pytest
         working-directory: api
+      - name: Verify OTLP exports with the pinned Collector
+        working-directory: api
+        run: |
+          docker run --rm -d --name moss-otel-smoke \
+            -p 127.0.0.1:14318:4318 -p 127.0.0.1:19464:9464 \
+            -v "$GITHUB_WORKSPACE/ops/otel-collector.yaml:/etc/otelcol/config.yaml:ro" \
+            otel/opentelemetry-collector-contrib:0.156.0@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108 \
+            --config=/etc/otelcol/config.yaml
+          trap 'docker rm -f moss-otel-smoke >/dev/null 2>&1 || true' EXIT
+          MOSS_USE_SQLITE=false PYTHONPATH=. uv run python ../ci/telemetry_smoke.py \
+            --endpoint http://127.0.0.1:14318 --metrics-url http://127.0.0.1:19464/metrics \
+            --output /tmp/moss-otel-evidence/collector-smoke.json
   api_postgres:
     runs-on: ubuntu-latest
     services:
