@@ -1,0 +1,8 @@
+{
+  "delivery": true,
+  "privateFieldsExcluded": true,
+  "workspaceIsolation": true,
+  "scopeIsolation": true,
+  "draftExcluded": true,
+  "media": true
+}

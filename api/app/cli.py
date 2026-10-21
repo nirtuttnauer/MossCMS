@@ -19,7 +19,7 @@ from .security import audit, issue_token
 def main():
     load_dotenv()
     parser = argparse.ArgumentParser(description="MossCMS operator tools")
-    parser.add_argument("command", choices=["serve", "migrate", "reset-password", "claim-workspace", "seed"])
+    parser.add_argument("command", choices=["serve", "migrate", "reindex", "reset-password", "claim-workspace", "seed"])
     parser.add_argument("--email")
     parser.add_argument("--project")
     args = parser.parse_args()
@@ -50,6 +50,17 @@ def main():
                 raw, _ = issue_token(session, "reset", days=1, user_id=user.id, email=user.email)
                 audit(session, None, "operator", "account.recovery.issue", userId=user.id)
                 print(settings.public_url + "/#reset/" + raw)
+        elif args.command == "reindex":
+            if not args.project:
+                parser.error("--project is required; reindexing is limited to one workspace")
+            from .indexing import rebuild
+            from .models import Entry, EntryFieldIndex
+
+            with factory.begin() as session:
+                if not session.get(Project, args.project):
+                    parser.error("Workspace not found")
+                count = rebuild(session.connection(), Entry.__table__, EntryFieldIndex.__table__, args.project)
+                print(json.dumps({"reindexed": args.project, "entries": count}))
         elif args.command == "claim-workspace":
             if not args.email or not args.project:
                 parser.error("--email and --project are required; recovery is limited to one unowned workspace")

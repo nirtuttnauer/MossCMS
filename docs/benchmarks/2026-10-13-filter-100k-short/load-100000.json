@@ -1,0 +1,85 @@
+{
+  "durationSeconds": 60.484,
+  "requestedSeconds": 60,
+  "readers": 20,
+  "writers": 3,
+  "operations": {
+    "search": {
+      "requests": 848,
+      "requestsPerSecond": 14.02,
+      "p50Ms": 409.859,
+      "p95Ms": 725.446,
+      "p99Ms": 901.947
+    },
+    "list": {
+      "requests": 847,
+      "requestsPerSecond": 14.004,
+      "p50Ms": 174.461,
+      "p95Ms": 479.996,
+      "p99Ms": 598.619
+    },
+    "generated": {
+      "requests": 847,
+      "requestsPerSecond": 14.004,
+      "p50Ms": 162.764,
+      "p95Ms": 324.942,
+      "p99Ms": 447.175
+    },
+    "etag": {
+      "requests": 848,
+      "requestsPerSecond": 14.02,
+      "p50Ms": 163.504,
+      "p95Ms": 488.322,
+      "p99Ms": 598.822
+    },
+    "filter": {
+      "requests": 845,
+      "requestsPerSecond": 13.971,
+      "p50Ms": 364.805,
+      "p95Ms": 979.164,
+      "p99Ms": 1190.217
+    },
+    "save": {
+      "requests": 139,
+      "requestsPerSecond": 2.298,
+      "p50Ms": 266.167,
+      "p95Ms": 498.281,
+      "p99Ms": 705.434
+    }
+  },
+  "errors": {},
+  "httpStatuses": {
+    "200": 3403,
+    "304": 832
+  },
+  "initialRequests": [
+    {
+      "phase": "first_after_start",
+      "operation": "list",
+      "milliseconds": 43.51437599689234
+    },
+    {
+      "phase": "first_after_start",
+      "operation": "generated",
+      "milliseconds": 38.80554199713515
+    },
+    {
+      "phase": "after_warmup",
+      "operation": "list",
+      "milliseconds": 23.05379199970048
+    },
+    {
+      "phase": "after_warmup",
+      "operation": "generated",
+      "milliseconds": 7.892082998296246
+    }
+  ],
+  "cacheNote": "Initial and warmed process requests are separate; database/OS caches are not forcibly evicted. ETag measures conditional responses, not a CDN or server response cache.",
+  "liveAndScheduledSnapshotsPreserved": true,
+  "databaseBytes": 593721011,
+  "scalarIndexStorage": {
+    "table_bytes": 82370560,
+    "index_bytes": 161964032,
+    "rows": 480000
+  }
+}

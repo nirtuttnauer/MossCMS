@@ -1,0 +1,77 @@
+{
+  "tables": {
+    "assets": {
+      "count": 3,
+      "sha256": "dad7dd150f9687a30a993010bd961015e4c543a231619752c63943af73f53492"
+    },
+    "audit": {
+      "count": 2752,
+      "sha256": "6b7d5d09ea8126fcc03724c4ea4a12db31b44e58f72340b6fbb48a6620783a7b"
+    },
+    "content_types": {
+      "count": 6,
+      "sha256": "32adc0f836ceaacbad5dc60138f1fc0fd009a7ac0c57d2f625a9b072e6821d2f"
+    },
+    "draft_receipts": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "entries": {
+      "count": 100000,
+      "sha256": "93ffcb09be3cd7e7fa814880d681060a3f1bb2709e4ede8a45e0ce5f5a51b52e"
+    },
+    "memberships": {
+      "count": 3,
+      "sha256": "1ccdabf55c872bc75144f83e14368b1bc935015d111580a2096903bbab242863"
+    },
+    "oauth_identities": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "preview_grants": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "projects": {
+      "count": 3,
+      "sha256": "24415f74d654d0bf954688305eec98478bdfac1c050316da4789d3ef510d37c8"
+    },
+    "publication_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "revisions": {
+      "count": 302747,
+      "sha256": "dcb74241e6a91d55ea15585fc4733b22e1fc35a287934d0dbcd741cbf9f23ee5"
+    },
+    "schema_revisions": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "tokens": {
+      "count": 6,
+      "sha256": "a1e4740ed3f2940b080c4c76b63858146516b7dda36629657179158b4803b333"
+    },
+    "users": {
+      "count": 3,
+      "sha256": "506577fa18646e22b1566c6f75a2490175e22bc18e3d2e6b9e054acd8f3e8e8f"
+    },
+    "webhook_deliveries": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "webhooks": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "website_paths": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "media": {
+    "benchmark-0.png": "bb731c23fb9103fa534c4df7d7569ce69fd293db31415b60eed0ef2bd6b7185d",
+    "benchmark-1.png": "bb731c23fb9103fa534c4df7d7569ce69fd293db31415b60eed0ef2bd6b7185d",
+    "benchmark-2.png": "bb731c23fb9103fa534c4df7d7569ce69fd293db31415b60eed0ef2bd6b7185d"
+  }
+}

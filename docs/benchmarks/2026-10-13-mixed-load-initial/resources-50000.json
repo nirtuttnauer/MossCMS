@@ -1,0 +1,164 @@
+[
+  {
+    "at": 1791842952.14096,
+    "containers": [
+      {
+        "BlockIO": "67.7MB / 0B",
+        "CPUPerc": "43.26%",
+        "Container": "5cc899c50e7cbddb392fea64bef017a9553dc0a577fa367839ac62116341a5fa",
+        "ID": "5cc899c50e7c",
+        "MemPerc": "3.88%",
+        "MemUsage": "159.1MiB / 4GiB",
+        "Name": "moss-benchmark-c-7zadsu-app-1",
+        "NetIO": "5.88MB / 1.24MB",
+        "PIDs": "30"
+      },
+      {
+        "BlockIO": "11MB / 2.55GB",
+        "CPUPerc": "79.07%",
+        "Container": "5483db3c9ef75a9ae5b2b769888c1e4c9e9ee5f0096bd650ae63bfc4f477070f",
+        "ID": "5483db3c9ef7",
+        "MemPerc": "5.86%",
+        "MemUsage": "240.1MiB / 4GiB",
+        "Name": "moss-benchmark-c-7zadsu-db-1",
+        "NetIO": "1.33GB / 2.91GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791842964.188568,
+    "containers": [
+      {
+        "BlockIO": "67.7MB / 0B",
+        "CPUPerc": "47.58%",
+        "Container": "5cc899c50e7cbddb392fea64bef017a9553dc0a577fa367839ac62116341a5fa",
+        "ID": "5cc899c50e7c",
+        "MemPerc": "4.15%",
+        "MemUsage": "170.1MiB / 4GiB",
+        "Name": "moss-benchmark-c-7zadsu-app-1",
+        "NetIO": "144MB / 32.2MB",
+        "PIDs": "29"
+      },
+      {
+        "BlockIO": "11.8MB / 2.55GB",
+        "CPUPerc": "192.06%",
+        "Container": "5483db3c9ef75a9ae5b2b769888c1e4c9e9ee5f0096bd650ae63bfc4f477070f",
+        "ID": "5483db3c9ef7",
+        "MemPerc": "5.97%",
+        "MemUsage": "244.6MiB / 4GiB",
+        "Name": "moss-benchmark-c-7zadsu-db-1",
+        "NetIO": "1.33GB / 3.03GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791842976.231435,
+    "containers": [
+      {
+        "BlockIO": "67.7MB / 0B",
+        "CPUPerc": "56.46%",
+        "Container": "5cc899c50e7cbddb392fea64bef017a9553dc0a577fa367839ac62116341a5fa",
+        "ID": "5cc899c50e7c",
+        "MemPerc": "4.17%",
+        "MemUsage": "170.7MiB / 4GiB",
+        "Name": "moss-benchmark-c-7zadsu-app-1",
+        "NetIO": "295MB / 64.8MB",
+        "PIDs": "30"
+      },
+      {
+        "BlockIO": "12.7MB / 2.55GB",
+        "CPUPerc": "199.86%",
+        "Container": "5483db3c9ef75a9ae5b2b769888c1e4c9e9ee5f0096bd650ae63bfc4f477070f",
+        "ID": "5483db3c9ef7",
+        "MemPerc": "6.34%",
+        "MemUsage": "259.5MiB / 4GiB",
+        "Name": "moss-benchmark-c-7zadsu-db-1",
+        "NetIO": "1.33GB / 3.18GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791842987.269058,
+    "containers": [
+      {
+        "BlockIO": "67.7MB / 0B",
+        "CPUPerc": "80.53%",
+        "Container": "5cc899c50e7cbddb392fea64bef017a9553dc0a577fa367839ac62116341a5fa",
+        "ID": "5cc899c50e7c",
+        "MemPerc": "4.15%",
+        "MemUsage": "169.8MiB / 4GiB",
+        "Name": "moss-benchmark-c-7zadsu-app-1",
+        "NetIO": "433MB / 94.3MB",
+        "PIDs": "30"
+      },
+      {
+        "BlockIO": "12.7MB / 2.57GB",
+        "CPUPerc": "197.93%",
+        "Container": "5483db3c9ef75a9ae5b2b769888c1e4c9e9ee5f0096bd650ae63bfc4f477070f",
+        "ID": "5483db3c9ef7",
+        "MemPerc": "6.26%",
+        "MemUsage": "256.5MiB / 4GiB",
+        "Name": "moss-benchmark-c-7zadsu-db-1",
+        "NetIO": "1.33GB / 3.33GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791842999.2981892,
+    "containers": [
+      {
+        "BlockIO": "67.7MB / 0B",
+        "CPUPerc": "73.34%",
+        "Container": "5cc899c50e7cbddb392fea64bef017a9553dc0a577fa367839ac62116341a5fa",
+        "ID": "5cc899c50e7c",
+        "MemPerc": "4.19%",
+        "MemUsage": "171.4MiB / 4GiB",
+        "Name": "moss-benchmark-c-7zadsu-app-1",
+        "NetIO": "596MB / 129MB",
+        "PIDs": "29"
+      },
+      {
+        "BlockIO": "12.7MB / 2.57GB",
+        "CPUPerc": "198.39%",
+        "Container": "5483db3c9ef75a9ae5b2b769888c1e4c9e9ee5f0096bd650ae63bfc4f477070f",
+        "ID": "5483db3c9ef7",
+        "MemPerc": "6.30%",
+        "MemUsage": "258.1MiB / 4GiB",
+        "Name": "moss-benchmark-c-7zadsu-db-1",
+        "NetIO": "1.33GB / 3.48GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791843011.333303,
+    "containers": [
+      {
+        "BlockIO": "67.7MB / 0B",
+        "CPUPerc": "65.02%",
+        "Container": "5cc899c50e7cbddb392fea64bef017a9553dc0a577fa367839ac62116341a5fa",
+        "ID": "5cc899c50e7c",
+        "MemPerc": "4.18%",
+        "MemUsage": "171MiB / 4GiB",
+        "Name": "moss-benchmark-c-7zadsu-app-1",
+        "NetIO": "776MB / 168MB",
+        "PIDs": "29"
+      },
+      {
+        "BlockIO": "12.7MB / 2.57GB",
+        "CPUPerc": "193.32%",
+        "Container": "5483db3c9ef75a9ae5b2b769888c1e4c9e9ee5f0096bd650ae63bfc4f477070f",
+        "ID": "5483db3c9ef7",
+        "MemPerc": "6.25%",
+        "MemUsage": "255.9MiB / 4GiB",
+        "Name": "moss-benchmark-c-7zadsu-db-1",
+        "NetIO": "1.33GB / 3.66GB",
+        "PIDs": "24"
+      }
+    ]
+  }
+]

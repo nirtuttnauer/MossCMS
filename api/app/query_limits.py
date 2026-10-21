@@ -6,7 +6,7 @@ MAX_QUERY_DEPTH = 12
 MAX_QUERY_SELECTIONS = 200
 
 
-def bounded_query(query):
+def bounded_query(query, *, return_document=False):
     document = parse(query)
     fragments = {d.name.value: d for d in document.definitions if isinstance(d, FragmentDefinitionNode)}
     count = 0
@@ -33,3 +33,4 @@ def bounded_query(query):
     for definition in document.definitions:
         if isinstance(definition, OperationDefinitionNode):
             walk(definition.selection_set)
+    return document if return_document else None

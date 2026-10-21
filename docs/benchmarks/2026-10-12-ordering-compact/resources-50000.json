@@ -1,0 +1,164 @@
+[
+  {
+    "at": 1791836822.5220768,
+    "containers": [
+      {
+        "BlockIO": "10MB / 0B",
+        "CPUPerc": "74.27%",
+        "Container": "311a022943b03858ee3231e3aa2f9526ebd4d6ed54d12a142281596b1a7dc9fb",
+        "ID": "311a022943b0",
+        "MemPerc": "3.38%",
+        "MemUsage": "138.5MiB / 4GiB",
+        "Name": "moss-benchmark-zhwo7l6h-app-1",
+        "NetIO": "14.2MB / 2.96MB",
+        "PIDs": "30"
+      },
+      {
+        "BlockIO": "5.41MB / 2.85GB",
+        "CPUPerc": "77.14%",
+        "Container": "5986016dffe3af8660fe8fb653dbb1dcbd69804b207f85df8d347b17d5dad6a1",
+        "ID": "5986016dffe3",
+        "MemPerc": "5.86%",
+        "MemUsage": "240.2MiB / 4GiB",
+        "Name": "moss-benchmark-zhwo7l6h-db-1",
+        "NetIO": "1.32GB / 2.91GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791836834.55823,
+    "containers": [
+      {
+        "BlockIO": "10MB / 0B",
+        "CPUPerc": "59.04%",
+        "Container": "311a022943b03858ee3231e3aa2f9526ebd4d6ed54d12a142281596b1a7dc9fb",
+        "ID": "311a022943b0",
+        "MemPerc": "3.52%",
+        "MemUsage": "144.1MiB / 4GiB",
+        "Name": "moss-benchmark-zhwo7l6h-app-1",
+        "NetIO": "124MB / 24MB",
+        "PIDs": "31"
+      },
+      {
+        "BlockIO": "6.57MB / 2.85GB",
+        "CPUPerc": "198.35%",
+        "Container": "5986016dffe3af8660fe8fb653dbb1dcbd69804b207f85df8d347b17d5dad6a1",
+        "ID": "5986016dffe3",
+        "MemPerc": "6.23%",
+        "MemUsage": "255.1MiB / 4GiB",
+        "Name": "moss-benchmark-zhwo7l6h-db-1",
+        "NetIO": "1.33GB / 3.03GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791836846.5901701,
+    "containers": [
+      {
+        "BlockIO": "10MB / 0B",
+        "CPUPerc": "74.72%",
+        "Container": "311a022943b03858ee3231e3aa2f9526ebd4d6ed54d12a142281596b1a7dc9fb",
+        "ID": "311a022943b0",
+        "MemPerc": "3.53%",
+        "MemUsage": "144.4MiB / 4GiB",
+        "Name": "moss-benchmark-zhwo7l6h-app-1",
+        "NetIO": "255MB / 48.1MB",
+        "PIDs": "31"
+      },
+      {
+        "BlockIO": "6.57MB / 2.85GB",
+        "CPUPerc": "200.78%",
+        "Container": "5986016dffe3af8660fe8fb653dbb1dcbd69804b207f85df8d347b17d5dad6a1",
+        "ID": "5986016dffe3",
+        "MemPerc": "6.44%",
+        "MemUsage": "263.6MiB / 4GiB",
+        "Name": "moss-benchmark-zhwo7l6h-db-1",
+        "NetIO": "1.33GB / 3.16GB",
+        "PIDs": "25"
+      }
+    ]
+  },
+  {
+    "at": 1791836857.616246,
+    "containers": [
+      {
+        "BlockIO": "10MB / 0B",
+        "CPUPerc": "104.24%",
+        "Container": "311a022943b03858ee3231e3aa2f9526ebd4d6ed54d12a142281596b1a7dc9fb",
+        "ID": "311a022943b0",
+        "MemPerc": "3.52%",
+        "MemUsage": "144MiB / 4GiB",
+        "Name": "moss-benchmark-zhwo7l6h-app-1",
+        "NetIO": "421MB / 78.7MB",
+        "PIDs": "31"
+      },
+      {
+        "BlockIO": "6.57MB / 3.04GB",
+        "CPUPerc": "191.97%",
+        "Container": "5986016dffe3af8660fe8fb653dbb1dcbd69804b207f85df8d347b17d5dad6a1",
+        "ID": "5986016dffe3",
+        "MemPerc": "6.40%",
+        "MemUsage": "262.3MiB / 4GiB",
+        "Name": "moss-benchmark-zhwo7l6h-db-1",
+        "NetIO": "1.33GB / 3.32GB",
+        "PIDs": "25"
+      }
+    ]
+  },
+  {
+    "at": 1791836868.643113,
+    "containers": [
+      {
+        "BlockIO": "10MB / 0B",
+        "CPUPerc": "104.92%",
+        "Container": "311a022943b03858ee3231e3aa2f9526ebd4d6ed54d12a142281596b1a7dc9fb",
+        "ID": "311a022943b0",
+        "MemPerc": "3.51%",
+        "MemUsage": "143.9MiB / 4GiB",
+        "Name": "moss-benchmark-zhwo7l6h-app-1",
+        "NetIO": "611MB / 113MB",
+        "PIDs": "31"
+      },
+      {
+        "BlockIO": "6.58MB / 3.31GB",
+        "CPUPerc": "182.75%",
+        "Container": "5986016dffe3af8660fe8fb653dbb1dcbd69804b207f85df8d347b17d5dad6a1",
+        "ID": "5986016dffe3",
+        "MemPerc": "6.47%",
+        "MemUsage": "264.9MiB / 4GiB",
+        "Name": "moss-benchmark-zhwo7l6h-db-1",
+        "NetIO": "1.34GB / 3.51GB",
+        "PIDs": "24"
+      }
+    ]
+  },
+  {
+    "at": 1791836879.673036,
+    "containers": [
+      {
+        "BlockIO": "10MB / 0B",
+        "CPUPerc": "105.27%",
+        "Container": "311a022943b03858ee3231e3aa2f9526ebd4d6ed54d12a142281596b1a7dc9fb",
+        "ID": "311a022943b0",
+        "MemPerc": "3.54%",
+        "MemUsage": "144.9MiB / 4GiB",
+        "Name": "moss-benchmark-zhwo7l6h-app-1",
+        "NetIO": "808MB / 149MB",
+        "PIDs": "31"
+      },
+      {
+        "BlockIO": "6.58MB / 3.34GB",
+        "CPUPerc": "185.06%",
+        "Container": "5986016dffe3af8660fe8fb653dbb1dcbd69804b207f85df8d347b17d5dad6a1",
+        "ID": "5986016dffe3",
+        "MemPerc": "6.46%",
+        "MemUsage": "264.6MiB / 4GiB",
+        "Name": "moss-benchmark-zhwo7l6h-db-1",
+        "NetIO": "1.34GB / 3.7GB",
+        "PIDs": "24"
+      }
+    ]
+  }
+]

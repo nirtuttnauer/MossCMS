@@ -1,0 +1,36 @@
+{
+  "quoted_at": "2026-10-12",
+  "inputs": {
+    "compute_monthly_usd": "48",
+    "snapshot_backup_fraction": "0.20",
+    "object_storage_base_usd": "5",
+    "object_storage_gib": "100",
+    "included_object_storage_gib": "250",
+    "extra_object_storage_usd_per_gib": "0.02",
+    "object_transfer_gib": "100",
+    "included_object_transfer_gib": "1024",
+    "extra_object_transfer_usd_per_gib": "0.01",
+    "compute_transfer_gib": "500",
+    "included_compute_transfer_gib": "5000",
+    "extra_compute_transfer_usd_per_gib": "0.01",
+    "operator_hours_monthly": "2",
+    "operator_hourly_usd": "50",
+    "other_monthly_usd": "0"
+  },
+  "assumptions": [
+    "Example budget, not an actual purchased deployment or a performance guarantee on DigitalOcean.",
+    "One Basic Regular 4-vCPU/8-GiB Droplet hosts both app and PostgreSQL; its 160-GiB disk must fit database, local media, images, logs, temporary dumps, and free space.",
+    "10 editors and 50k or 100k entries incur no software seat or total-entry fee. Resource use depends on fields, revisions, media, traffic, and retention.",
+    "Assume 50 GiB local media, 500 GiB monthly compute transfer, and 100 GiB off-host object storage for retained application backups with 100 GiB object transfer. Adjust these inputs to measured needs.",
+    "Weekly platform snapshots cost 20% of compute. They do not replace matched application database/media backups or prove an acceptable recovery point.",
+    "Assume two operator hours monthly at $50/hour. This is a budgeting choice, not measured maintenance time; initial setup, incidents, development, and migration labor are extra.",
+    "Frontend hosting, taxes, domain registration/renewal, paid monitoring, optional managed database, and high availability are excluded and must be added to other_monthly_usd when needed.",
+    "Cloud quotes are separate from the local Docker Desktop benchmark. No equivalence between local capped containers and the cloud VM is claimed."
+  ],
+  "sources": {
+    "compute": "https://www.digitalocean.com/pricing/droplets",
+    "platform_snapshots": "https://docs.digitalocean.com/products/backups/details/pricing/",
+    "object_storage": "https://www.digitalocean.com/pricing/spaces-object-storage",
+    "compute_transfer": "https://docs.digitalocean.com/platform/billing/bandwidth/"
+  }
+}
