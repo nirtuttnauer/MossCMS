@@ -4,7 +4,7 @@ Bug reports, documentation improvements, and pull requests are welcome.
 For substantial changes, open an issue first to discuss the approach.
 
 Follow the setup and development instructions in [README.md](README.md).
-Use Python 3.12 or newer with uv, Node.js 22 or newer, and Docker Compose
+Use Python 3.12 or newer with uv, Node.js 22.12 or newer, and Docker Compose
 for the PostgreSQL-backed application.
 
 Keep changes focused and run the checks listed in the README for the parts

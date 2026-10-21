@@ -4,7 +4,9 @@
 
 # MossCMS
 
-A self-hosted content service with a GraphQL API and a React admin. Define your data, publish entries, and consume them from any frontend. One Docker image serves the API and admin from the same origin, backed by PostgreSQL.
+A self-hosted, GraphQL-first CMS for content-driven websites and small editorial teams. Model your content, edit it in a React admin, and deliver published entries to your own frontend.
+
+One Docker image serves the API and admin from the same origin. Use PostgreSQL or the optional persistent SQLite mode; store media locally or in S3-compatible storage. Drafts, live content, and scheduled revisions remain separate so editing does not silently change what visitors see.
 
 [MIT licensed](LICENSE). Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -12,13 +14,23 @@ A self-hosted content service with a GraphQL API and a React admin. Define your 
 
 ![MossCMS content library and getting-started checklist](docs/acceptance-2026-10-11/first-use-three-ready.jpg)
 
+*Actual admin screenshot from the checked-in first-use walkthrough, using sample content.*
+
 | Build | Edit | Deliver |
 | --- | --- | --- |
 | Visual content schemas, nested fields, locales, and references | Markdown, media, autosave, and revision recovery | Schema-derived GraphQL and scoped delivery tokens |
 | Separate workspaces with their own teams and schemas | Independent drafts, live content, and scheduled revisions | Published content with private fields removed |
 | Local or S3-compatible asset storage | Role-based access and advisory SEO checks | An example website with saved draft previews |
 
-[Start locally](#start) · [How it fits together](#how-it-fits-together) · [First content walkthrough](#your-first-content) · [Delivery API](#graphql-for-your-frontends) · [Example website](#example-website-frontend) · [Production setup](#storage-and-production)
+[Start locally](#start) · [Architecture](#how-it-fits-together) · [First content](#your-first-content) · [Delivery API](#graphql-for-your-frontends) · [Development](#local-development-and-checks) · [Status](#status-and-scope)
+
+## Status and scope
+
+MossCMS is an early-stage project with implemented editorial and delivery workflows. The feature descriptions below refer to the current `main` code. Tests and checked-in acceptance reports describe specific verified paths; they do not establish that every deployment, OAuth provider, or storage backend is qualified.
+
+As of 21 October 2026, additional [query-performance](https://github.com/nirtuttnauer/MossCMS/pull/3), [delivery-client](https://github.com/nirtuttnauer/MossCMS/pull/4), [observability](https://github.com/nirtuttnauer/MossCMS/pull/5), [workspace-portability](https://github.com/nirtuttnauer/MossCMS/pull/6), and [editor-workflow](https://github.com/nirtuttnauer/MossCMS/pull/7) changes are under review. Check their merge status before relying on them in a checkout of `main`.
+
+Self-hosting means owning HTTPS, access configuration, backups, upgrades, and recovery. Start with the [operator guide](docs/deployment-recovery.md) before exposing an instance beyond your development machine. SQLite is intended for one app instance; changing database backends does not migrate your data.
 
 <details>
 <summary>Browse the full README</summary>
@@ -27,7 +39,7 @@ A self-hosted content service with a GraphQL API and a React admin. Define your 
 - **Content and access:** [Admin and teams](#admin-and-teams), [OAuth](#oauth-sign-in), [data modeling](#define-data), [publishing](#draft-live-and-scheduled-content), [SEO audit](#seo-audit).
 - **Integration:** [GraphQL](#graphql-for-your-frontends), [documentation guides](#documentation).
 - **Operations:** [Storage and production](#storage-and-production), [backup, restore, and upgrades](#backup-restore-and-upgrades).
-- **Contributing:** [Code layout](#code-layout), [development and checks](#local-development-and-checks), [local sign-in bypass](#temporarily-skip-sign-in), [product plan](#product-plan).
+- **Contributing:** [Code layout](#code-layout), [development and checks](#local-development-and-checks), [local sign-in bypass](#temporarily-skip-sign-in), [roadmap and evidence](#roadmap-and-evidence).
 
 </details>
 
@@ -77,7 +89,7 @@ docker compose exec app python -m app.cli seed --project YOUR_WORKSPACE_ID
 
 ### Run a published Docker Hub image
 
-The image repository is `nirtuttnauer/mosscms`. Images include the API and built admin, with PostgreSQL supplied by Compose. After the [first Docker Hub publication](docs/docker.md#publish-to-docker-hub), run these commands from the cloned repository to start without building locally:
+The configured image repository is `nirtuttnauer/mosscms`. Registry publication depends on repository configuration; the source-build quickstart above does not require a published image. Images include the API and built admin, with the database mode selected by Compose. Once an image has been [published to Docker Hub](docs/docker.md#publish-to-docker-hub), run these commands from the cloned repository to start without building locally:
 
 ```sh
 python3 scripts/configure.py
@@ -87,7 +99,7 @@ docker compose up --no-build -d --wait app
 
 Open [localhost:8001](http://localhost:8001) and use `MOSS_SETUP_TOKEN` from `.env` to create the first administrator. Database and uploaded files persist in the same named volumes as a local build.
 
-Compose defaults to `nirtuttnauer/mosscms:latest`. Set `MOSS_IMAGE` in `.env` to a published version (for example, `nirtuttnauer/mosscms:1.2.3`) or digest for a repeatable deployment. `latest` tracks `main`; version tags are published from Git tags such as `v1.2.3`. The publishing workflow builds Linux AMD64 and ARM64 images. Use `MOSS_PORT` to change the host port; the container listens on 8001.
+Compose defaults to `nirtuttnauer/mosscms:latest`. Set `MOSS_IMAGE` in `.env` to an existing published tag or digest for a repeatable deployment. When registry publishing is configured, the workflow updates `latest` from `main` and creates version tags from matching Git tags. Its build targets are Linux AMD64 and ARM64. Use `MOSS_PORT` to change the host port; the container listens on 8001.
 
 To build from your checkout, keep using `docker compose up --build -d`. To avoid replacing a locally cached release tag, use `MOSS_IMAGE=mosscms:local docker compose up --build -d`. The optional example website is built separately with `docker compose --profile website up --build -d example-site`.
 
@@ -105,7 +117,7 @@ flowchart LR
         Editorial["Editorial GraphQL<br/>/graphql"] --> Content["Content, permissions<br/>and publication workers"]
         Delivery["Delivery GraphQL<br/>/delivery/graphql"] --> Content
     end
-    Content --> Database[("PostgreSQL<br/>content, accounts, revisions")]
+    Content --> Database[("PostgreSQL or SQLite<br/>content, accounts, revisions")]
     Content --> Media["Media storage<br/>local volume or private S3"]
 ```
 
@@ -361,7 +373,7 @@ Use **SEO audit** to review draft and live records separately, inspect detected 
 
 ## Local development and checks
 
-Install **Python 3.12+ with uv** and **Node.js 22+ with npm**. Generate `.env` with `python3 scripts/configure.py` first. In separate terminals, starting from the repository root:
+Install **Python 3.12+ with uv** and **Node.js 22.12+ with npm**. The Node minimum follows Vite's checked-in engine requirement. Generate `.env` with `python3 scripts/configure.py` first. In separate terminals, starting from the repository root:
 
 ```sh
 cd api
@@ -441,13 +453,6 @@ If an older bypass setup left the workspace without members, recover only that w
 | Build a frontend or inspect SEO findings | [Example website](example-site/README.md), [SEO audit](docs/seo-audit.md) |
 | Contribute or understand implementation boundaries | [Contributing](CONTRIBUTING.md), [maintainability review](docs/maintainability-review.md) |
 
-## Product plan
+## Roadmap and evidence
 
-[PRD](docs/PRD.md) · [Tasks and acceptance criteria](docs/planning/TASKS.md) · [Implementation ledger](docs/planning/IMPLEMENTATION.md) · [Release evidence](docs/release-acceptance-2026-10-08.md)
-
-<details>
-<summary>Planning history</summary>
-
-The [PRD](docs/PRD.md) retains the 7 October baseline and records the approved release scope. The [task breakdown](docs/planning/TASKS.md) includes acceptance criteria and dependencies. All 34 baseline tasks were approved on 8 October 2026 and implemented sequentially on feature branches integrated into local `main`. The [implementation ledger](docs/planning/IMPLEMENTATION.md) and [release evidence](docs/release-acceptance-2026-10-08.md) record the result. The original Markdown/JSON plan preserves the historical proposal snapshot; consult the implementation and acceptance documents for delivered behavior.
-
-</details>
+[Open issues](https://github.com/nirtuttnauer/MossCMS/issues) and [pull requests](https://github.com/nirtuttnauer/MossCMS/pulls) track ongoing work. The [PRD](docs/PRD.md) and [task breakdown](docs/planning/TASKS.md) preserve product intent; the [implementation ledger](docs/planning/IMPLEMENTATION.md) and [release evidence](docs/release-acceptance-2026-10-08.md) are historical checkpoints. Use the current code, tests, and workflow guides to determine what a particular checkout supports.
