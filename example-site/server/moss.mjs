@@ -1,5 +1,6 @@
 import { cachedWebsite } from './cache.mjs';
 import { applyPreview, loadPreview, PreviewError } from './preview.mjs';
+import { createDeliveryClient } from '../../shared/delivery.mjs';
 const query = `query WebsiteEntries($after: String) {
   websiteRedirects
   websiteReservedPaths
@@ -14,9 +15,7 @@ export function loadWebsite(environment) {
 }
 async function fetchWebsite(environment) {
   const { MOSS_API_URL = 'http://localhost:8001', MOSS_DELIVERY_TOKEN } = environment;
-  if (!MOSS_DELIVERY_TOKEN) throw new Error('MOSS_DELIVERY_TOKEN is missing. Run scripts/setup_moss.py.');
-  const endpoint = new URL('/delivery/graphql', MOSS_API_URL);
-  if (!['http:', 'https:'].includes(endpoint.protocol)) throw new Error('Invalid MossCMS URL.');
+  const delivery = createDeliveryClient({ baseUrl: MOSS_API_URL, token: MOSS_DELIVERY_TOKEN });
   const publicUrl = new URL(environment.SITE_PUBLIC_URL ?? 'http://localhost:5174');
   if (!['http:', 'https:'].includes(publicUrl.protocol)) throw new Error('Invalid public website URL.');
   const entries = [];
@@ -24,23 +23,15 @@ async function fetchWebsite(environment) {
   let reservedPaths = [];
   let after = null;
   for (let page = 0; page < 20; page++) {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${MOSS_DELIVERY_TOKEN}` },
-      body: JSON.stringify({ query, variables: { after } }),
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!response.ok) throw new Error(`MossCMS returned HTTP ${response.status}.`);
-    const result = await response.json();
-    if (result.errors?.length) throw new Error(result.errors.map(error => error.message).join('; '));
+    const result = await delivery.query(query, { after });
     if (page === 0) {
-      redirects = result.data.websiteRedirects ?? [];
-      reservedPaths = result.data.websiteReservedPaths ?? [];
+      redirects = result.websiteRedirects ?? [];
+      reservedPaths = result.websiteReservedPaths ?? [];
     }
-    entries.push(...result.data.entries.nodes);
-    if (!result.data.entries.hasNextPage) break;
+    entries.push(...result.entries.nodes);
+    if (!result.entries.hasNextPage) break;
     if (page === 19) throw new Error('Website exceeds the 2,000-entry limit.');
-    after = result.data.entries.endCursor;
+    after = result.entries.endCursor;
   }
   return websiteFromEntries(entries, publicUrl.origin, redirects, reservedPaths);
 }
