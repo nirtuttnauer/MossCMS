@@ -203,7 +203,7 @@ export function RevisionCompare({
 
     if (['richText', 'markdown'].includes(type) && typeof val === 'string') {
       return (
-        <div className="diff-markdown">
+        <div className="diff-markdown" tabIndex={0}>
           <Markdown text={val} assets={[...assets, ...resolvedAssets]} />
         </div>
       )
@@ -218,7 +218,7 @@ export function RevisionCompare({
     }
 
     if (typeof val === 'object') {
-      return <pre className="diff-json">{JSON.stringify(val, null, 2)}</pre>
+      return <pre tabIndex={0} className="diff-json">{JSON.stringify(val, null, 2)}</pre>
     }
 
     return <span>{formatScalar(val)}</span>
@@ -421,15 +421,15 @@ export function RevisionCompare({
           <div className="compare-raw-view">
             <div className="raw-col">
               <h4>Left Snapshot</h4>
-              <pre>{JSON.stringify({ slug: leftSlug, title: leftTitle, data: leftData }, null, 2)}</pre>
+              <pre tabIndex={0}>{JSON.stringify({ slug: leftSlug, title: leftTitle, data: leftData }, null, 2)}</pre>
             </div>
             <div className="raw-col">
               <h4>Right Snapshot</h4>
-              <pre>{JSON.stringify({ slug: rightSlug, title: rightTitle, data: rightData }, null, 2)}</pre>
+              <pre tabIndex={0}>{JSON.stringify({ slug: rightSlug, title: rightTitle, data: rightData }, null, 2)}</pre>
             </div>
           </div>
         ) : (
-          <div className="diff-table-wrap">
+          <div className="diff-table-wrap" tabIndex={0} role="region" aria-label="Revision differences">
             <table className="diff-table">
               <thead>
                 <tr>

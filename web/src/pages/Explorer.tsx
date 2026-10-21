@@ -84,7 +84,7 @@ export function Explorer({ types }: { types: ContentType[] }) {
           <Button disabled={busy} type="submit">{busy ? 'Running…' : 'Run query'}</Button>
         </form>
         <h2>Result</h2>
-        <pre role="status">{output}</pre>
+        <pre tabIndex={0} role="status">{output}</pre>
       </section>
       {selectedType && <section className="plain-card">{types.length > 1 && <label>Integration content type<select value={selectedType.key} onChange={event => setHandoffType(event.target.value)}>{types.map(type => <option key={type.key} value={type.key}>{type.name}</option>)}</select></label>}<DeliveryHandoff typeKey={selectedType.key} /></section>}
     </>

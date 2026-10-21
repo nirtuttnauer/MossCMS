@@ -58,7 +58,7 @@ export function MarkdownInput({
   }
 
   return (
-    <section>
+    <section className="markdown-input">
       <label htmlFor={controlId}>{label}{required ? ' *' : ''}</label>
       <div className="markdown-toolbar" role="group" aria-label={`${label} formatting`}>
         {[

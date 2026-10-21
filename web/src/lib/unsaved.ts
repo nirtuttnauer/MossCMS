@@ -1,19 +1,19 @@
 import { useLayoutEffect, useRef } from 'react';
 
 const confirmationMessage = 'Discard unsaved changes? Your saved draft and live content will be kept.';
-const pending = new Set<symbol>();
+const pending = new Map<symbol, string>();
 
 export function confirmNavigation() {
-  return pending.size === 0 || window.confirm(confirmationMessage);
+  return pending.size === 0 || window.confirm(pending.values().next().value || confirmationMessage);
 }
 
-export function useUnsavedChanges(dirty: boolean) {
+export function useUnsavedChanges(dirty: boolean, prompt = confirmationMessage) {
   const token = useRef(Symbol('editor'));
   useLayoutEffect(() => {
     if (!dirty)
       return;
     const id = token.current;
-    pending.add(id);
+    pending.set(id, prompt);
     const unload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = '';
@@ -23,6 +23,6 @@ export function useUnsavedChanges(dirty: boolean) {
       pending.delete(id);
       window.removeEventListener('beforeunload', unload);
     };
-  }, [dirty]);
-  return () => !dirty || window.confirm(confirmationMessage);
+  }, [dirty, prompt]);
+  return () => !dirty || window.confirm(prompt);
 }

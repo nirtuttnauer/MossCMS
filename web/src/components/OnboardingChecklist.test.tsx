@@ -325,3 +325,13 @@ describe('OnboardingChecklist (MC-35)', () => {
     expect(options?.signal).toBe(timeoutSignal)
   })
 })
+
+it('a compact library checklist stays resumable without marking publication complete', () => {
+  localStorage.clear()
+  render(<OnboardingChecklist compact project={{ id: 'compact', name: 'Studio', role: 'admin' }} userId="user" role="admin" types={[{ id: 'type', key: 'article', name: 'Article', version: 1, fields: [] }]} overview={{ total: 1, drafts: 1, published: 0, scheduled: 0, types: 1, assets: 0, members: 1 }} onChanged={vi.fn()} />)
+  expect(screen.queryByText('First published entry checklist')).toBeNull()
+  expect(screen.getByRole('button', { name: 'Resume getting started guide' }).textContent).toContain('2/4')
+  fireEvent.click(screen.getByRole('button', { name: 'Resume getting started guide' }))
+  expect(screen.getByText('Publish an entry').closest('li')?.getAttribute('aria-current')).toBe('step')
+  expect(screen.getByRole('button', { name: /Open a draft to publish/ })).toBeTruthy()
+})
