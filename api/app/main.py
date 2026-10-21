@@ -35,6 +35,7 @@ from .query_limits import bounded_query
 from .security import CmsError, identify, require
 from .storage import router as storage_router
 from .telemetry import Telemetry, TelemetryMiddleware
+from .workspace_migration import MAX_ARCHIVE_UPLOAD, router as migration_router
 
 load_dotenv()
 logger = logging.getLogger("mosscms")
@@ -98,6 +99,7 @@ def create_app(settings=None):
 
     app = FastAPI(title="MossCMS", version="0.2.0", lifespan=lifespan)
     app.include_router(webhooks_router)
+    app.include_router(migration_router)
     app.state.settings, app.state.engine, app.state.db = settings, engine, factory
     app.state.telemetry = telemetry
     app.state.started = time.monotonic()
@@ -134,7 +136,8 @@ def create_app(settings=None):
             length = int(request.headers.get("content-length", 0))
         except ValueError:
             return JSONResponse({"detail": "Invalid Content-Length."}, status_code=400)
-        if length > settings.max_upload + 1024 * 1024:
+        body_limit = MAX_ARCHIVE_UPLOAD if request.url.path == "/api/migration/import" else settings.max_upload
+        if length > body_limit + 1024 * 1024:
             return JSONResponse({"detail": "Request body is too large."}, status_code=413)
         try:
             response = await call_next(request)
