@@ -65,7 +65,7 @@ describe('API request contracts', () => {
   })
 
   it('sends the unchanged content-type mutation, variables, and explicit context to the configured GraphQL endpoint', async () => {
-    const originalDocument = 'mutation($key:String!,$name:String!,$fields:JSON!,$version:Int,$migration:JSON){saveContentType(key:$key,name:$name,fields:$fields,version:$version,migration:$migration){id key name fields version entryCount}}'
+    const originalDocument = 'mutation($key:String!,$name:String!,$fields:JSON!,$version:Int,$migration:JSON){saveContentType(key:$key,name:$name,fields:$fields,version:$version,migration:$migration){id key name fields version entryCount reviewRequired}}'
     expect(saveContentTypeMutation).toBe(originalDocument)
     vi.stubEnv('VITE_GRAPHQL_URL', '/workspace/graphql')
     const variables = { key: 'article', name: 'Article', fields: [], version: null, migration: {} }

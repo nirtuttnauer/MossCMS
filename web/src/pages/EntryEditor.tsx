@@ -12,7 +12,8 @@ import { RevisionCompare, type Revision } from '../components/RevisionCompare'
 import { isEntryValid, validateEntry } from '../lib/validation'
 import { initialData } from '../lib/fields'
 import { creationLabels, timestamp, typeOrder, type DuplicationSource, type EntryPage as Page } from '../lib/entries'
-import { ApiError, getContext, draftReceiptQuery, entryFields, gql, message, saveEntryMutation, slugify, type Asset, type ContentType, type Entry } from '../lib/api'
+import { can } from '../lib/access'
+import { ApiError, getContext, draftReceiptQuery, entryFields, gql, message, rest, saveEntryMutation, slugify, type Asset, type ContentType, type Entry } from '../lib/api'
 
 function localDateTime(value: Date) {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}T${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`
@@ -70,6 +71,9 @@ export function EntryEditor({
   useEffect(() => { heading.current?.focus(); window.scrollTo(0, 0) }, [initialEntry?.id])
   const [key, setKey] = useState(initialEntry?.typeKey || seed?.typeKey || initialType || types[0]?.key || '')
   const definition = types.find(t => t.key === key)!
+  const allowPublish = can(role, 'publish')
+  const allowSchedule = can(role, 'schedule')
+  const allowReview = can(role, 'review')
   const [data, setData] = useState<Record<string, unknown>>(() => {
     if (initialEntry?.data) return initialEntry.data
     if (seed?.data) return JSON.parse(JSON.stringify(seed.data))
@@ -86,6 +90,21 @@ export function EntryEditor({
   const [references, setReferences] = useState<Entry[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
   const [preview, setPreview] = useState<{id:string;previewUrl:string;revision:number;expiresAt:string} | null>(null)
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  const [reviewerId, setReviewerId] = useState('')
+  const [members, setMembers] = useState<{id:string;name:string}[]>([])
+  const showPreviewPane = typeOrder.includes(key)
+  useEffect(() => {
+    if (!definition?.reviewRequired) return
+    let alive = true
+    rest<{ members: { id: string; name: string }[] }>('/api/team').then(result => { if (alive) setMembers(result.members) }).catch(() => {})
+    return () => { alive = false }
+  }, [definition?.reviewRequired])
+  useEffect(() => {
+    if (!preview) return
+    const timer = window.setInterval(() => setNowMs(Date.now()), 15000)
+    return () => window.clearInterval(timer)
+  }, [preview])
   const [history, setHistory] = useState<Revision[] | null>(null)
   const [showCompare, setShowCompare] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -189,6 +208,20 @@ export function EntryEditor({
     } catch(reason) { setError(message(reason)) }
     finally { setBusy(false) }
   }
+  async function reviewAction(action: 'submitForReview' | 'approveEntry' | 'returnEntry') {
+    setBusy(true); setError('')
+    try {
+      const saved = await autosave.flush()
+      if (!saved) throw new Error('Save this draft before review.')
+      const result = await gql<{ [key: string]: Entry }>(
+        `mutation($id:ID!,$version:Int!,$reviewerId:ID){${action}(id:$id,version:$version,reviewerId:$reviewerId){${entryFields}}}`,
+        { id: saved.id, version: saved.version, reviewerId: reviewerId || null },
+        context,
+      )
+      onSaved(action === 'approveEntry' ? 'Revision approved.' : action === 'returnEntry' ? 'Revision returned to the author.' : 'Submitted for review.', result[action])
+    } catch (reason) { setError(message(reason)) }
+    finally { setBusy(false) }
+  }
   async function loadHistory() {
     try { const result = await gql<{ revisions: Revision[] }>('query($id:ID!){revisions(id:$id){number snapshot author createdAt}}', { id: entry!.id }, context); setHistory(result.revisions) }
     catch (reason) { setError(message(reason)) }
@@ -220,7 +253,7 @@ export function EntryEditor({
     <form className="editor-form entry-page-form" noValidate onSubmit={save}>
       {autosave.error && <div className="form-error" role="alert">{autosave.error}<Button type="button" variant="outline" onClick={autosave.state === 'Conflict' ? autosave.compare : autosave.retry}>{autosave.state === 'Conflict' ? 'Compare server version' : 'Check and retry'}</Button></div>}
       {autosave.server && <section><h3>Server version {autosave.server.version}</h3><details><summary>Server data</summary><pre tabIndex={0}>{JSON.stringify(autosave.server.data,null,2)}</pre></details><p>Your edits remain in the form above. Copy any changes you want to keep before reloading.</p><Button type="button" onClick={() => { if (confirmClose()) {const next=autosave.reload();if(next){setData(next.data);setSlug(next.slug);setKey(next.typeKey);setStatus('draft')}} }}>Discard local edits and reload server</Button></section>}
-      <div className="entry-workspace">
+      <div className={`entry-workspace${showPreviewPane ? ' has-preview' : ''}`}>
       {seed && !entry && (
         <div className="duplication-banner" role="status">
           <Copy size={16} aria-hidden="true" />
@@ -301,6 +334,18 @@ export function EntryEditor({
         />
         </section>
       </fieldset>
+      {showPreviewPane && <section className="editor-preview-pane" aria-label="Website preview">
+        <h2>{preview ? `Saved revision ${preview.revision}` : 'Website preview'}</h2>
+        {previewOrigin == null && <p className="notice" role="status">{role === 'admin' ? <a href={`#settings?workspace=${encodeURIComponent(projectId || context.project)}&section=website-preview`}>Connect a preview origin</a> : 'No preview origin is connected. Ask an administrator to connect the website preview in Settings.'}</p>}
+        {previewOrigin != null && !preview && <p className="notice" role="status">No saved revision is previewed yet. Prepare a preview after the draft is saved.</p>}
+        {preview && autosave.dirty && <p className="notice" role="status">Unsaved edits are not in this preview. Save and refresh to update it.</p>}
+        {preview && (Date.parse(preview.expiresAt) <= nowMs ? <p className="notice" role="status">This preview expired. Refresh to issue a new saved revision.</p> : <p className="field-help">Expires {timestamp(preview.expiresAt)}. Refresh loads the saved revision again.</p>)}
+        {preview && <div className="inline-form">
+          <Button type="button" variant="outline" disabled={busy} onClick={preparePreview}>Refresh preview</Button>
+          <a href={preview.previewUrl} target="_blank" rel="noopener noreferrer">Open in a new tab</a>
+        </div>}
+        {preview && Date.parse(preview.expiresAt) > nowMs && <iframe title={`Website preview of saved revision ${preview.revision}`} src={preview.previewUrl} />}
+      </section>}
       <aside className="entry-sidebar" aria-label="Entry controls">
       <fieldset className="publishing-fieldset" disabled={!editable || busy || Boolean(pendingPublication) || initialEntry?.status === 'deleted'}>
         <section className="publishing-panel" aria-label="Publishing options">
@@ -311,23 +356,25 @@ export function EntryEditor({
             { value: 'draft', label: 'Draft', description: 'Preserve live content and schedule' },
             { value: 'published', label: 'Immediate publication', description: 'Publish when you confirm below' },
             { value: 'scheduled', label: 'Scheduled publication', description: entry?.scheduledAt ? 'Replace the captured schedule' : 'Capture these edits for later' },
-          ].filter(option => !isUnsavedDuplicate || option.value === 'draft').map(option => <button type="button" key={option.value} className={status === option.value ? 'selected' : ''} aria-pressed={status === option.value} onClick={() => setStatus(option.value)}><span>{option.label}{status === option.value && <Check size={12} />}</span><small>{option.description}</small></button>)}</div>
+          ].filter(option => (!isUnsavedDuplicate || option.value === 'draft') && (option.value !== 'published' || allowPublish) && (option.value !== 'scheduled' || allowSchedule)).map(option => <button type="button" key={option.value} className={status === option.value ? 'selected' : ''} aria-pressed={status === option.value} onClick={() => setStatus(option.value)}><span>{option.label}{status === option.value && <Check size={12} />}</span><small>{option.description}</small></button>)}</div>
           {status === 'scheduled' ? <div className="schedule-fields"><label>Publish on<input type="datetime-local" required min={localDateTime(new Date(Date.now() + 60000))} value={schedule} onChange={event => setSchedule(event.target.value)} /></label><p className="field-help">Timezone: <strong>{timezone}</strong>. This captures the selected draft. Later draft edits will not change it. Existing live content stays available.</p></div> : <p className="field-help">{status === 'published' ? 'Publishing makes this entry available to your connected frontends.' : 'Draft saves preserve existing live content and any pending schedule.'}</p>}
           {entry?.scheduledAt && <p className="field-help">Scheduled revision {entry.scheduledRevision} for {timestamp(entry.scheduledAt)} ({timezone}). {entry.scheduledRevision !== entry.version && 'Newer draft changes are not scheduled. Use Replace schedule to include them.'}</p>}
           {entry?.scheduleError && <p className="form-error" role="alert">Publication failed: {entry.scheduleError.message} Resolve the cause and schedule again.</p>}
-          {editable && entry?.scheduledAt && <Button type="button" variant="outline" onClick={() => publicationAction('cancelSchedule')}>Cancel schedule</Button>}
-          {editable && entry?.isLive && <Button type="button" variant="outline" onClick={() => publicationAction('unpublishEntry')}>Unpublish</Button>}
+          {definition.reviewRequired && allowPublish && entry?.reviewState !== 'approved' && <p className="notice" role="status">Publish and schedule stay blocked until another person approves this exact revision.</p>}
+          {editable && allowSchedule && entry?.scheduledAt && <Button type="button" variant="outline" onClick={() => publicationAction('cancelSchedule')}>Cancel schedule</Button>}
+          {editable && allowPublish && entry?.isLive && <Button type="button" variant="outline" onClick={() => publicationAction('unpublishEntry')}>Unpublish</Button>}
         </section>
       </fieldset>
-      {editable && initialEntry?.status !== 'deleted' && typeOrder.includes(key) && <section className="editor-surface preview-controls"><h2><Eye size={17} aria-hidden="true" />Website preview</h2><p>Review a saved draft on your website before publishing.</p>{previewOrigin === null ? <p>{role === 'admin' ? <a className="button button-outline" href={`#settings?workspace=${encodeURIComponent(projectId || context.project)}&section=website-preview`}>Connect website preview</a> : 'Ask an administrator to connect the website preview in Settings.'}</p> : <Button type="button" variant="outline" disabled={busy || isUnsavedDuplicate} onClick={preparePreview}>Save draft & prepare website preview</Button>}{preview && <p><a href={preview.previewUrl} target="_blank" rel="noopener noreferrer">Open saved revision {preview.revision}</a> · expires {timestamp(preview.expiresAt)} <Button type="button" variant="outline" onClick={async()=>{try{await gql('mutation($id:ID!){revokePreviewGrant(id:$id)}',{id:preview.id});setPreview(null)}catch(reason){setError(message(reason))}}}>Revoke preview</Button></p>}</section>}
+      {editable && initialEntry?.status !== 'deleted' && typeOrder.includes(key) && <section className="editor-surface preview-controls"><h2><Eye size={17} aria-hidden="true" />Website preview</h2><p>Review a saved draft on your website before publishing.</p>{previewOrigin === null ? <p>{role === 'admin' ? <a className="button button-outline" href={`#settings?workspace=${encodeURIComponent(projectId || context.project)}&section=website-preview`}>Connect website preview</a> : 'Ask an administrator to connect the website preview in Settings.'}</p> : <Button type="button" variant="outline" disabled={busy || isUnsavedDuplicate} onClick={preparePreview}>Save draft & prepare website preview</Button>}{preview && <p>Revision {preview.revision} is shown beside the draft. Expires {timestamp(preview.expiresAt)}. <Button type="button" variant="outline" onClick={async()=>{try{await gql('mutation($id:ID!){revokePreviewGrant(id:$id)}',{id:preview.id});setPreview(null)}catch(reason){setError(message(reason))}}}>Revoke preview</Button></p>}</section>}
       {pendingPublication && <section role="status"><p>{publicationState || 'Saving publication…'}</p><Button type="button" disabled={busy} onClick={async()=>{setBusy(true);try{await checkPublication(pendingPublication,false)}catch(reason){setError(message(reason))}finally{setBusy(false)}}}>Check outcome</Button><Button type="button" variant="outline" disabled={busy} onClick={async()=>{setBusy(true);try{await checkPublication(pendingPublication,true)}catch(reason){setError(message(reason))}finally{setBusy(false)}}}>Retry same operation</Button></section>}
+      {editable && definition.reviewRequired && entry && entry.status !== 'deleted' && <section className="editor-surface" aria-label="Review"><h2>Review</h2><p>Status: {entry.reviewState || 'draft'}{entry.approvedRevision ? ` · approved revision ${entry.approvedRevision}` : ''}. Approval is bound to the saved revision, slug, and schema version.</p><label>Reviewer<select aria-label="Reviewer" value={reviewerId} onChange={event => setReviewerId(event.target.value)}><option value="">Choose a reviewer</option>{members.map(member => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label><div className="inline-form">{can(role, 'edit') && <Button type="button" variant="outline" disabled={busy || !reviewerId} onClick={() => reviewAction('submitForReview')}>Submit for review</Button>}{allowReview && <Button type="button" disabled={busy} onClick={() => reviewAction('approveEntry')}>Approve revision</Button>}{allowReview && <Button type="button" variant="outline" disabled={busy} onClick={() => reviewAction('returnEntry')}>Return for changes</Button>}</div></section>}
       <SeoEntryPanel entry={entry} dirty={autosave.dirty} projectId={projectId || context.project} />
       {entry && <section className="editor-surface history-controls"><h2><History size={17} aria-hidden="true" />Revision history</h2><p>Version {entry.version} · updated {timestamp(entry.updatedAt)}</p><div className="inline-form"><Button type="button" variant="outline" disabled={busy} onClick={loadHistory}>{history ? 'Refresh history' : 'History & restore'}</Button><Button type="button" variant="outline" disabled={busy} onClick={async () => { if (!history) await loadHistory(); setShowCompare(true) }}>Compare revisions & live</Button></div></section>}
       </aside>
       </div>
       {history && <section className="revision-list"><h3>History</h3>{history.map(revision => <article key={revision.number}><div className="inline-form"><strong>Version {revision.number}</strong><small>{revision.author} · {new Date(revision.createdAt).toLocaleString()}</small>{editable && <Button type="button" variant="outline" disabled={busy} onClick={() => { if (window.confirm(`Restore revision ${revision.number} as a new draft? Live content and schedules will be preserved.`)) void restore(revision.number).catch(() => {}) }}>Restore draft</Button>}<Button type="button" variant="ghost" disabled={busy} onClick={() => setShowCompare(true)}>Compare</Button></div><details><summary>Preview this revision</summary><pre tabIndex={0}>{JSON.stringify(revision.snapshot, null, 2)}</pre></details></article>)}</section>}
       {error && <p className="form-error" role="alert">{error}</p>}
-      <div className="entry-actionbar"><div className="entry-save-state" role="status">{editable ? <>{autosave.state === 'Saved' ? <Check size={16} aria-hidden="true" /> : <Circle size={16} aria-hidden="true" />}<span>Draft: {autosave.state}{autosave.state === 'Incomplete' && ' — complete required fields to autosave.'}</span></> : <span>Read-only access</span>}</div>{editable && initialEntry?.status !== 'deleted' && <Button type="submit" disabled={busy}>{busy ? 'Saving…' : pendingPublication ? 'Check outcome' : status === 'published' ? 'Publish now' : status === 'scheduled' ? 'Schedule publication' : 'Save draft'}</Button>}</div>
+      <div className="entry-actionbar"><div className="entry-save-state" role="status">{editable ? <>{autosave.state === 'Saved' ? <Check size={16} aria-hidden="true" /> : <Circle size={16} aria-hidden="true" />}<span>Draft: {autosave.state}{autosave.state === 'Incomplete' && ' — complete required fields to autosave.'}</span></> : <span>Read-only access</span>}</div>{editable && initialEntry?.status !== 'deleted' && (status === 'draft' || (status === 'published' && allowPublish) || (status === 'scheduled' && allowSchedule)) && <Button type="submit" disabled={busy}>{busy ? 'Saving…' : pendingPublication ? 'Check outcome' : status === 'published' ? 'Publish now' : status === 'scheduled' ? 'Schedule publication' : 'Save draft'}</Button>}</div>
     </form>
     {showCompare && entry && (
       <RevisionCompare

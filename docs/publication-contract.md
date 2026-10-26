@@ -35,8 +35,9 @@ again at publication, since another publication may claim them in the meantime.
 
 ## Transitions
 
-Every editorial mutation requires workspace membership, editor permission, CSRF
-and the current entry version. Schema/type moves require an administrator.
+Every editorial mutation requires workspace membership, the matching capability,
+CSRF, and the current entry version. Schema and type moves require schema access,
+which remains administrator-only. See [permissions](permissions.md).
 Changes, revisions and audit events commit in the same transaction.
 
 | Action | Working copy | Live snapshot | Schedule |
@@ -89,6 +90,15 @@ and must validate against the current schema when restored. Type moves validate
 all three snapshots against the destination and both slug indexes before commit.
 Missing/deleted references are checked at save and again when a schedule is due;
 delivery resolves only currently live references within its token scope.
+
+Optional review is stored per content type and is off until enabled. Approval
+binds to one revision, slug, and schema version. Publish, schedule, import, and
+the worker all refuse a revision that is not approved when review is required.
+Restore remains a draft and does not make that revision live. A material edit or
+schema migration clears the approval.
+A release captures approved publish or unpublish actions and commits every action
+or none. Failure leaves the previous live snapshots. Later draft edits do not
+change a captured release.
 
 Rehearse upgrades on a separate restored database. Recovery is a matched database
 backup and previous application image; downgrading schema alone cannot represent

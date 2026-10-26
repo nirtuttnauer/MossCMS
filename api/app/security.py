@@ -109,13 +109,28 @@ def identify(request, session, delivery=False, project=True):
     }
 
 
-def require(context, role="reader", write=False):
+def require(context, role="reader", write=False, capability=None):
     if not context.get("project_id"):
         raise CmsError("Select a project.", "FORBIDDEN")
-    ranks = {"reader": 0, "editor": 1, "admin": 2}
-    if context.get("delivery") and write:
-        raise CmsError("Delivery tokens cannot write content.", "FORBIDDEN")
-    if ranks.get(context.get("role"), -1) < ranks[role]:
+    if context.get("delivery"):
+        if write or role != "reader" or capability not in {None, "read"}:
+            raise CmsError(
+                "Delivery tokens cannot write content." if write else "Insufficient project permissions.",
+                "FORBIDDEN",
+            )
+        return
+    from .permissions import ensure_access
+
+    caps = ensure_access(context)
+    if capability:
+        needed = {capability}
+    elif role == "admin":
+        needed = {"schema", "team"}
+    elif role == "editor":
+        needed = {"edit"}
+    else:
+        needed = {"read"}
+    if not needed <= caps:
         raise CmsError("Insufficient project permissions.", "FORBIDDEN")
     if write:
         supplied = context["request"].headers.get("x-moss-csrf", "")

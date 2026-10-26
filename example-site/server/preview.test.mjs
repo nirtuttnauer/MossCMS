@@ -25,7 +25,7 @@ test('preview session is HttpOnly, scoped, revalidated, and revocable',async()=>
 });
 test('bootstrap strips fragment credentials before redemption and blocks cross-origin POST',async()=>{
   const middleware=previewMiddleware(environment),r=response();await middleware(request('/preview'),r,()=>{});
-  assert.match(r.body,/history.replaceState/);assert.match(r.headers['x-robots-tag'],/noindex/);assert.match(r.headers['content-security-policy'],/default-src 'none'/);
+  assert.match(r.body,/history.replaceState/);assert.match(r.headers['x-robots-tag'],/noindex/);assert.match(r.headers['content-security-policy'],/default-src 'none'/);assert.match(r.headers['content-security-policy'],/frame-ancestors https:\/\/cms\.example/);
   const blocked=response();await middleware(request('/api/preview','POST',{origin:'https://evil.example'}),blocked,()=>{});assert.equal(blocked.status,403);
 });
 

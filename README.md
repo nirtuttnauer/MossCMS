@@ -152,7 +152,7 @@ flowchart LR
 
 1. **Choose a workspace.** Use the workspace menu in the sidebar. Administrators can create or rename workspaces in **Settings**.
 2. **Define a content type.** Open **Content types** and create an `article` type. Add a required text field named `title` and a rich text field named `body`. Save the schema. The [field definition example](#define-data) shows nested objects, lists, locales, references, and assets.
-3. **Write an entry.** Open **Content**, select your Article group, and choose **New entry**. Enter a slug such as `hello-world`, fill in the title, and write the body. **Save draft** keeps the entry private; the editor also autosaves changes.
+3. **Write an entry.** Open **Content**, select your Article group, and choose **New entry**. Enter a slug such as `hello-world`, fill in the title, and write the body in the visual editor or in source mode. **Save draft** keeps the entry private; the editor also autosaves changes.
 4. **Add media.** Upload an image in **Assets**, then insert it through the Markdown editor's image picker or an asset field. Markdown stores durable asset IDs, so expiring download links are refreshed when content is read.
 5. **Publish.** Choose **Immediate publication**, then confirm with **Publish now** to make the entry live. To publish later, use **Schedule publication** and select a date in your browser's timezone. Later draft edits preserve the live version and captured schedule. **Publications** shows the queue and failed publications.
 6. **Connect a frontend.** Use **Create token & verify delivery** in the getting-started guide to create a 90-day token scoped to `article`, or create a token in **Settings**. Copy it once, keep it on your server, and query published content:
@@ -187,10 +187,10 @@ Existing content is retained. If you have not created a real administrator yet, 
 ## Admin and teams
 
 - Overview: live counts and service health.
-- Content types: create field schemas, inspect history, and explicitly migrate existing data.
-- Content: create/edit entries, drafts, publish/schedule, cursor pagination, filters, recoverable trash, and revision preview/restore.
+- Content types: create field schemas, inspect history, explicitly migrate existing data, and optionally require review before publication.
+- Content: create/edit entries, drafts, publish/schedule, cursor pagination, filters, recoverable trash, revision preview/restore, and grouped releases.
 - Assets: upload local or S3 media and obtain expiring download links.
-- Team: invite by email, copy/revoke invitation links, change roles, remove access. Invitations expire after seven days.
+- Team: invite by email, copy/revoke invitation links, change roles, remove access. Invitations expire after seven days. Custom permissions, author and publisher roles, and field allow-lists stay off until an administrator enables them. See [permissions](docs/permissions.md).
 - Settings: create/rename workspaces, connect OAuth accounts, create/revoke delivery tokens, and inspect audit history.
 - API explorer: query the selected workspace or use a delivery token.
 
@@ -199,8 +199,10 @@ Existing content is retained. If you have not created a real administrator yet, 
 | Administrator | Manage schemas, membership, tokens, entries, and media |
 | Editor | Manage entries and media; publish and schedule content |
 | Reader | View editorial content, including drafts; cannot edit or publish |
+| Author | Create and edit drafts and upload media. Available after custom permissions |
+| Publisher | Edit, publish, schedule, and review. Available after custom permissions |
 
-Every record and query is scoped to workspace membership. At least one administrator must remain. Invitations are shared manually; no email service is required.
+Every record and query is scoped to workspace membership. At least one administrator must remain. Invitations are shared manually; no email service is required. Field rules never remove administrator access.
 
 Password recovery is available to the server operator:
 

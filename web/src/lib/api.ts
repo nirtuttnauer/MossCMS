@@ -18,6 +18,7 @@ export type ContentType = {
   name: string;
   fields: Field[];
   version: number;
+  reviewRequired?: boolean;
 };
 export type Entry = {
   id: string;
@@ -45,6 +46,10 @@ export type Entry = {
   publishedData?: Record<string, unknown> | null;
   publishedSlug?: string | null;
   publishedTitle?: string | null;
+  reviewState?: string | null;
+  approvedRevision?: number | null;
+  reviewerId?: string | null;
+  reviewAuthorId?: string | null;
 };
 export type Asset = {
   width?: number | null;
@@ -154,8 +159,8 @@ export async function gql<T>(query: string, variables?: Record<string, unknown>,
   }
   return result.data;
 }
-export const entryFields = 'id typeKey slug title data status version updatedAt scheduledAt isLive hasUnpublishedChanges publishedAt publishedRevision scheduledRevision scheduleError publishedSnapshot publishedData publishedSlug publishedTitle';
-export const typeFields = 'id key name fields version entryCount';
+export const entryFields = 'id typeKey slug title data status version updatedAt scheduledAt isLive hasUnpublishedChanges publishedAt publishedRevision scheduledRevision scheduleError publishedSnapshot publishedData publishedSlug publishedTitle reviewState approvedRevision reviewerId reviewAuthorId';
+export const typeFields = 'id key name fields version entryCount reviewRequired';
 export const saveContentTypeMutation = `mutation($key:String!,$name:String!,$fields:JSON!,$version:Int,$migration:JSON){saveContentType(key:$key,name:$name,fields:$fields,version:$version,migration:$migration){${typeFields}}}`;
 export const saveEntryMutation = `mutation Save($typeKey:String!,$slug:String!,$data:JSON!,$status:String!,$id:ID,$version:Int,$scheduledAt:String,$requestKey:String){saveEntry(typeKey:$typeKey,slug:$slug,data:$data,status:$status,id:$id,version:$version,scheduledAt:$scheduledAt,requestKey:$requestKey){${entryFields}}}`;
 export function slugify(value: string) { return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
