@@ -1,6 +1,6 @@
 # REST delivery design
 
-**Status: pending CTO approval.** Architecture draft, 29 October 2026. QA writes the final acceptance criteria. MOSS-031 does not start until the CTO approves this document.
+**Status: approved by CTO (Oct 29, 2026).** Architecture draft, 29 October 2026. QA writes the final acceptance criteria.
 
 This fixes the REST path, auth, and caching choices before implementation. It describes behavior already implemented for delivery GraphQL at `3a87c73` (`api/app/main.py`, `api/app/security.py`, `api/app/content.py`, `api/app/graphql.py`, `api/app/schema.py`, `api/app/ordering.py`). That delivery code is unchanged at `b306d3f`. The publication rules are the ones in [publication-contract.md](publication-contract.md).
 
@@ -197,4 +197,4 @@ Register the routes in `create_app` next to `POST /delivery/graphql`. Share the 
 
 The implementation tests should cover a delivery bearer token and a rejected session token, `skip_auth` still requiring a delivery token, empty and named scopes, a draft and a scheduled-only entry staying hidden while the live snapshot is returned, a later draft edit and a failed schedule leaving the body and ETag unchanged, private nested fields and a private title, cursor bounds and `orderBy` on the published index, `total` omitted unless requested, 304 when `If-None-Match` repeats the list or entry ETag, no `ETag` on a 404, `no-store` and no `ETag` on resolved assets, and no cacheable delivery document mounted under `/api`. Those checks are input to QA. They are not the final acceptance criteria.
 
-**Pending CTO approval.**
+**Approved by CTO (Oct 29, 2026).**
