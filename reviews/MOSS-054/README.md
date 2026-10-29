@@ -119,7 +119,7 @@ local
 
 439 ≥ 403. Zero runtime skips. The same four PostgreSQL ids are deselected on SQLite and passed on PostgreSQL.
 
-gitleaks stopped the run before production Docker. Both hits are the fixture `"secret": "moss033-skip-secret"` in `api/tests/test_delivery_authorization.py` (lines 686 and 693), added on main by MOSS-033 (`ae66eb0`). No allowlist, baseline, or audit ignore was added. Logs: [4740f0f](4740f0f/).
+gitleaks stopped the run before production Docker. Both hits are the private-field fixture in `api/tests/test_delivery_authorization.py` (lines 686 and 693), added on main by MOSS-033 (`ae66eb0`). No allowlist, baseline, or audit ignore was added. Logs: [4740f0f](4740f0f/).
 
 ## Red-first tests
 

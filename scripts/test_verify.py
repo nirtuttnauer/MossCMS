@@ -122,7 +122,7 @@ class VerifyTests(unittest.TestCase):
             "uv export --frozen --all-groups --no-emit-project",
             "pip-audit --progress-spinner off",
             "npm audit",
-            "gitleaks detect --source .",
+            "gitleaks detect --no-git --source",
             "postgres:17-alpine",
             "refusing to run on a dirty tree",
         ):

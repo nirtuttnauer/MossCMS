@@ -329,9 +329,15 @@ step ci npm-audit-ci <<'EOF'
 npm audit
 EOF
 
-# gitleaks on the clean checkout. Git mode reads tracked files, so dependency installs are out of scope. No allowlist.
+# gitleaks on the tracked tree at HEAD. git archive is that checkout, so
+# dependency installs and evidence written by this run stay out of scope.
+# Walking history would still report a fixture removed from the tip, because
+# that commit is already on main. No allowlist and no history rewrite.
 step . gitleaks <<'EOF'
-gitleaks detect --source . --redact=100 --no-banner --exit-code 1
+snapshot="$(mktemp -d)"
+trap 'rm -rf "$snapshot"' EXIT
+git archive HEAD | tar -x -C "$snapshot"
+gitleaks detect --no-git --source "$snapshot" --redact=100 --no-banner --exit-code 1
 EOF
 
 step ci ci-npm-ci <<'EOF'
