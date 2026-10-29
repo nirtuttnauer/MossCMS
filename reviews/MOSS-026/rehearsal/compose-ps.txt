@@ -1,0 +1,4 @@
+NAME                       IMAGE                    COMMAND                  SERVICE        CREATED          STATUS                    PORTS
+workspace-app-1            mosscms:local            "python -m app.cli s…"   app            12 minutes ago   Up 12 minutes (healthy)   127.0.0.1:8001->8001/tcp
+workspace-db-1             postgres:17-alpine       "docker-entrypoint.s…"   db             18 minutes ago   Up 18 minutes (healthy)   5432/tcp
+workspace-example-site-1   workspace-example-site   "docker-entrypoint.s…"   example-site   12 minutes ago   Up 12 minutes (healthy)   127.0.0.1:5174->5174/tcp

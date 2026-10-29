@@ -1,0 +1,5 @@
+EXIT web-check 0
+EXIT web-test 0
+EXIT web-build 0
+EXIT web-audit-high 0
+EXIT web-audit 0
