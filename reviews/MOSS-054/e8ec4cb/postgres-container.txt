@@ -1,9 +1,0 @@
-label: local
-sha: e8ec4cb2b621a37c0fc5ffae453ab7d910b6aabf
-image: postgres:17-alpine
-command: docker run --rm -d --name moss-verify-pg -e POSTGRES_USER=pg -e POSTGRES_PASSWORD=pgtestpw -e POSTGRES_DB=postgres -p 127.0.0.1:5432:5432 postgres:17-alpine
----- output ----
-d5023746831329907c0214f80e18ec012bfa9105a298f613026eab862ede7c28
-/var/run/postgresql:5432 - no response
-/var/run/postgresql:5432 - accepting connections
-postgres (PostgreSQL) 17.11

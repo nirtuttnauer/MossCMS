@@ -1,0 +1,99 @@
+label: local
+date: 2026-10-29T06:38:19Z
+sha: c684c24a8128bdfb32e8e06279a9481e613fbbe7
+workdir: .
+command:
+docker build --tag mosscms:smoke .
+GITHUB_WORKSPACE=/workspace
+---- output ----
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  20.85MB
+Step 1/29 : FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS web-build
+ ---> 0a7108bf6c7b
+Step 2/29 : WORKDIR /web
+ ---> Using cache
+ ---> ca96b5da75e3
+Step 3/29 : COPY shared/ /shared/
+ ---> Using cache
+ ---> 7467e188a4bf
+Step 4/29 : COPY web/package.json web/package-lock.json ./
+ ---> Using cache
+ ---> 2fad31fe44f3
+Step 5/29 : RUN npm ci
+ ---> Using cache
+ ---> 7e21842feeda
+Step 6/29 : COPY web/ ./
+ ---> Using cache
+ ---> c4167d1615d3
+Step 7/29 : ARG VITE_GRAPHQL_URL=/graphql
+ ---> Using cache
+ ---> 87a1c97adc4e
+Step 8/29 : ENV VITE_GRAPHQL_URL=${VITE_GRAPHQL_URL}
+ ---> Using cache
+ ---> bcac9606a541
+Step 9/29 : RUN npm run check && npm run build
+ ---> Using cache
+ ---> f2e49d698715
+Step 10/29 : FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d AS api-deps
+ ---> 02108f5d322d
+Step 11/29 : WORKDIR /api
+ ---> Using cache
+ ---> 528bbed4ab2b
+Step 12/29 : ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/app/.venv
+ ---> Using cache
+ ---> 785f967454f2
+Step 13/29 : RUN pip install --no-cache-dir uv==0.12.23
+ ---> Using cache
+ ---> ec83e2711f87
+Step 14/29 : COPY api/pyproject.toml api/uv.lock ./
+ ---> Using cache
+ ---> ed325f62513f
+Step 15/29 : RUN uv sync --locked --no-dev --no-install-project
+ ---> Using cache
+ ---> 0e8e0d181a93
+Step 16/29 : FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d AS runtime
+ ---> 02108f5d322d
+Step 17/29 : ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PATH="/app/.venv/bin:$PATH" PORT=8001 MOSS_STORAGE_DIR=/data
+ ---> Using cache
+ ---> 2a36c7de60fe
+Step 18/29 : WORKDIR /app
+ ---> Using cache
+ ---> 6ab0c80edb81
+Step 19/29 : RUN useradd --create-home --uid 10001 appuser && mkdir /data && chown appuser:appuser /data
+ ---> Using cache
+ ---> d97ba2cecf11
+Step 20/29 : COPY --from=api-deps /app/.venv /app/.venv
+ ---> Using cache
+ ---> 82963586f5f5
+Step 21/29 : COPY api/app ./app
+ ---> 9af4b90356ee
+Step 22/29 : COPY api/migrations ./migrations
+ ---> 0d4a2c10581f
+Step 23/29 : COPY api/alembic.ini ./alembic.ini
+ ---> dcdda4e760c9
+Step 24/29 : COPY shared/ /shared/
+ ---> 416c225ab320
+Step 25/29 : COPY --from=web-build /web/dist ./static
+ ---> 87a8bd7b6471
+Step 26/29 : USER appuser
+ ---> Running in e1ab90308bdd
+ ---> Removed intermediate container e1ab90308bdd
+ ---> 1143abf9970f
+Step 27/29 : EXPOSE 8001
+ ---> Running in debf38d9b4a6
+ ---> Removed intermediate container debf38d9b4a6
+ ---> 69c4b220f9b3
+Step 28/29 : HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/ready', timeout=3)"
+ ---> Running in 398efec10bc0
+ ---> Removed intermediate container 398efec10bc0
+ ---> 2c2eb6525972
+Step 29/29 : CMD ["python", "-m", "app.cli", "serve"]
+ ---> Running in f2cfcc9c58a6
+ ---> Removed intermediate container f2cfcc9c58a6
+ ---> 879ad26dabdc
+Successfully built 879ad26dabdc
+Successfully tagged mosscms:smoke
+exit_code: 0
