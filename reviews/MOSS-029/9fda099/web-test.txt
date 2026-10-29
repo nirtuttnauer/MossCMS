@@ -19,9 +19,10 @@ Not implemented: Window's scrollTo() method
 Not implemented: Window's scrollTo() method
 Not implemented: Window's scrollTo() method
 Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
 
- Test Files  35 passed (35)
-      Tests  317 passed (317)
-   Start at  05:40:18
-   Duration  13.54s (transform 1.35s, setup 0ms, import 6.43s, tests 18.53s, environment 11.21s)
+ Test Files  36 passed (36)
+      Tests  356 passed (356)
+   Start at  05:59:03
+   Duration  13.86s (transform 1.41s, setup 0ms, import 6.78s, tests 18.95s, environment 11.85s)
 

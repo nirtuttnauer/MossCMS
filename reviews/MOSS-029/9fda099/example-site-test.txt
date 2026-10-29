@@ -3,294 +3,300 @@
 > node --test server/*.test.mjs
 
 TAP version 13
-# (node:10298) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (node:29755) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: cached values are isolated from callers and refresh after five seconds
 ok 1 - cached values are isolated from callers and refresh after five seconds
   ---
-  duration_ms: 1.506075
+  duration_ms: 1.443758
   type: 'test'
   ...
 # Subtest: concurrent callers share a load but receive separate copies
 ok 2 - concurrent callers share a load but receive separate copies
   ---
-  duration_ms: 1.044767
+  duration_ms: 1.078941
   type: 'test'
   ...
 # Subtest: invalidated loads cannot refill the cache or remove a pending replacement
 ok 3 - invalidated loads cannot refill the cache or remove a pending replacement
   ---
-  duration_ms: 0.310593
+  duration_ms: 0.323318
   type: 'test'
   ...
 # Subtest: a late invalidated load cannot overwrite the replacement
 ok 4 - a late invalidated load cannot overwrite the replacement
   ---
-  duration_ms: 0.192487
+  duration_ms: 0.17662
   type: 'test'
   ...
 # Subtest: outages can use stale data for ten minutes without extending its lifetime
 ok 5 - outages can use stale data for ten minutes without extending its lifetime
   ---
-  duration_ms: 0.746506
+  duration_ms: 0.753816
   type: 'test'
   ...
 # Subtest: failed initial loads are not retained and can be retried
 ok 6 - failed initial loads are not retained and can be retried
   ---
-  duration_ms: 0.218591
+  duration_ms: 0.211264
   type: 'test'
   ...
 # Subtest: the cache evicts its oldest key when it reaches ten entries
 ok 7 - the cache evicts its oldest key when it reaches ten entries
   ---
-  duration_ms: 0.379154
+  duration_ms: 0.395951
   type: 'test'
   ...
 # Subtest: streaming pagination has no hidden 2,000-entry limit and supports early exit
 ok 8 - streaming pagination has no hidden 2,000-entry limit and supports early exit
   ---
-  duration_ms: 24.077229
+  duration_ms: 26.247178
   type: 'test'
   ...
 # Subtest: missing and repeated cursors fail instead of looping forever
 ok 9 - missing and repeated cursors fail instead of looping forever
   ---
-  duration_ms: 0.962502
+  duration_ms: 0.978762
   type: 'test'
   ...
 # Subtest: errors retain codes and request IDs without exposing credentials or invalid response bodies
 ok 10 - errors retain codes and request IDs without exposing credentials or invalid response bodies
   ---
-  duration_ms: 1.647875
+  duration_ms: 2.628842
   type: 'test'
   ...
 # Subtest: invalid configuration and page bounds reject before sending a request
 ok 11 - invalid configuration and page bounds reject before sending a request
   ---
-  duration_ms: 0.53878
+  duration_ms: 0.545022
   type: 'test'
   ...
-# (node:10305) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (node:29762) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: verified workspace-scoped events invalidate cache and duplicates are safe
 ok 12 - verified workspace-scoped events invalidate cache and duplicates are safe
   ---
-  duration_ms: 4.04162
+  duration_ms: 4.059168
   type: 'test'
   ...
 # Subtest: event verification rejects invalid credentials, signatures, payloads and scope
 ok 13 - event verification rejects invalid credentials, signatures, payloads and scope
   ---
-  duration_ms: 0.548768
+  duration_ms: 0.562945
   type: 'test'
   ...
 # Subtest: event signatures allow five minutes of clock skew in either direction
 ok 14 - event signatures allow five minutes of clock skew in either direction
   ---
-  duration_ms: 0.920014
+  duration_ms: 0.965685
   type: 'test'
   ...
 # Subtest: the receiver enforces byte limits and rejects bad signatures and methods
 ok 15 - the receiver enforces byte limits and rejects bad signatures and methods
   ---
-  duration_ms: 2.788856
+  duration_ms: 3.005895
   type: 'test'
   ...
 # Subtest: the receiver verifies the original bytes across split multibyte chunks
 ok 16 - the receiver verifies the original bytes across split multibyte chunks
   ---
-  duration_ms: 0.61918
+  duration_ms: 0.67677
   type: 'test'
   ...
 # Subtest: event streams send heartbeats and stop writing after disconnect
 ok 17 - event streams send heartbeats and stop writing after disconnect
   ---
-  duration_ms: 1.219975
+  duration_ms: 1.250611
   type: 'test'
   ...
 # Subtest: public feeds escape XML, use publication time and canonical stable routes
 ok 18 - public feeds escape XML, use publication time and canonical stable routes
   ---
-  duration_ms: 1.040261
+  duration_ms: 1.223363
   type: 'test'
   ...
 # Subtest: feeds omit invalid dates and XML control characters, sort posts and cap RSS at 100
 ok 19 - feeds omit invalid dates and XML control characters, sort posts and cap RSS at 100
   ---
-  duration_ms: 1.916366
+  duration_ms: 1.958299
   type: 'test'
   ...
 # Subtest: initial metadata escapes content and uses configured canonical, never request host
 ok 20 - initial metadata escapes content and uses configured canonical, never request host
   ---
-  duration_ms: 1.437966
+  duration_ms: 1.397026
   type: 'test'
   ...
 # Subtest: social images reject credentials and transient or unsafe URLs while static HTTPS images remain usable
 ok 21 - social images reject credentials and transient or unsafe URLs while static HTTPS images remain usable
   ---
-  duration_ms: 0.340335
+  duration_ms: 0.416179
   type: 'test'
   ...
 # Subtest: the shared pipeline intercepts site JSON and feeds before page rendering
 ok 22 - the shared pipeline intercepts site JSON and feeds before page rendering
   ---
-  duration_ms: 2.548481
+  duration_ms: 2.611901
   type: 'test'
   ...
 # Subtest: preview headers reach delegated static and Vite responses
 ok 23 - preview headers reach delegated static and Vite responses
   ---
-  duration_ms: 0.297629
+  duration_ms: 0.311581
   type: 'test'
   ...
 # Subtest: the preview bootstrap terminates the pipeline before delivery or rendering
 ok 24 - the preview bootstrap terminates the pipeline before delivery or rendering
   ---
-  duration_ms: 1.24998
+  duration_ms: 1.20942
   type: 'test'
   ...
 # Subtest: website projection preserves section routing, alias collisions, metadata and profile preference
 ok 25 - website projection preserves section routing, alias collisions, metadata and profile preference
   ---
-  duration_ms: 1.280216
+  duration_ms: 1.368891
   type: 'test'
   ...
 # Subtest: the loader paginates with server-only credentials and normalizes the public origin
 ok 26 - the loader paginates with server-only credentials and normalizes the public origin
   ---
-  duration_ms: 0.932632
+  duration_ms: 0.981964
   type: 'test'
   ...
 # Subtest: the loader validates credentials and protocols before making requests
 ok 27 - the loader validates credentials and protocols before making requests
   ---
-  duration_ms: 0.555623
+  duration_ms: 0.560478
   type: 'test'
   ...
 # Subtest: the loader retains its pagination bound and propagates HTTP and GraphQL errors
 ok 28 - the loader retains its pagination bound and propagates HTTP and GraphQL errors
   ---
-  duration_ms: 1.959518
+  duration_ms: 1.886405
   type: 'test'
   ...
 # Subtest: stable paths and unique legacy aliases resolve
 ok 29 - stable paths and unique legacy aliases resolve
   ---
-  duration_ms: 0.631444
+  duration_ms: 0.739606
   type: 'test'
   ...
 # Subtest: server returns actual public 404s and canonical redirects
 ok 30 - server returns actual public 404s and canonical redirects
   ---
-  duration_ms: 1.01123
+  duration_ms: 1.174512
   type: 'test'
   ...
 # Subtest: route parsing handles encoded slugs and malformed escapes without changing precedence
 ok 31 - route parsing handles encoded slugs and malformed escapes without changing precedence
   ---
-  duration_ms: 0.220813
+  duration_ms: 0.201203
   type: 'test'
   ...
 # Subtest: HEAD avoids rendering and unsupported or static requests delegate without loading content
 ok 32 - HEAD avoids rendering and unsupported or static requests delegate without loading content
   ---
-  duration_ms: 0.671908
+  duration_ms: 0.713735
   type: 'test'
   ...
 # Subtest: historical paths redirect straight to the current live canonical route
 ok 33 - historical paths redirect straight to the current live canonical route
   ---
-  duration_ms: 1.490389
+  duration_ms: 1.308545
   type: 'test'
   ...
 # Subtest: recorded history takes precedence over an incidental legacy alias
 ok 34 - recorded history takes precedence over an incidental legacy alias
   ---
-  duration_ms: 0.127117
+  duration_ms: 0.116827
+  type: 'test'
+  ...
+# Subtest: hebrew nextjs route resolves from the raw slug and the percent-encoded URL
+ok 35 - hebrew nextjs route resolves from the raw slug and the percent-encoded URL
+  ---
+  duration_ms: 0.734199
   type: 'test'
   ...
 # Subtest: unpublished reserved URLs return unavailable instead of another entry legacy alias
-ok 35 - unpublished reserved URLs return unavailable instead of another entry legacy alias
+ok 36 - unpublished reserved URLs return unavailable instead of another entry legacy alias
   ---
-  duration_ms: 0.089968
+  duration_ms: 0.100494
   type: 'test'
   ...
-# (node:10355) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (node:29812) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: preview session is HttpOnly, scoped, revalidated, and revocable
-ok 36 - preview session is HttpOnly, scoped, revalidated, and revocable
+ok 37 - preview session is HttpOnly, scoped, revalidated, and revocable
   ---
-  duration_ms: 3.920642
+  duration_ms: 4.029844
   type: 'test'
   ...
 # Subtest: bootstrap strips fragment credentials before redemption and blocks cross-origin POST
-ok 37 - bootstrap strips fragment credentials before redemption and blocks cross-origin POST
+ok 38 - bootstrap strips fragment credentials before redemption and blocks cross-origin POST
   ---
-  duration_ms: 0.415925
+  duration_ms: 0.355879
   type: 'test'
   ...
 # Subtest: the generated bootstrap removes credentials before sending the grant and redirects after redemption
-ok 38 - the generated bootstrap removes credentials before sending the grant and redirects after redemption
+ok 39 - the generated bootstrap removes credentials before sending the grant and redirects after redemption
   ---
-  duration_ms: 1.434968
+  duration_ms: 1.415755
   type: 'test'
   ...
 # Subtest: preview sessions expire locally and exit clears the cookie
-ok 39 - preview sessions expire locally and exit clears the cookie
+ok 40 - preview sessions expire locally and exit clears the cookie
   ---
-  duration_ms: 2.622663
+  duration_ms: 2.466773
   type: 'test'
   ...
 # Subtest: preview request validation rejects invalid bodies before redemption and retains the byte limit
-ok 40 - preview request validation rejects invalid bodies before redemption and retains the byte limit
+ok 41 - preview request validation rejects invalid bodies before redemption and retains the byte limit
   ---
-  duration_ms: 3.165757
+  duration_ms: 3.316807
   type: 'test'
   ...
 # Subtest: redemption rejects expired, invalid-date and unsupported-type grants
-ok 41 - redemption rejects expired, invalid-date and unsupported-type grants
+ok 42 - redemption rejects expired, invalid-date and unsupported-type grants
   ---
-  duration_ms: 0.554572
+  duration_ms: 0.567852
   type: 'test'
   ...
 # Subtest: empty bodies return an empty Buffer
-ok 42 - empty bodies return an empty Buffer
+ok 43 - empty bodies return an empty Buffer
   ---
-  duration_ms: 0.877669
+  duration_ms: 0.922923
   type: 'test'
   ...
 # Subtest: the exact byte limit accepts strings, buffers and byte arrays across chunks
-ok 43 - the exact byte limit accepts strings, buffers and byte arrays across chunks
+ok 44 - the exact byte limit accepts strings, buffers and byte arrays across chunks
   ---
-  duration_ms: 0.173962
+  duration_ms: 0.173401
   type: 'test'
   ...
 # Subtest: one byte over the limit rejects both single and multiple chunks
-ok 44 - one byte over the limit rejects both single and multiple chunks
+ok 45 - one byte over the limit rejects both single and multiple chunks
   ---
-  duration_ms: 1.085197
+  duration_ms: 1.175619
   type: 'test'
   ...
 # Subtest: request stream errors propagate unchanged
-ok 45 - request stream errors propagate unchanged
+ok 46 - request stream errors propagate unchanged
   ---
-  duration_ms: 0.235895
+  duration_ms: 0.225188
   type: 'test'
   ...
 # Subtest: overflow stops consumption and closes the request iterator
-ok 46 - overflow stops consumption and closes the request iterator
+ok 47 - overflow stops consumption and closes the request iterator
   ---
-  duration_ms: 0.262596
+  duration_ms: 0.345573
   type: 'test'
   ...
-1..46
-# tests 46
+1..47
+# tests 47
 # suites 0
-# pass 46
+# pass 47
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 171.244792
+# duration_ms 175.097376

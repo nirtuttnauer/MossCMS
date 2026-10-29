@@ -2,15 +2,15 @@
   "ok": true,
   "runs": {
     "sqlite": {
-      "collected": 441,
-      "passed": 437,
+      "collected": 489,
+      "passed": 485,
       "deselected": 4,
       "failed": 0,
       "skipped": 0
     },
     "postgres": {
-      "collected": 441,
-      "passed": 441,
+      "collected": 489,
+      "passed": 489,
       "deselected": 0,
       "failed": 0,
       "skipped": 0

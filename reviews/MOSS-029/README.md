@@ -8,23 +8,21 @@ Recorded 29 October 2026 (UTC). An operator can reset an account password when M
 
 | | |
 | --- | --- |
-| SHA tested | `c71a1f80aebc5b5c5243fa39fc7959757ce99706` |
-| Code commit | `03eaf42` (reset command, tests, and operator steps) |
+| SHA tested | `9fda099c07ce41836b6e3e72a1f540510f363e4a` |
+| Code commit | `5e782cd` (reset command, tests, and operator steps) |
 | Branch | `cursor/moss-029-password-reset-83ab` |
-| Parent | `ae66eb0a9218cce4d24a45fa887126ea974013b8` (main, after MOSS-033) |
+| Parent | `01ccda62a56f2a7ce387bcb734efdf50e70b7293` (main, after MOSS-058) |
 | Baseline | `3a87c73c8e925973608e373863813163b41f04a9` |
 | Previous suite | `28c3dc9` / MOSS-026 at `835fbf6`: 433 collected |
 | `git status --porcelain` at the start of this run | empty (clean) |
-| Date | 2026-10-29T05:51:06Z through 2026-10-29T05:54:27Z |
+| Date | 2026-10-29T05:55:35Z through 2026-10-29T05:59:17Z, plus typecheck and vite builds immediately after |
 | Python / uv | 3.12.3 / 0.12.23 |
 | ruff / mypy | 0.16.10 / 2.4.0 |
 | Node / npm | v22.23.4 / 10.9.9 |
 | PostgreSQL | 16.15, role `ubuntu`, local socket |
 | Docker | CLI 29.1.3, Compose 2.40.3 (compose config tests ran; the daemon was not started) |
 
-`main` moved from `28c3dc9` to `ae66eb0` after the first suite. This branch was rebased onto `ae66eb0`. `git diff 8611b1a 03eaf42` for `api/app/cli.py`, `api/tests/test_cli.py`, `README.md`, and `docs/deployment-recovery.md` is empty, so the reset behavior is the same bytes as the earlier run. The API commands below were run again on the rebased tree. Web and example-site sources are unchanged from that earlier run (317 and 46), which used the same commands on 2026-10-29T05:37:08Z through 2026-10-29T05:40:54Z.
-
-`UV_NO_ENV_FILE=1`. No `.env` was present in the checkout.
+`main` moved twice during this ticket (`28c3dc9` to `ae66eb0`, then to `01ccda6`). This branch was rebased onto `01ccda6` before the run below. `UV_NO_ENV_FILE=1`. No `.env` was present in the checkout.
 
 ## Commands
 
@@ -42,24 +40,26 @@ MOSS_USE_SQLITE=false MOSS_REQUIRED_RUN=postgres \
   uv run pytest -ra --tb=line
 uv run python tests/verify_required_runs.py
 
-cd web && npm ci && npm run check && npm test && npm run build
-cd example-site && npm ci && npm run check && npm test && npm run build
+cd web && npm run check && npm test && npm run build
+cd example-site && npm run check && npm test && npm run build
 ```
+
+`npm ci` for web and example-site exited 0 earlier on this checkout, before MOSS-058. Those lockfiles are unchanged by this ticket. The check, test, and build commands above ran on `9fda099`.
 
 | Command | Exit | Result |
 | --- | --- | --- |
 | `ruff check app tests migrations` | 0 | all checks passed |
-| `ruff format --check app tests migrations` | 0 | 87 files already formatted |
+| `ruff format --check app tests migrations` | 0 | 89 files already formatted |
 | ruff check scripts, example-site setup, and telemetry smoke | 0 | all checks passed |
 | ruff format check of those files | 0 | 17 files already formatted |
-| `mypy app` | 0 | no issues in 28 source files |
-| SQLite required run | 0 | collected 441, **437 passed, 4 deselected, 0 skipped**, 6 warnings in 70.68s |
-| PostgreSQL required run | 0 | collected 441, **441 passed, 0 deselected, 0 skipped**, 6 warnings in 104.24s |
-| `tests/verify_required_runs.py` | 0 | union of passed ids is 441 |
-| web `npm ci`, `npm run check`, `npm test`, `npm run build` | 0 | `tsc -b`; 35 files, 317 tests passed; vite build |
-| example-site `npm ci`, `npm run check`, `npm test`, `npm run build` | 0 | `tsc --noEmit`; 46 passed, 0 failed, 0 skipped; vite build |
+| `mypy app` | 0 | no issues in 29 source files |
+| SQLite required run | 0 | collected 489, **485 passed, 4 deselected, 0 skipped**, 6 warnings in 69.98s |
+| PostgreSQL required run | 0 | collected 489, **489 passed, 0 deselected, 0 skipped**, 6 warnings in 108.41s |
+| `tests/verify_required_runs.py` | 0 | union of passed ids is 489 |
+| web `npm run check`, `npm test`, `npm run build` | 0 | `tsc -b`; 36 files, 356 tests passed; vite build |
+| example-site `npm run check`, `npm test`, `npm run build` | 0 | `tsc --noEmit`; 47 passed, 0 failed, 0 skipped; vite build |
 
-441 ≥ 402 at `3a87c73`, and 441 ≥ 433 on the MOSS-026 suite. The two tests added here are `test_reset_password_cli_link_replaces_the_password_once` and `test_reset_password_cli_link_expires_on_an_injected_clock`. The four SQLite deselections are the committed PostgreSQL-only tests, and they passed in the PostgreSQL run:
+489 ≥ 402 at `3a87c73`, and 489 ≥ 433 on the MOSS-026 suite. The two tests added here are `test_reset_password_cli_link_replaces_the_password_once` and `test_reset_password_cli_link_expires_on_an_injected_clock`. The four SQLite deselections are the committed PostgreSQL-only tests, and they passed in the PostgreSQL run:
 
 - `tests/test_concurrency.py::test_postgres_workers_skip_locked_rows_and_claim_once`
 - `tests/test_indexing.py::test_common_string_count_avoids_per_match_probes_in_generic_postgres_plan`
@@ -68,11 +68,11 @@ cd example-site && npm ci && npm run check && npm test && npm run build
 
 No xfail. No new skip.
 
-Logs: [pytest-sqlite.txt](c71a1f8/pytest-sqlite.txt), [pytest-postgres.txt](c71a1f8/pytest-postgres.txt), [verify.txt](c71a1f8/verify.txt), [ruff-check.txt](c71a1f8/ruff-check.txt), [ruff-format.txt](c71a1f8/ruff-format.txt), [ruff-scripts.txt](c71a1f8/ruff-scripts.txt), [ruff-scripts-format.txt](c71a1f8/ruff-scripts-format.txt), [mypy.txt](c71a1f8/mypy.txt), [web-check.txt](c71a1f8/web-check.txt), [web-test.txt](c71a1f8/web-test.txt), [web-build.txt](c71a1f8/web-build.txt), [example-site-check.txt](c71a1f8/example-site-check.txt), [example-site-test.txt](c71a1f8/example-site-test.txt), [example-site-build.txt](c71a1f8/example-site-build.txt).
+Logs: [pytest-sqlite.txt](9fda099/pytest-sqlite.txt), [pytest-postgres.txt](9fda099/pytest-postgres.txt), [verify.txt](9fda099/verify.txt), [ruff-check.txt](9fda099/ruff-check.txt), [ruff-format.txt](9fda099/ruff-format.txt), [ruff-scripts.txt](9fda099/ruff-scripts.txt), [ruff-scripts-format.txt](9fda099/ruff-scripts-format.txt), [mypy.txt](9fda099/mypy.txt), [web-check.txt](9fda099/web-check.txt), [web-test.txt](9fda099/web-test.txt), [web-build.txt](9fda099/web-build.txt), [example-site-check.txt](9fda099/example-site-check.txt), [example-site-test.txt](9fda099/example-site-test.txt), [example-site-build.txt](9fda099/example-site-build.txt).
 
 ## rehearsal (Linux VM)
 
-Recorded 29 October 2026 (UTC), 2026-10-29T05:46Z through 2026-10-29T05:49:24Z. The reset sources were `8611b1a`, byte-identical to `03eaf42` on this rebased branch. `git status --porcelain` was empty before the browser session. This section is the operator command and the opened link. It is separate from the `local` suite above.
+Recorded 29 October 2026 (UTC), 2026-10-29T05:46Z through 2026-10-29T05:49:24Z. The reset sources were byte-identical to `5e782cd`. `git status --porcelain` was empty before the browser session. This section is the operator command and the opened link. It is separate from the `local` suite above.
 
 This VM had no running Docker daemon, so the command was the module the documented Compose command runs:
 
