@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compose builds `mosscms:local` from this checkout by default (`pull_policy: build`) instead of pulling `nirtuttnauer/mosscms:latest`. A published image is optional and requires both `MOSS_IMAGE` and `MOSS_PULL_POLICY=missing`. ([#19](https://github.com/nirtuttnauer/MossCMS/pull/19), `1b26f0fb07617e5d55303df2d25441281347f0d5`)
 - The project status and task list now cite the 29 October 2026 local suite record in place of the 8 October verification counts. ([#18](https://github.com/nirtuttnauer/MossCMS/pull/18), `b9c336d397b37c9075bad0765fb375c0c513faaa`)
 
+### Fixed
+
+- Hebrew and other Unicode titles keep their letters in slugs. Bidi and zero-width characters are removed before NFC and casefold. A slug may use Latin plus one other script, and Latin mixed with Cyrillic or Greek is rejected. Delivery percent-encodes website paths. Stored slugs stay as they are. ([#32](https://github.com/nirtuttnauer/MossCMS/pull/32), `9761817b1566c557e8a2f9f147816a31b1564793`)
+
 ### Security
 
 - Raised the API Pillow requirement from `pillow>=11.3,<13` (resolved 12.3.0) to `pillow>=13`, which resolves to 13.0.0 and includes the fixes from that release. Image upload and thumbnail code does not use the APIs Pillow 13 removed. ([#10](https://github.com/nirtuttnauer/MossCMS/pull/10), `b306d3f0e609347735880be2a3d487b1ac1500a2`)
