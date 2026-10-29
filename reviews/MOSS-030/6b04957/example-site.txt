@@ -1,0 +1,324 @@
+START 2026-10-29T04:17:50Z SHA 6b0495772ea7b84f70b9a7ebc83a8edf619a6151
+
+> moss-example-site@0.1.0 check
+> tsc --noEmit
+
+CHECK:0
+
+> moss-example-site@0.1.0 test
+> node --test server/*.test.mjs
+
+TAP version 13
+# (node:17287) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: cached values are isolated from callers and refresh after five seconds
+ok 1 - cached values are isolated from callers and refresh after five seconds
+  ---
+  duration_ms: 8.304152
+  type: 'test'
+  ...
+# Subtest: concurrent callers share a load but receive separate copies
+ok 2 - concurrent callers share a load but receive separate copies
+  ---
+  duration_ms: 1.130576
+  type: 'test'
+  ...
+# Subtest: invalidated loads cannot refill the cache or remove a pending replacement
+ok 3 - invalidated loads cannot refill the cache or remove a pending replacement
+  ---
+  duration_ms: 0.376073
+  type: 'test'
+  ...
+# Subtest: a late invalidated load cannot overwrite the replacement
+ok 4 - a late invalidated load cannot overwrite the replacement
+  ---
+  duration_ms: 0.204383
+  type: 'test'
+  ...
+# Subtest: outages can use stale data for ten minutes without extending its lifetime
+ok 5 - outages can use stale data for ten minutes without extending its lifetime
+  ---
+  duration_ms: 0.829783
+  type: 'test'
+  ...
+# Subtest: failed initial loads are not retained and can be retried
+ok 6 - failed initial loads are not retained and can be retried
+  ---
+  duration_ms: 0.206398
+  type: 'test'
+  ...
+# Subtest: the cache evicts its oldest key when it reaches ten entries
+ok 7 - the cache evicts its oldest key when it reaches ten entries
+  ---
+  duration_ms: 0.451835
+  type: 'test'
+  ...
+# Subtest: streaming pagination has no hidden 2,000-entry limit and supports early exit
+ok 8 - streaming pagination has no hidden 2,000-entry limit and supports early exit
+  ---
+  duration_ms: 50.016831
+  type: 'test'
+  ...
+# Subtest: missing and repeated cursors fail instead of looping forever
+ok 9 - missing and repeated cursors fail instead of looping forever
+  ---
+  duration_ms: 0.933185
+  type: 'test'
+  ...
+# Subtest: errors retain codes and request IDs without exposing credentials or invalid response bodies
+ok 10 - errors retain codes and request IDs without exposing credentials or invalid response bodies
+  ---
+  duration_ms: 8.149434
+  type: 'test'
+  ...
+# Subtest: invalid configuration and page bounds reject before sending a request
+ok 11 - invalid configuration and page bounds reject before sending a request
+  ---
+  duration_ms: 0.486489
+  type: 'test'
+  ...
+# (node:17294) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: verified workspace-scoped events invalidate cache and duplicates are safe
+ok 12 - verified workspace-scoped events invalidate cache and duplicates are safe
+  ---
+  duration_ms: 16.36442
+  type: 'test'
+  ...
+# Subtest: event verification rejects invalid credentials, signatures, payloads and scope
+ok 13 - event verification rejects invalid credentials, signatures, payloads and scope
+  ---
+  duration_ms: 0.55886
+  type: 'test'
+  ...
+# Subtest: event signatures allow five minutes of clock skew in either direction
+ok 14 - event signatures allow five minutes of clock skew in either direction
+  ---
+  duration_ms: 1.057951
+  type: 'test'
+  ...
+# Subtest: the receiver enforces byte limits and rejects bad signatures and methods
+ok 15 - the receiver enforces byte limits and rejects bad signatures and methods
+  ---
+  duration_ms: 4.225406
+  type: 'test'
+  ...
+# Subtest: the receiver verifies the original bytes across split multibyte chunks
+ok 16 - the receiver verifies the original bytes across split multibyte chunks
+  ---
+  duration_ms: 2.73933
+  type: 'test'
+  ...
+# Subtest: event streams send heartbeats and stop writing after disconnect
+ok 17 - event streams send heartbeats and stop writing after disconnect
+  ---
+  duration_ms: 1.237487
+  type: 'test'
+  ...
+# Subtest: public feeds escape XML, use publication time and canonical stable routes
+ok 18 - public feeds escape XML, use publication time and canonical stable routes
+  ---
+  duration_ms: 1.220574
+  type: 'test'
+  ...
+# Subtest: feeds omit invalid dates and XML control characters, sort posts and cap RSS at 100
+ok 19 - feeds omit invalid dates and XML control characters, sort posts and cap RSS at 100
+  ---
+  duration_ms: 2.21677
+  type: 'test'
+  ...
+# Subtest: initial metadata escapes content and uses configured canonical, never request host
+ok 20 - initial metadata escapes content and uses configured canonical, never request host
+  ---
+  duration_ms: 7.157923
+  type: 'test'
+  ...
+# Subtest: social images reject credentials and transient or unsafe URLs while static HTTPS images remain usable
+ok 21 - social images reject credentials and transient or unsafe URLs while static HTTPS images remain usable
+  ---
+  duration_ms: 0.376873
+  type: 'test'
+  ...
+# Subtest: the shared pipeline intercepts site JSON and feeds before page rendering
+ok 22 - the shared pipeline intercepts site JSON and feeds before page rendering
+  ---
+  duration_ms: 2.577444
+  type: 'test'
+  ...
+# Subtest: preview headers reach delegated static and Vite responses
+ok 23 - preview headers reach delegated static and Vite responses
+  ---
+  duration_ms: 1.123943
+  type: 'test'
+  ...
+# Subtest: the preview bootstrap terminates the pipeline before delivery or rendering
+ok 24 - the preview bootstrap terminates the pipeline before delivery or rendering
+  ---
+  duration_ms: 0.371394
+  type: 'test'
+  ...
+# Subtest: website projection preserves section routing, alias collisions, metadata and profile preference
+ok 25 - website projection preserves section routing, alias collisions, metadata and profile preference
+  ---
+  duration_ms: 1.284333
+  type: 'test'
+  ...
+# Subtest: the loader paginates with server-only credentials and normalizes the public origin
+ok 26 - the loader paginates with server-only credentials and normalizes the public origin
+  ---
+  duration_ms: 0.972758
+  type: 'test'
+  ...
+# Subtest: the loader validates credentials and protocols before making requests
+ok 27 - the loader validates credentials and protocols before making requests
+  ---
+  duration_ms: 4.414358
+  type: 'test'
+  ...
+# Subtest: the loader retains its pagination bound and propagates HTTP and GraphQL errors
+ok 28 - the loader retains its pagination bound and propagates HTTP and GraphQL errors
+  ---
+  duration_ms: 5.693442
+  type: 'test'
+  ...
+# Subtest: stable paths and unique legacy aliases resolve
+ok 29 - stable paths and unique legacy aliases resolve
+  ---
+  duration_ms: 0.74563
+  type: 'test'
+  ...
+# Subtest: server returns actual public 404s and canonical redirects
+ok 30 - server returns actual public 404s and canonical redirects
+  ---
+  duration_ms: 1.097149
+  type: 'test'
+  ...
+# Subtest: route parsing handles encoded slugs and malformed escapes without changing precedence
+ok 31 - route parsing handles encoded slugs and malformed escapes without changing precedence
+  ---
+  duration_ms: 0.189134
+  type: 'test'
+  ...
+# Subtest: HEAD avoids rendering and unsupported or static requests delegate without loading content
+ok 32 - HEAD avoids rendering and unsupported or static requests delegate without loading content
+  ---
+  duration_ms: 0.692128
+  type: 'test'
+  ...
+# Subtest: historical paths redirect straight to the current live canonical route
+ok 33 - historical paths redirect straight to the current live canonical route
+  ---
+  duration_ms: 1.626221
+  type: 'test'
+  ...
+# Subtest: recorded history takes precedence over an incidental legacy alias
+ok 34 - recorded history takes precedence over an incidental legacy alias
+  ---
+  duration_ms: 0.130993
+  type: 'test'
+  ...
+# Subtest: unpublished reserved URLs return unavailable instead of another entry legacy alias
+ok 35 - unpublished reserved URLs return unavailable instead of another entry legacy alias
+  ---
+  duration_ms: 0.091103
+  type: 'test'
+  ...
+# Subtest: preview session is HttpOnly, scoped, revalidated, and revocable
+ok 36 - preview session is HttpOnly, scoped, revalidated, and revocable
+  ---
+  duration_ms: 6.405337
+  type: 'test'
+  ...
+# Subtest: bootstrap strips fragment credentials before redemption and blocks cross-origin POST
+ok 37 - bootstrap strips fragment credentials before redemption and blocks cross-origin POST
+  ---
+  duration_ms: 0.360473
+  type: 'test'
+  ...
+# Subtest: the generated bootstrap removes credentials before sending the grant and redirects after redemption
+ok 38 - the generated bootstrap removes credentials before sending the grant and redirects after redemption
+  ---
+  duration_ms: 1.550467
+  type: 'test'
+  ...
+# (node:17337) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: preview sessions expire locally and exit clears the cookie
+ok 39 - preview sessions expire locally and exit clears the cookie
+  ---
+  duration_ms: 2.916859
+  type: 'test'
+  ...
+# Subtest: preview request validation rejects invalid bodies before redemption and retains the byte limit
+ok 40 - preview request validation rejects invalid bodies before redemption and retains the byte limit
+  ---
+  duration_ms: 3.203075
+  type: 'test'
+  ...
+# Subtest: redemption rejects expired, invalid-date and unsupported-type grants
+ok 41 - redemption rejects expired, invalid-date and unsupported-type grants
+  ---
+  duration_ms: 0.538839
+  type: 'test'
+  ...
+# Subtest: empty bodies return an empty Buffer
+ok 42 - empty bodies return an empty Buffer
+  ---
+  duration_ms: 1.04644
+  type: 'test'
+  ...
+# Subtest: the exact byte limit accepts strings, buffers and byte arrays across chunks
+ok 43 - the exact byte limit accepts strings, buffers and byte arrays across chunks
+  ---
+  duration_ms: 0.184823
+  type: 'test'
+  ...
+# Subtest: one byte over the limit rejects both single and multiple chunks
+ok 44 - one byte over the limit rejects both single and multiple chunks
+  ---
+  duration_ms: 5.029919
+  type: 'test'
+  ...
+# Subtest: request stream errors propagate unchanged
+ok 45 - request stream errors propagate unchanged
+  ---
+  duration_ms: 0.238498
+  type: 'test'
+  ...
+# Subtest: overflow stops consumption and closes the request iterator
+ok 46 - overflow stops consumption and closes the request iterator
+  ---
+  duration_ms: 0.266559
+  type: 'test'
+  ...
+1..46
+# tests 46
+# suites 0
+# pass 46
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 351.164785
+TEST:0
+
+> moss-example-site@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 1759 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                         1.17 kB │ gzip:   0.57 kB
+dist/assets/index-DKyWmvXO.css         14.82 kB │ gzip:   4.18 kB
+dist/assets/index-C4PqTOi8.js         292.99 kB │ gzip:  93.99 kB
+dist/assets/three.module-Dljb2UHm.js  746.77 kB │ gzip: 191.66 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 13.47s
+BUILD:0
+END 2026-10-29T04:18:10Z
