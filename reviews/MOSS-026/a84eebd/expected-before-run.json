@@ -1,0 +1,13 @@
+{
+  "collected_at": "2026-10-29T05:05:41.395343+00:00",
+  "collected": 403,
+  "postgres_marker": [
+    "tests/test_concurrency.py::test_postgres_workers_skip_locked_rows_and_claim_once",
+    "tests/test_indexing.py::test_common_string_count_avoids_per_match_probes_in_generic_postgres_plan",
+    "tests/test_postgres_product_migration.py::test_postgres_0009_preserves_localized_live_scheduled_and_revision_data",
+    "tests/test_search.py::test_generic_postgres_substring_plan_uses_trigrams_and_rechecks_matches"
+  ],
+  "sqlite_expected_passed": 399,
+  "postgres_expected_passed": 403,
+  "problems": []
+}

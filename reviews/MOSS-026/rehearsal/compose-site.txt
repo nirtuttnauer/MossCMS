@@ -1,0 +1,201 @@
+time="2026-10-29T05:01:08Z" level=warning msg="Docker Compose is configured to build using Bake, but buildx isn't installed"
+#0 building with "default" instance using docker driver
+
+#1 [app internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.42kB done
+#1 DONE 0.0s
+
+#2 [app internal] load metadata for docker.io/library/node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+#2 DONE 0.0s
+
+#3 [app internal] load metadata for docker.io/library/python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
+#3 DONE 0.0s
+
+#4 [app internal] load .dockerignore
+#4 transferring context: 314B done
+#4 DONE 0.0s
+
+#5 [app api-deps 1/5] FROM docker.io/library/python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
+#5 resolve docker.io/library/python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d 0.0s done
+#5 DONE 0.0s
+
+#6 [app web-build 1/7] FROM docker.io/library/node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+#6 resolve docker.io/library/node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 0.0s done
+#6 DONE 0.0s
+
+#7 [app internal] load build context
+#7 transferring context: 5.22kB done
+#7 DONE 0.0s
+
+#8 [app api-deps 4/5] COPY api/pyproject.toml api/uv.lock ./
+#8 CACHED
+
+#9 [app api-deps 3/5] RUN pip install --no-cache-dir uv==0.12.23
+#9 CACHED
+
+#10 [app runtime 5/8] COPY api/app ./app
+#10 CACHED
+
+#11 [app api-deps 5/5] RUN uv sync --locked --no-dev --no-install-project
+#11 CACHED
+
+#12 [app runtime 4/8] COPY --from=api-deps /app/.venv /app/.venv
+#12 CACHED
+
+#13 [app runtime 3/8] RUN useradd --create-home --uid 10001 appuser && mkdir /data && chown appuser:appuser /data
+#13 CACHED
+
+#14 [app runtime 6/8] COPY api/migrations ./migrations
+#14 CACHED
+
+#15 [app api-deps 2/5] WORKDIR /api
+#15 CACHED
+
+#16 [app web-build 4/7] COPY web/package.json web/package-lock.json ./
+#16 CACHED
+
+#17 [app web-build 2/7] WORKDIR /web
+#17 CACHED
+
+#18 [app web-build 3/7] COPY shared/ /shared/
+#18 CACHED
+
+#19 [app web-build 5/7] RUN npm ci
+#19 CACHED
+
+#20 [app runtime 2/8] WORKDIR /app
+#20 CACHED
+
+#21 [app runtime 7/8] COPY api/alembic.ini ./alembic.ini
+#21 CACHED
+
+#22 [app web-build 7/7] RUN npm run check && npm run build
+#22 CACHED
+
+#23 [app web-build 6/7] COPY web/ ./
+#23 CACHED
+
+#24 [app runtime 8/8] COPY --from=web-build /web/dist ./static
+#24 CACHED
+
+#25 [app] exporting to image
+#25 exporting layers done
+#25 exporting manifest sha256:94cce3cd39325b96166ca3bcd6fad591cc4de7d55dcf34de1505774f0f77b7e0 done
+#25 exporting config sha256:a145f74d00cb2d39211fb540bf8e75d528183c0c638d9f7e3cac132e66560094 done
+#25 exporting attestation manifest sha256:f8f4cb473e9674ee6fa6f9cec463025314e943d848beddcc6eabafacef0f0887 done
+#25 exporting manifest list sha256:cb421c22afa7221689cb5e57ce715d5ad10553e4add5bf7cd84fd4f69b826053 done
+#25 naming to docker.io/library/mosscms:local done
+#25 unpacking to docker.io/library/mosscms:local done
+#25 DONE 0.0s
+
+#26 [app] resolving provenance for metadata file
+#26 DONE 0.0s
+
+#27 [example-site internal] load build definition from Dockerfile
+#27 transferring dockerfile: 882B done
+#27 DONE 0.0s
+
+#2 [example-site internal] load metadata for docker.io/library/node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+#2 DONE 0.0s
+
+#28 [example-site internal] load .dockerignore
+#28 transferring context: 314B done
+#28 DONE 0.0s
+
+#29 [example-site internal] load build context
+#29 transferring context: 200.80kB done
+#29 DONE 0.0s
+
+#6 [example-site build 1/9] FROM docker.io/library/node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+#6 resolve docker.io/library/node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 0.0s done
+#6 CACHED
+
+#30 [example-site build 2/9] WORKDIR /site
+#30 DONE 0.0s
+
+#31 [example-site build 3/9] COPY shared/ /shared/
+#31 DONE 0.0s
+
+#32 [example-site build 4/9] COPY example-site/package.json example-site/package-lock.json ./
+#32 DONE 0.0s
+
+#33 [example-site build 5/9] RUN npm ci
+#33 2.863 
+#33 2.863 added 167 packages, and audited 168 packages in 3s
+#33 2.863 
+#33 2.863 80 packages are looking for funding
+#33 2.863   run `npm fund` for details
+#33 2.864 
+#33 2.864 found 0 vulnerabilities
+#33 2.864 npm notice
+#33 2.864 npm notice New major version of npm available! 10.9.9 -> 12.2.1
+#33 2.864 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+#33 2.864 npm notice To update run: npm install -g npm@12.2.1
+#33 2.864 npm notice
+#33 DONE 3.1s
+
+#34 [example-site build 6/9] COPY example-site/tsconfig.json example-site/vite.config.ts example-site/index.html ./
+#34 DONE 0.1s
+
+#35 [example-site build 7/9] COPY example-site/src ./src
+#35 DONE 0.0s
+
+#36 [example-site build 8/9] COPY example-site/server ./server
+#36 DONE 0.0s
+
+#37 [example-site build 9/9] RUN npm run build
+#37 0.203 
+#37 0.203 > moss-example-site@0.1.0 build
+#37 0.203 > tsc --noEmit && vite build
+#37 0.203 
+#37 2.572 vite v7.3.7 building client environment for production...
+#37 2.623 transforming...
+#37 10.85 ✓ 1759 modules transformed.
+#37 11.18 rendering chunks...
+#37 11.28 computing gzip size...
+#37 11.30 dist/index.html                         1.17 kB │ gzip:   0.57 kB
+#37 11.30 dist/assets/index-DKyWmvXO.css         14.82 kB │ gzip:   4.18 kB
+#37 11.30 dist/assets/index-C4PqTOi8.js         292.99 kB │ gzip:  93.99 kB
+#37 11.30 dist/assets/three.module-Dljb2UHm.js  746.77 kB │ gzip: 191.66 kB
+#37 11.30 ✓ built in 8.70s
+#37 11.30 
+#37 11.30 (!) Some chunks are larger than 500 kB after minification. Consider:
+#37 11.30 - Using dynamic import() to code-split the application
+#37 11.30 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+#37 11.30 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+#37 DONE 11.4s
+
+#38 [example-site runtime 4/5] COPY --from=build /site/dist ./dist
+#38 DONE 0.0s
+
+#39 [example-site runtime 5/5] COPY example-site/server ./server
+#39 DONE 0.0s
+
+#40 [example-site] exporting to image
+#40 exporting layers 0.1s done
+#40 exporting manifest sha256:c5ead762e11768691f837863b291b9a64a02d8c5c37db7d8caf0dc05c5344f94 done
+#40 exporting config sha256:5c12b512e466d6ce28ddfd498300dc54ec651a476ff551405230273c827894a1 done
+#40 exporting attestation manifest sha256:4b50484d260c7f5aa5835d9ff7840e81d2cafc5e9f1235341587b2c9e27f4b5c done
+#40 exporting manifest list sha256:486e913b33b0ce14ae624a564b513770528d5c6905489a3b6357003e8dc5871b done
+#40 naming to docker.io/library/workspace-example-site:latest done
+#40 unpacking to docker.io/library/workspace-example-site:latest 0.0s done
+#40 DONE 0.1s
+
+#41 [example-site] resolving provenance for metadata file
+#41 DONE 0.0s
+ app  Built
+ example-site  Built
+ Container workspace-db-1  Running
+ Container workspace-app-1  Recreate
+ Container workspace-app-1  Recreated
+ Container workspace-example-site-1  Creating
+ Container workspace-example-site-1  Created
+ Container workspace-db-1  Waiting
+ Container workspace-db-1  Healthy
+ Container workspace-app-1  Starting
+ Container workspace-app-1  Started
+ Container workspace-app-1  Waiting
+ Container workspace-app-1  Healthy
+ Container workspace-example-site-1  Starting
+ Container workspace-example-site-1  Started
+EXIT:0

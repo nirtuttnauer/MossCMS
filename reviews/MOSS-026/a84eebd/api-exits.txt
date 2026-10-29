@@ -1,0 +1,10 @@
+EXIT ruff-check 0
+EXIT ruff-format 0
+EXIT ruff-scripts 0
+EXIT ruff-scripts-format 0
+EXIT ruff-telemetry 0
+EXIT ruff-telemetry-format 0
+EXIT mypy 0
+EXIT pytest-sqlite 0
+EXIT pytest-postgres 0
+EXIT verify 0
