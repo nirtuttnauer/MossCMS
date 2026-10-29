@@ -204,7 +204,7 @@ Logs: [pytest-sqlite.txt](18ee0d8/pytest-sqlite.txt), [pytest-postgres.txt](18ee
 
 ## local, after the squash onto main
 
-Pull request 31 squash-merged as `43a93fc58007e82f11789d3c255820551bd249b1` at 2026-10-29T05:58:52Z. That commit is the user-visible change. The pre-squash guide SHA `7c3914c37003a94015f13fb0cce3bae5ed9b5d91` is not in `git log 3a87c73..HEAD` on `main`, so the Unreleased bullet now cites `43a93fc58007e82f11789d3c255820551bd249b1` and still links pull request 31. `gh pr view 31` reports that oid as `mergeCommit`. This follow-up changes only `CHANGELOG.md` and `reviews/`, which `scripts/check_changelog.py` does not treat as user-visible.
+Pull request 31 squash-merged as `43a93fc58007e82f11789d3c255820551bd249b1` at 2026-10-29T05:58:52Z. That commit is the user-visible change. The pre-squash guide SHA `7c3914c37003a94015f13fb0cce3bae5ed9b5d91` is not in `git log 3a87c73..HEAD` on `main`, so the Unreleased bullet now cites `43a93fc58007e82f11789d3c255820551bd249b1` and still links pull request 31. `gh pr view 31` reports that oid as `mergeCommit`. A direct push of that citation was rejected because `main` only accepts pull requests, so the citation lands through pull request 35. That follow-up changes only `CHANGELOG.md` and `reviews/`, which `scripts/check_changelog.py` does not treat as user-visible.
 
 Recorded 2026-10-29T06:01:20Z on `main` at `43a93fc58007e82f11789d3c255820551bd249b1` with the citation already edited in the working tree. Labeled `local`.
 
