@@ -9,9 +9,10 @@ Recorded 29 October 2026 (UTC). An operator can reset an account password when M
 | | |
 | --- | --- |
 | SHA tested | `9fda099c07ce41836b6e3e72a1f540510f363e4a` |
-| Code commit | `5e782cd` (reset command, tests, and operator steps) |
+| Code commit after the MOSS-009 rebase | `e6dc239` (same `api/`, `web/`, and `example-site/` bytes as `5e782cd`) |
 | Branch | `cursor/moss-029-password-reset-83ab` |
-| Parent | `01ccda62a56f2a7ce387bcb734efdf50e70b7293` (main, after MOSS-058) |
+| Parent at test time | `01ccda62a56f2a7ce387bcb734efdf50e70b7293` (main, after MOSS-058) |
+| Parent at merge | `43a93fc58007e82f11789d3c255820551bd249b1` (main, MOSS-009) |
 | Baseline | `3a87c73c8e925973608e373863813163b41f04a9` |
 | Previous suite | `28c3dc9` / MOSS-026 at `835fbf6`: 433 collected |
 | `git status --porcelain` at the start of this run | empty (clean) |
@@ -22,7 +23,7 @@ Recorded 29 October 2026 (UTC). An operator can reset an account password when M
 | PostgreSQL | 16.15, role `ubuntu`, local socket |
 | Docker | CLI 29.1.3, Compose 2.40.3 (compose config tests ran; the daemon was not started) |
 
-`main` moved twice during this ticket (`28c3dc9` to `ae66eb0`, then to `01ccda6`). This branch was rebased onto `01ccda6` before the run below. `UV_NO_ENV_FILE=1`. No `.env` was present in the checkout.
+`main` moved during this ticket (`28c3dc9` to `ae66eb0`, then to `01ccda6`). The commands below ran after the rebase onto `01ccda6`, at SHA `9fda099`. `main` then moved to `43a93fc` (MOSS-009, documentation only). This branch was rebased onto `43a93fc` with no change to `api/`, `web/`, or `example-site/` versus that tested tree, and the operator steps were added to [docs/client-hardening.md](../../docs/client-hardening.md). `UV_NO_ENV_FILE=1`. No `.env` was present in the checkout.
 
 ## Commands
 
