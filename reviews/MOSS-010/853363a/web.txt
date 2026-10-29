@@ -1,0 +1,60 @@
+LABEL: local
+SHA: 853363af4d744f4b2bd0504c4c1eb1b04a0c6a08
+DATE_START: 2026-10-29T05:01:46Z
+COMMAND: npm run check && npm test && npm run build && npm audit --audit-level=high
+
+> mosscms-admin@0.1.0 check
+> tsc -b
+
+EXIT npm run check: 0
+
+> mosscms-admin@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /workspace/web
+
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+
+ Test Files  35 passed (35)
+      Tests  317 passed (317)
+   Start at  05:01:50
+   Duration  15.76s (transform 1.73s, setup 0ms, import 7.70s, tests 22.08s, environment 12.81s)
+
+EXIT npm test: 0
+
+> mosscms-admin@0.1.0 build
+> tsc -b && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 1845 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                      0.40 kB │ gzip:   0.28 kB
+dist/assets/index-CozgB4GM.css      63.53 kB │ gzip:  13.80 kB
+dist/assets/Migration-BMW6KVXu.js   15.44 kB │ gzip:   5.27 kB
+dist/assets/index-DeHdh3wb.js      500.85 kB │ gzip: 156.61 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 6.80s
+EXIT npm run build: 0
+found 0 vulnerabilities
+EXIT npm audit: 0
+DATE_END: 2026-10-29T05:02:17Z

@@ -2,21 +2,20 @@
 
 MossCMS uses one multistage image for the Python API and compiled React admin. The runtime runs as UID 10001, listens on port 8001, stores local media in `/data`, and checks database readiness at `/ready`. Startup applies database migrations before serving. By default, `compose.yaml` provides PostgreSQL with persistent database and media volumes. Set `MOSS_USE_SQLITE=true` to use SQLite in the media volume instead.
 
-## Run from Docker Hub
+The app image is built from this checkout unless you opt into a published image. `compose.yaml` sets `image: ${MOSS_IMAGE:-mosscms:local}` and `pull_policy: ${MOSS_PULL_POLICY:-build}`. `docker compose up` therefore builds `mosscms:local` and does not pull an app image. `python3 scripts/start.py` uses that same build. PostgreSQL is `postgres:17-alpine`. No registry login and no published MossCMS image are required.
 
-After the first publication, the public image is `nirtuttnauer/mosscms`; pulling it requires no Docker Hub sign-in. Clone this repository to obtain Compose, configuration and backup tools:
+## Build from this checkout
 
 ```sh
 git clone https://github.com/nirtuttnauer/MossCMS.git
 cd MossCMS
 python3 scripts/configure.py
-docker compose pull app db
-docker compose up --no-build -d --wait app
+docker compose up -d --wait app
 ```
 
-Open http://localhost:8001 and create your first administrator using `MOSS_SETUP_TOKEN` from `.env`. The image includes no preset account or database credentials. Keep `.env` private. `docker compose logs --tail 100 app db` shows startup diagnostics.
+`docker compose up --build -d --wait app` builds as well. Leave `MOSS_IMAGE` and `MOSS_PULL_POLICY` unset so the defaults above apply. For a direct image build, use `docker build -t mosscms:local .`. The image needs the database and environment settings provided by Compose to run.
 
-`MOSS_IMAGE` selects the app image; its default is `nirtuttnauer/mosscms:latest`. Published images support `linux/amd64` and `linux/arm64`. `latest` follows `main`; `sha-FULL_COMMIT_SHA` identifies a build; a Git tag `v1.2.3` publishes `1.2.3` and `1.2`. Pin a version or digest in `.env` for production. Pre-release tags produce the full pre-release version rather than a stable minor alias.
+Open http://localhost:8001 and create your first administrator using `MOSS_SETUP_TOKEN` from `.env`. The image includes no preset account or database credentials. Keep `.env` private. `docker compose logs --tail 100 app db` shows startup diagnostics.
 
 For a fresh production instance, generate configuration with `python3 scripts/configure.py --production --public-url https://cms.example.com` instead. Terminate TLS at a reverse proxy forwarding to the default loopback binding. Follow [deployment and recovery](deployment-recovery.md) for authentication, proxy, storage and backup configuration.
 
@@ -26,30 +25,40 @@ For a fresh production instance, generate configuration with `python3 scripts/co
 
 ```sh
 python3 scripts/configure.py --sqlite
-docker compose pull app
-docker compose up --no-build -d --wait
+docker compose up -d --wait
 ```
 
-`--sqlite` sets the boolean `MOSS_USE_SQLITE=true` in `.env`. For a local build, replace `--no-build` with `--build`. Production also supports SQLite: add `--production --public-url https://cms.example.com` to the configuration command. The SQLite database persists at `/data/mosscms.db`, including when S3 stores uploads.
+`--sqlite` sets the boolean `MOSS_USE_SQLITE=true` in `.env`. Compose still builds `mosscms:local`. Production also supports SQLite: add `--production --public-url https://cms.example.com` to the configuration command. The SQLite database persists at `/data/mosscms.db`, including when S3 stores uploads.
 
-With `MOSS_USE_SQLITE=true`, ordinary `docker compose up` stops any existing Postgres container and starts the app without PostgreSQL credentials; `false` or an unset flag keeps the PostgreSQL dependency. SQLite mode replaces `db` with the app image running `/bin/true`, which exits immediately without mounting or changing the Postgres data volume. After the app is ready, the optional website can start with `docker compose --profile website up --build -d example-site`. Use one app instance and preserve the data volume. Switching backends does not migrate content. Follow [SQLite backup and recovery](deployment-recovery.md#sqlite-backup-and-recovery).
+With `MOSS_USE_SQLITE=true`, ordinary `docker compose up` stops any existing Postgres container and starts the app without PostgreSQL credentials; `false` or an unset flag keeps the PostgreSQL dependency. SQLite mode replaces `db` with the app image running `/bin/true`, which exits immediately without mounting or changing the Postgres data volume. That stub uses `pull_policy: never` and the same tag as the app, so Compose does not pull it. After the app is ready, the optional website can start with `docker compose --profile website up --build -d example-site`. Use one app instance and preserve the data volume. Switching backends does not migrate content. Follow [SQLite backup and recovery](deployment-recovery.md#sqlite-backup-and-recovery).
 
-## Build locally
+The optional example website remains a separate local build; see [website setup](../example-site/README.md).
+
+## Run a published image
+
+Publication is a separate step and is not required to start Compose. After the first publication, the public image is `nirtuttnauer/mosscms`. Pulling it requires no Docker Hub sign-in. Set both variables in `.env`:
+
+```
+MOSS_IMAGE=nirtuttnauer/mosscms:1.2.3
+MOSS_PULL_POLICY=missing
+```
+
+`MOSS_PULL_POLICY=missing` makes Compose pull when the image is absent and use the local copy after that. The default `build` policy builds this checkout instead, and tags the result with whatever `MOSS_IMAGE` is set to. Then:
 
 ```sh
-python3 scripts/configure.py
-MOSS_IMAGE=mosscms:local docker compose up --build -d --wait app
+docker compose pull app db
+docker compose up --no-build -d --wait app
 ```
 
-The existing `docker compose up --build -d` command also works and tags the local build with the selected `MOSS_IMAGE`. For a direct image build, use `docker build -t mosscms:local .`. The image needs the database and environment settings provided by Compose to run.
+In SQLite mode the `db` service is the app image with `pull_policy: never`. `docker compose pull app` fetches the published tag; the stub does not contact the registry. In PostgreSQL mode, `db` is `postgres:17-alpine` and `docker compose pull db` fetches that image.
 
-The optional example website remains a separate local build; see [website setup](../example-site/README.md). Start it with `docker compose --profile website up --build -d example-site` after configuring its environment.
+Published images support `linux/amd64` and `linux/arm64`. `latest` follows `main`; `sha-FULL_COMMIT_SHA` identifies a build; a Git tag `v1.2.3` publishes `1.2.3` and `1.2`. Pin a version or digest in `.env` for production. Pre-release tags produce the full pre-release version rather than a stable minor alias. `latest` exists only after a publish from `main`.
 
 ## Upgrade a published image
 
 To add optional OTLP tracing and histogram metrics, use the [OpenTelemetry guide](observability.md) and `compose.observability.yaml`. The overlay includes a pinned local Collector; ordinary Compose remains telemetry-disabled by default.
 
-Stop writers and [back up database and media](deployment-recovery.md#backup-with-writers-stopped). Retain the old image and its matching backup/configuration. Set `MOSS_IMAGE` in `.env` to the new published version or digest, then:
+Stop writers and [back up database and media](deployment-recovery.md#backup-with-writers-stopped). Retain the old image and its matching backup/configuration. Set `MOSS_IMAGE` in `.env` to the new published version or digest and set `MOSS_PULL_POLICY=missing`, then:
 
 ```sh
 docker compose pull app

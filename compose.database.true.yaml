@@ -7,7 +7,9 @@ services:
       db:
         condition: service_completed_successfully
   db:
-    image: ${MOSS_IMAGE:-nirtuttnauer/mosscms:latest}
+    image: ${MOSS_IMAGE:-mosscms:local}
+    # The app service builds or pulls this tag. Do not pull it again from here.
+    pull_policy: never
     entrypoint: [/bin/true]
     restart: "no"
     read_only: true

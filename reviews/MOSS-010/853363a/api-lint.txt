@@ -1,0 +1,43 @@
+LABEL: local
+SHA: 853363af4d744f4b2bd0504c4c1eb1b04a0c6a08
+STATUS:
+DATE_START: 2026-10-29T04:58:08Z
+[1;32mAll checks passed![0m
+EXIT ruff check app tests migrations: 0
+82 files already formatted
+EXIT ruff format app tests migrations: 0
+[1;32mAll checks passed![0m
+EXIT ruff check scripts: 0
+14 files already formatted
+EXIT ruff format scripts: 0
+[1;32mAll checks passed![0m
+EXIT ruff check telemetry: 0
+1 file already formatted
+EXIT ruff format telemetry: 0
+Success: no issues found in 27 source files
+EXIT mypy: 0
+COMMAND: MOSS_USE_SQLITE=false MOSS_REQUIRED_RUN=sqlite uv run pytest -m "not postgres"
+EXIT sqlite pytest: 0
+COMMAND: MOSS_USE_SQLITE=false MOSS_REQUIRED_RUN=postgres MOSS_TEST_DATABASE_URL=postgresql+psycopg://pg:pgtestpw@localhost:5432/postgres uv run pytest
+EXIT postgres pytest: 0
+EXIT verify: 0
+{
+  "ok": true,
+  "runs": {
+    "sqlite": {
+      "collected": 406,
+      "passed": 402,
+      "deselected": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "postgres": {
+      "collected": 406,
+      "passed": 406,
+      "deselected": 0,
+      "failed": 0,
+      "skipped": 0
+    }
+  }
+}
+DATE_END: 2026-10-29T05:01:38Z
