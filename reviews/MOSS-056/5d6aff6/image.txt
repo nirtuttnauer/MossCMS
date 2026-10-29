@@ -1,0 +1,138 @@
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  17.64MB
+Step 1/28 : FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS web-build
+ ---> 7c3b093add7c
+Step 2/28 : WORKDIR /web
+ ---> Using cache
+ ---> 535182156b55
+Step 3/28 : COPY shared/ /shared/
+ ---> Using cache
+ ---> e897d63a8859
+Step 4/28 : COPY web/package.json web/package-lock.json ./
+ ---> Using cache
+ ---> e211e5bbe283
+Step 5/28 : RUN npm ci
+ ---> Using cache
+ ---> 0c720cbfa98a
+Step 6/28 : COPY web/ ./
+ ---> Using cache
+ ---> 6ebe3905e3da
+Step 7/28 : ARG VITE_GRAPHQL_URL=/graphql
+ ---> Using cache
+ ---> 657d97bdf79b
+Step 8/28 : ENV VITE_GRAPHQL_URL=${VITE_GRAPHQL_URL}
+ ---> Using cache
+ ---> baa1cefa5682
+Step 9/28 : RUN npm run check && npm run build
+ ---> Using cache
+ ---> 0b4d3c5f4f96
+Step 10/28 : FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d AS api-deps
+ ---> 414a398990af
+Step 11/28 : WORKDIR /api
+ ---> Using cache
+ ---> 3fb97fb30945
+Step 12/28 : ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/app/.venv
+ ---> Using cache
+ ---> c187da499d23
+Step 13/28 : RUN pip install --no-cache-dir uv==0.12.23
+ ---> Using cache
+ ---> ac8df3a1fb56
+Step 14/28 : COPY api/pyproject.toml api/uv.lock ./
+ ---> Using cache
+ ---> 51053d7ca7ec
+Step 15/28 : RUN uv sync --locked --no-dev --no-install-project
+ ---> Using cache
+ ---> f93daf449808
+Step 16/28 : FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d AS runtime
+ ---> 414a398990af
+Step 17/28 : ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PATH="/app/.venv/bin:$PATH" PORT=8001 MOSS_STORAGE_DIR=/data
+ ---> Using cache
+ ---> 84debaee1165
+Step 18/28 : WORKDIR /app
+ ---> Using cache
+ ---> 12fb4f10fef5
+Step 19/28 : RUN useradd --create-home --uid 10001 appuser && mkdir /data && chown appuser:appuser /data
+ ---> Using cache
+ ---> a58cdf9c0557
+Step 20/28 : COPY --from=api-deps /app/.venv /app/.venv
+ ---> Using cache
+ ---> 9540b3e2e6f5
+Step 21/28 : COPY api/app ./app
+ ---> 44e2ad0339e0
+Step 22/28 : COPY api/migrations ./migrations
+ ---> 702d79d3a992
+Step 23/28 : COPY api/alembic.ini ./alembic.ini
+ ---> 41649be6cf35
+Step 24/28 : COPY --from=web-build /web/dist ./static
+ ---> 528499c357d6
+Step 25/28 : USER appuser
+ ---> Running in 940973176b30
+ ---> Removed intermediate container 940973176b30
+ ---> e4405acec202
+Step 26/28 : EXPOSE 8001
+ ---> Running in ebb21dfa40b5
+ ---> Removed intermediate container ebb21dfa40b5
+ ---> d0778ce570f5
+Step 27/28 : HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/ready', timeout=3)"
+ ---> Running in d62161082147
+ ---> Removed intermediate container d62161082147
+ ---> 2fd71a1528b6
+Step 28/28 : CMD ["python", "-m", "app.cli", "serve"]
+ ---> Running in bf8980838e27
+ ---> Removed intermediate container bf8980838e27
+ ---> 0e94b42f8bc1
+Successfully built 0e94b42f8bc1
+Successfully tagged mosscms:smoke
+DOCKER_BUILD:0
+IPTABLES:0
+ Network mosscms-smoke_default  Creating
+ Network mosscms-smoke_default  Created
+ Container mosscms-smoke-db-1  Creating
+ Container mosscms-smoke-db-1  Created
+ Container mosscms-smoke-app-1  Creating
+ Container mosscms-smoke-app-1  Created
+ Container mosscms-smoke-db-1  Starting
+ Container mosscms-smoke-db-1  Started
+ Container mosscms-smoke-db-1  Waiting
+ Container mosscms-smoke-db-1  Healthy
+ Container mosscms-smoke-app-1  Starting
+ Container mosscms-smoke-app-1  Started
+ Container mosscms-smoke-db-1  Waiting
+ Container mosscms-smoke-app-1  Waiting
+ Container mosscms-smoke-db-1  Healthy
+ Container mosscms-smoke-app-1  Healthy
+COMPOSE_UP:0
+
+> test
+> playwright test
+
+
+Running 2 tests using 1 worker
+
+(node:25267) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 production.spec.mjs:7:1 › production readiness and packaged branding assets (403ms)
+  ✓  2 production.spec.mjs:21:1 › production setup, login and branding on desktop and mobile (1.8s)
+
+  2 passed (2.7s)
+
+To open last HTML report run:
+
+  npx playwright show-report
+
+PLAYWRIGHT:0
+ Container mosscms-smoke-app-1  Stopping
+ Container mosscms-smoke-app-1  Stopped
+ Container mosscms-smoke-app-1  Removing
+ Container mosscms-smoke-app-1  Removed
+ Container mosscms-smoke-db-1  Stopping
+ Container mosscms-smoke-db-1  Stopped
+ Container mosscms-smoke-db-1  Removing
+ Container mosscms-smoke-db-1  Removed
+ Network mosscms-smoke_default  Removing
+ Network mosscms-smoke_default  Removed
+COMPOSE_DOWN:0
+IMAGE_DONE
