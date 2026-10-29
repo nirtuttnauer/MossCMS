@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "runs": {
+    "sqlite": {
+      "collected": 437,
+      "passed": 433,
+      "deselected": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "postgres": {
+      "collected": 437,
+      "passed": 437,
+      "deselected": 0,
+      "failed": 0,
+      "skipped": 0
+    }
+  }
+}
+VERIFY_EXIT:0
