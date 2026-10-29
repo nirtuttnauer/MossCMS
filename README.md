@@ -213,13 +213,25 @@ Existing content is retained. If you have not created a real administrator yet, 
 
 Every record and query is scoped to workspace membership. At least one administrator must remain. Invitations are shared manually; no email service is required.
 
-Password recovery is available to the server operator:
+<a id="reset-a-password-without-email"></a>
 
-```sh
-docker compose exec app python -m app.cli reset-password --email person@example.com
-```
+### Reset a password without email
 
-Share the resulting one-time recovery link privately with that account owner. It expires after one day and successful recovery revokes existing sessions.
+MossCMS has no mail delivery. An operator on the server creates a recovery link and gives it to the account owner. The procedure is in the [client hardening guide](docs/client-hardening.md#reset-a-password-without-email) and the [operator guide](docs/deployment-recovery.md#reset-a-password-without-email).
+
+1. From the repository root, with the app running, issue a link for that account:
+
+   ```sh
+   docker compose exec app python -m app.cli reset-password --email person@example.com
+   ```
+
+   The command prints one line: the value of `MOSS_PUBLIC_URL`, then `/#reset/` and the token. That line is the secret. The audit log records the operator action and the account id. The token is only in this printed line. Set `MOSS_PUBLIC_URL` to the origin the owner can open, without a trailing slash, before issuing the link.
+
+2. Give the link to the account owner through a channel you trust. They open it, enter the same email address, and choose a new password of 12–128 characters.
+
+3. The new password works immediately. The previous password stops working, and existing sessions for that account are signed out.
+
+The link works once. Opening it again reports that the link is invalid or expired. An unused link expires one day after the command. Running the command again deletes any unused link for that account and prints a new one. `--email` is required. An unknown email stops with `Account not found` and prints no link.
 
 ## OAuth sign-in
 
@@ -490,6 +502,7 @@ If an older bypass setup left the workspace without members, recover only that w
 | Run or publish a Docker image | [Docker setup and publishing](docs/docker.md) |
 | Operate, upgrade, or recover an instance | [Deployment and recovery](docs/deployment-recovery.md) |
 | Terminate TLS and set CSP, HSTS, origins, and secrets | [Client hardening](docs/client-hardening.md) |
+| Reset a password when mail is not configured | [Password recovery](#reset-a-password-without-email) |
 | Understand autosave, conflicts, revisions, or draft previews | [Editor workflows](docs/editor-workflows.md) |
 | Understand publishing and scheduling guarantees | [Publication contract](docs/publication-contract.md) |
 | Work with Markdown, images, or storage limits | [Markdown](docs/markdown.md), [images](docs/images.md) |
