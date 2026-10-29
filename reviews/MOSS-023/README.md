@@ -61,6 +61,27 @@ Logs: [pytest-sqlite.txt](1b55a1b/pytest-sqlite.txt), [pytest-postgres.txt](1b55
 | `cd web && npm ci && npm run check && npm test && npm run build && npm audit --audit-level=high` | 0 | 35 files, 317 tests passed, build succeeded, 0 vulnerabilities |
 | `cd example-site && npm test && npm run check && npm audit --audit-level=high` | 0 | 46 passed, 0 failed, 0 skipped, 0 vulnerabilities |
 
-## Left open
+## Workflow
 
-The ticket asks for a written QA and CTO agreement that is not in the ticket text. This PR stays open for that item. The SQLite job in `.github/workflows/checks.yml` still runs `uv run pytest` without `-m "not postgres"`; that file is left for MOSS-003.
+MOSS-003 is on main (`8f4c76e` and later). The SQLite job in `.github/workflows/checks.yml` runs `uv run pytest -m "not postgres"` with `MOSS_REQUIRED_RUN=sqlite`. The PostgreSQL job keeps `uv run pytest` and sets `MOSS_REQUIRED_RUN=postgres`. Action SHA pins, permissions, and job and step names are unchanged. The two jobs do not share result files, so `tests/verify_required_runs.py` stays the local union check. Each CI job still checks its own committed deselection list, and `tests/test_required_runs.py` checks that the two marker expressions cover every collected id.
+
+## Rerun after the workflow edit
+
+local
+
+2026-10-29T04:24:55Z through 2026-10-29T04:28:07Z, on the same API tree as `3f94ac3` plus the workflow edit. `actionlint` 1.7.7 on `checks.yml` and `docker.yml` exited 0.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| ruff check/format (api, scripts, example-site setup, telemetry smoke) and `mypy app` | 0 | clean; 27 source files |
+| SQLite required run | 0 | 399 passed, 4 deselected, 0 skipped, 61.11s |
+| PostgreSQL required run | 0 | 403 passed, 0 deselected, 0 skipped, 89.03s |
+| `tests/verify_required_runs.py` | 0 | union 403 |
+| web check, test, build, `npm audit --audit-level=high` | 0 | 317 passed, 0 vulnerabilities |
+| example-site test, check, `npm audit --audit-level=high` | 0 | 46 passed, 0 failed, 0 skipped, 0 vulnerabilities |
+
+Logs: [pytest-sqlite.txt](workflow-rerun/pytest-sqlite.txt), [pytest-postgres.txt](workflow-rerun/pytest-postgres.txt), [verify.txt](workflow-rerun/verify.txt).
+
+## Review after merge
+
+Nir authorized merging without a separate written QA and CTO sign-off. QA and the CTO should review this rule after the fact.
