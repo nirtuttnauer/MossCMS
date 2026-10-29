@@ -12,6 +12,15 @@ from fastapi.responses import JSONResponse
 from . import content
 from .graphql import resolved_image_assets
 from .models import ContentType
+from .openapi_schema import (
+    CACHEABLE_RESPONSES,
+    NO_STORE_RESPONSES,
+    AssetDocument,
+    ContentTypeDocument,
+    EntryDocument,
+    EntryPage,
+    RedirectDocument,
+)
 from .schema import LOCALE, public_fields
 from .security import CmsError, identify, require
 
@@ -307,30 +316,93 @@ def register_delivery_routes(app, factory, settings):
     def call(request, build, *, cacheable):
         return delivery_call(factory, settings, request, build, cacheable=cacheable)
 
-    @app.api_route("/delivery/types", methods=["GET", "HEAD"])
+    @app.api_route(
+        "/delivery/types",
+        methods=["GET", "HEAD"],
+        tags=["Delivery"],
+        operation_id="listDeliveryTypes",
+        summary="List published content types",
+        response_description="Content types in the token project, limited to its scopes.",
+        response_model=list[ContentTypeDocument],
+        responses=CACHEABLE_RESPONSES,
+    )
     def delivery_types(request: Request):
         return call(request, types_payload, cacheable=True)
 
-    @app.api_route("/delivery/types/{typeKey}", methods=["GET", "HEAD"])
+    @app.api_route(
+        "/delivery/types/{typeKey}",
+        methods=["GET", "HEAD"],
+        tags=["Delivery"],
+        operation_id="getDeliveryType",
+        summary="Read one published content type",
+        response_description="The content type with private fields removed.",
+        response_model=ContentTypeDocument,
+        responses=CACHEABLE_RESPONSES,
+    )
     def delivery_type(typeKey: str, request: Request):
         return call(request, lambda context: type_payload(context, typeKey), cacheable=True)
 
-    @app.api_route("/delivery/entries", methods=["GET", "HEAD"])
+    @app.api_route(
+        "/delivery/entries",
+        methods=["GET", "HEAD"],
+        tags=["Delivery"],
+        operation_id="listDeliveryEntries",
+        summary="List published entries",
+        response_description="One page of published entries. total is included only for total=true.",
+        response_model=EntryPage,
+        responses=CACHEABLE_RESPONSES,
+    )
     def delivery_entries(request: Request):
         return call(request, entries_payload, cacheable=True)
 
-    @app.api_route("/delivery/entries/{id}/resolved-assets", methods=["GET", "HEAD"])
+    @app.api_route(
+        "/delivery/entries/{id}/resolved-assets",
+        methods=["GET", "HEAD"],
+        tags=["Delivery"],
+        operation_id="listDeliveryEntryAssets",
+        summary="Read signed image URLs for one published entry",
+        response_description="Signed image URLs. Cache-Control is no-store and there is no ETag.",
+        response_model=list[AssetDocument],
+        responses=NO_STORE_RESPONSES,
+    )
     def delivery_resolved_assets(id: str, request: Request):
         return call(request, lambda context: resolved_payload(context, id), cacheable=False)
 
-    @app.api_route("/delivery/entries/{id}", methods=["GET", "HEAD"])
+    @app.api_route(
+        "/delivery/entries/{id}",
+        methods=["GET", "HEAD"],
+        tags=["Delivery"],
+        operation_id="getDeliveryEntry",
+        summary="Read one published entry",
+        response_description="The published snapshot with private fields removed.",
+        response_model=EntryDocument,
+        responses=CACHEABLE_RESPONSES,
+    )
     def delivery_entry(id: str, request: Request):
         return call(request, lambda context: entry_payload(context, id), cacheable=True)
 
-    @app.api_route("/delivery/website/redirects", methods=["GET", "HEAD"])
+    @app.api_route(
+        "/delivery/website/redirects",
+        methods=["GET", "HEAD"],
+        tags=["Delivery"],
+        operation_id="listDeliveryRedirects",
+        summary="List website redirects",
+        response_description="Former public paths for live entries in the token scopes.",
+        response_model=list[RedirectDocument],
+        responses=CACHEABLE_RESPONSES,
+    )
     def delivery_redirects(request: Request):
         return call(request, redirects_payload, cacheable=True)
 
-    @app.api_route("/delivery/website/reserved-paths", methods=["GET", "HEAD"])
+    @app.api_route(
+        "/delivery/website/reserved-paths",
+        methods=["GET", "HEAD"],
+        tags=["Delivery"],
+        operation_id="listDeliveryReservedPaths",
+        summary="List reserved website paths",
+        response_description="Path strings reserved by entries in the token scopes.",
+        response_model=list[str],
+        responses=CACHEABLE_RESPONSES,
+    )
     def delivery_reserved_paths(request: Request):
         return call(request, reserved_payload, cacheable=True)

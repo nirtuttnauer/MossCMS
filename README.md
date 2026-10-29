@@ -307,6 +307,7 @@ Create a delivery token in Settings. Tokens expire and can be scoped to selected
 | Endpoint | Authentication | Content and operations |
 | --- | --- | --- |
 | `POST /delivery/graphql` | Bearer delivery token | Published content in token scope; public fields; queries only |
+| `GET /delivery/...` | Bearer delivery token | The same published content over REST. [OpenAPI](api/openapi.json) is the contract; `/docs` renders it |
 | `POST /graphql` | Session, `X-Moss-Project`; `X-Moss-CSRF` for mutations | Workspace content, drafts, and revisions according to role; queries and mutations |
 
 The example website uses this request flow (the diagram omits its cache and preview handling):
@@ -509,6 +510,7 @@ If an older bypass setup left the workspace without members, recover only that w
 | Configure provider sign-in or publication callbacks | [OAuth setup](docs/oauth-setup.md), [webhook protocol](docs/webhooks.md) |
 | Build a frontend or inspect SEO findings | [Example website](example-site/README.md), [SEO audit](docs/seo-audit.md) |
 | Stream delivery content or evaluate capacity and cost | [Typed delivery client](docs/delivery-client.md), [benchmark guide](docs/benchmarks/README.md), [measured results](docs/benchmarks/RESULTS-2026-10-12.md) |
+| Read the REST delivery contract | [OpenAPI reference](docs/rest-openapi.md), [openapi.json](api/openapi.json) |
 | Understand automatic exact-filter indexing and repairs | [Automatic indexing](docs/automatic-indexing.md) |
 | Measure latency, GraphQL failures and database bottlenecks | [OpenTelemetry setup and performance queries](docs/observability.md) |
 | Contribute or understand implementation boundaries | [Contributing](CONTRIBUTING.md), [maintainability review](docs/maintainability-review.md) |

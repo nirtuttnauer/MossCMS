@@ -25,6 +25,7 @@ from .accounts import context, router as account_router
 from .config import Settings
 from .content import publish_due, scoped, website_path_conflict
 from .delivery_rest import delivery_representation, register_delivery_routes
+from .openapi_schema import OPENAPI_DESCRIPTION, OPENAPI_SUMMARY, build_openapi
 from .development import initialize_development
 from .graphql import generated_schema
 from .migrate import migrate
@@ -97,7 +98,20 @@ def create_app(settings=None):
             engine.dispose()
             await asyncio.to_thread(telemetry.shutdown)
 
-    app = FastAPI(title="MossCMS", version="0.2.0", lifespan=lifespan)
+    app = FastAPI(
+        title="MossCMS",
+        version="0.2.0",
+        summary=OPENAPI_SUMMARY,
+        description=OPENAPI_DESCRIPTION,
+        license_info={"name": "MIT", "identifier": "MIT"},
+        openapi_tags=[
+            {
+                "name": "Delivery",
+                "description": "Read-only published content. Send Authorization: Bearer with a delivery token.",
+            }
+        ],
+        lifespan=lifespan,
+    )
     app.include_router(webhooks_router)
     app.include_router(migration_router)
     app.state.settings, app.state.engine, app.state.db = settings, engine, factory
@@ -326,7 +340,24 @@ def create_app(settings=None):
         return {"service": "MossCMS", "admin": "Run the Vite dev server on port 5173."}
 
     app.add_middleware(TelemetryMiddleware, telemetry=telemetry)
+    _install_openapi(app)
     return app
+
+
+def _install_openapi(app):
+    """Serve the generated schema with the delivery ETag helper. /docs keeps FastAPI's page."""
+    app.router.routes[:] = [route for route in app.router.routes if getattr(route, "path", None) != app.openapi_url]
+
+    def generated_openapi():
+        if app.openapi_schema is None:
+            app.openapi_schema = build_openapi(app)
+        return app.openapi_schema
+
+    app.openapi = generated_openapi
+
+    @app.api_route("/openapi.json", methods=["GET", "HEAD"], include_in_schema=False)
+    def openapi_document(request: Request):
+        return delivery_representation(request, app.openapi(), cacheable=True)
 
 
 app = create_app()
