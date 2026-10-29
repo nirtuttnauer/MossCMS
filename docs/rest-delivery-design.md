@@ -203,3 +203,9 @@ The implementation tests should cover a delivery bearer token and a rejected ses
 ## MOSS-032
 
 List paging, filters, and `orderBy` stay on `entry_page`, so a delivery REST page matches the delivery `entries` connection for the same arguments. `locale` is the list and item parameter that matches a GraphQL field `locale` argument. Parity tests call both protocols.
+
+## MOSS-034
+
+FastAPI generates the OpenAPI document from the registered routes. The reviewed copy is `api/openapi.json`. `api/tests/test_openapi.py` fails when the generated document differs, so a route change is reviewed with the schema diff. There is no committed GraphQL schema to copy.
+
+`GET` and `HEAD /openapi.json` are public and call `delivery_representation` with the generated document, so they use the same ETag, `Cache-Control`, `Vary`, and 304 rules as a cacheable delivery read. `/docs` renders that document. The written reference is [rest-openapi.md](rest-openapi.md).
