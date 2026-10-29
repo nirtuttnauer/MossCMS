@@ -89,6 +89,12 @@ The same four PostgreSQL ids are deselected on SQLite and passed on PostgreSQL. 
 
 Logs: [431fb3a](431fb3a/).
 
+## Run after the changelog landed
+
+local
+
+`d870650c9f21be9dacbb3b24007c6599cea36593` is the same script and evidence replayed onto `5804733` (main, MOSS-057 changelog). `git status --porcelain` was empty. 2026-10-29T05:34:26Z through 2026-10-29T05:39:17Z. `scripts/verify.sh MOSS-054` exited 0. Counts were unchanged from `431fb3a`: SQLite 429 passed, 4 deselected, 0 skipped; PostgreSQL 433 passed, 0 skipped; web 317; example-site 46 passed, 0 failed, 0 skipped. `pip-audit`, `npm audit`, and gitleaks were clean. Logs: [d870650](d870650/).
+
 ## Red-first tests
 
 `python3 scripts/test_verify.py` on this script, before the clean run above. Each case exits non-zero, and the script stops on the first failure.
