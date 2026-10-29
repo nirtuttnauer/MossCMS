@@ -147,3 +147,21 @@ Import & export is a separate script (`/assets/Migration-*.js`). It has to load 
 Before sign-in, `GET /auth/me` returns 401. The console reports that as a failed resource load. That line is the signed-out session check. It is not a CSP violation. After a successful sign-in the same request returns 200.
 
 Screenshots of the sign-in page and the content library, taken with the policy enabled, are in [reviews/MOSS-009/rehearsal/](../reviews/MOSS-009/rehearsal/).
+
+## Reset a password without email
+
+MossCMS has no mail delivery. When an account owner cannot sign in, an operator on the server creates a one-time link and gives it to that person. The same steps are in the [README](../README.md#reset-a-password-without-email) and the [operator guide](deployment-recovery.md#reset-a-password-without-email).
+
+1. From the repository root, with the app container running:
+
+   ```sh
+   docker compose exec app python -m app.cli reset-password --email person@example.com
+   ```
+
+   The command prints one line: `MOSS_PUBLIC_URL`, then `/#reset/` and the token. That line is the secret. Do not paste it into a ticket, a log, or the repository. The audit log records `account.recovery.issue` and the account id. The token is only in the printed line. `MOSS_PUBLIC_URL` must be the HTTPS origin the owner can open, without a trailing slash. A trailing slash in the setting is removed from the printed link.
+
+2. Give the link to the account owner through a channel you trust. They open it, enter that same email, and set a new password of 12–128 characters.
+
+3. The new password works immediately. The previous password stops working. Existing sessions for that account are signed out.
+
+The link works once. Opening it again reports that the link is invalid or expired, and the password stays as it was. An unused link expires one day after it was issued. Expiry uses the server clock. Running the command again deletes any unused link for that account and prints a new one. Omitting `--email` exits with `--email is required`. An unknown email exits with `Account not found` and prints no link.

@@ -89,7 +89,7 @@ def main():
                     session.delete(existing)
                 raw, _ = issue_token(session, "reset", days=1, user_id=user.id, email=user.email)
                 audit(session, None, "operator", "account.recovery.issue", userId=user.id)
-                print(settings.public_url + "/#reset/" + raw)
+                print(settings.public_url.rstrip("/") + "/#reset/" + raw)
         elif args.command == "reindex":
             if not args.project:
                 parser.error("--project is required; reindexing is limited to one workspace")
