@@ -498,9 +498,9 @@ def test_string_totals_preserve_scalar_type_guards_for_legacy_values(app, client
     assert count(client, admin, {"body": "\x01"}) == 0
 
 
+@pytest.mark.postgres
 def test_common_string_count_avoids_per_match_probes_in_generic_postgres_plan(app, client, admin):
-    if app.state.engine.dialect.name != "postgresql":
-        pytest.skip("PostgreSQL generic prepared plans")
+    assert app.state.engine.dialect.name == "postgresql"
     from psycopg.sql import Literal
 
     definition = define(client, admin)

@@ -427,13 +427,14 @@ uv run ruff format --check app tests migrations
 uv run ruff check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
 uv run ruff format --check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
 uv run mypy app
-MOSS_USE_SQLITE=false uv run pytest
+MOSS_USE_SQLITE=false MOSS_REQUIRED_RUN=sqlite uv run pytest -m "not postgres"
 ```
 
-The API suite uses isolated temporary databases. `MOSS_USE_SQLITE=false` keeps the application’s local `.env` backend selection from overriding those test databases; SQLite-specific tests enable their own configuration. To run it against PostgreSQL (which exercises JSON path casts, `SKIP LOCKED`, and advisory locks that SQLite silently no-ops), point it at an admin connection; each test uses its own throwaway database and is cleaned up afterward:
+The API suite uses isolated temporary databases. `MOSS_USE_SQLITE=false` keeps the application’s local `.env` backend selection from overriding those test databases; SQLite-specific tests enable their own configuration. A skip or xfail at runtime fails the run; there is no allowed-skip list. PostgreSQL-only tests carry the `postgres` marker and are excluded from the SQLite run before collection with `-m "not postgres"`. Docker Compose tests carry the `compose` marker and run in both required runs. The deselected test ids are committed in [api/tests/required_runs.json](api/tests/required_runs.json) and checked against each run. To run the PostgreSQL required run (JSON path casts, `SKIP LOCKED`, and advisory locks), point it at an admin connection; each test uses its own throwaway database and is cleaned up afterward. Install Docker Compose first so the compose tests execute:
 
 ```sh
-MOSS_USE_SQLITE=false MOSS_TEST_DATABASE_URL='postgresql+psycopg://USER:***@HOST:5432/DB' uv run pytest
+MOSS_USE_SQLITE=false MOSS_REQUIRED_RUN=postgres MOSS_TEST_DATABASE_URL='postgresql+psycopg://USER:***@HOST:5432/DB' uv run pytest
+uv run python tests/verify_required_runs.py
 ```
 
 ```sh
