@@ -217,3 +217,32 @@ cd ci && npm audit
 | ci `npm audit` | 0 | 0 vulnerabilities |
 
 Logs: [web-check.txt](a84eebd/web-check.txt), [web-test.txt](a84eebd/web-test.txt), [web-build.txt](a84eebd/web-build.txt), [web-audit.txt](a84eebd/web-audit.txt), [web-audit-high.txt](a84eebd/web-audit-high.txt), [example-site-check.txt](a84eebd/example-site-check.txt), [example-site-test.txt](a84eebd/example-site-test.txt), [example-site-build.txt](a84eebd/example-site-build.txt), [example-site-audit.txt](a84eebd/example-site-audit.txt), [example-site-audit-high.txt](a84eebd/example-site-audit-high.txt), [ci-audit.txt](a84eebd/ci-audit.txt).
+
+## local, after merging main
+
+`main` moved while this record was open (MOSS-010, MOSS-031, MOSS-045). Those commits were merged into this branch as `e991dd2bc22c7e7efae64b0c74031a241fd536ac`. The rehearsal above stays the `a84eebd` deploy. This section is the suite on the merged tree, still labeled `local`.
+
+| | |
+| --- | --- |
+| SHA tested | `e991dd2bc22c7e7efae64b0c74031a241fd536ac` |
+| `git status --porcelain` | empty |
+| Date | 2026-10-29T05:15:55Z through 2026-10-29T05:20Z |
+| Compared with | `3a87c73` (402 collected) and the MOSS-031 run on `1a005f2` (415 collected) |
+
+The gitignored rehearsal `.env` files were moved aside for the same `load_dotenv()` reason, then restored. `UV_NO_ENV_FILE=1`.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| ruff check app, tests, migrations | 0 | all checks passed |
+| ruff format check | 0 | 84 files already formatted |
+| ruff check/format scripts, setup, telemetry smoke | 0 | all checks passed |
+| `mypy app` | 0 | no issues in 28 source files |
+| SQLite required run | 0 | collected 415, **411 passed, 4 deselected, 0 skipped**, 6 warnings in 74.93s |
+| PostgreSQL required run | 0 | collected 415, **415 passed, 0 skipped**, 6 warnings in 125.33s |
+| `tests/verify_required_runs.py` | 0 | union of passed ids is 415 |
+| web check, test, build | 0 | `tsc -b`; 35 files, 317 tests; vite build |
+| example-site check, test, build | 0 | `tsc --noEmit`; 46 passed, 0 skipped; vite build |
+
+415 ≥ 402. The four SQLite deselections are the same committed PostgreSQL-only ids, and they passed in the PostgreSQL run. No new skip or xfail. Counts match the MOSS-031 run already on `main`. `web/` and `example-site/` sources are unchanged from the `a84eebd` run, so the earlier npm audit and pip-audit results still describe those lockfiles. `api/uv.lock` is unchanged from `1a005f2`.
+
+Logs: [pytest-sqlite.txt](e991dd2/pytest-sqlite.txt), [pytest-postgres.txt](e991dd2/pytest-postgres.txt), [verify.txt](e991dd2/verify.txt), [ruff-check.txt](e991dd2/ruff-check.txt), [ruff-format.txt](e991dd2/ruff-format.txt), [ruff-scripts.txt](e991dd2/ruff-scripts.txt), [ruff-scripts-format.txt](e991dd2/ruff-scripts-format.txt), [mypy.txt](e991dd2/mypy.txt), [web-check.txt](e991dd2/web-check.txt), [web-test.txt](e991dd2/web-test.txt), [web-build.txt](e991dd2/web-build.txt), [example-site-check.txt](e991dd2/example-site-check.txt), [example-site-test.txt](e991dd2/example-site-test.txt), [example-site-build.txt](e991dd2/example-site-build.txt).
