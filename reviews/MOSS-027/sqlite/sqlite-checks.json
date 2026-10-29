@@ -1,0 +1,31 @@
+{
+  "git": {
+    "sha": "28c3dc969c4d5d36a6aa08c4f0103a5b512cd03a",
+    "status": "",
+    "at": "2026-10-29T05:53:12Z"
+  },
+  "sign_in": "rehearsal-admin@example.com",
+  "slug": "client-restore-note",
+  "isLive": true,
+  "secret_present_for_editor": true,
+  "revisions": [
+    1
+  ],
+  "delivery_slugs": [
+    "client-restore-note"
+  ],
+  "delivery_secret": false,
+  "search_total": 0,
+  "original_sha256": "f5ab25a3634b73c5a28ddc23a7d3ec21c038b37b53399170c1a9a2000c22ef0d",
+  "original_type": "image/png",
+  "variant_status": 200,
+  "variant_type": "image/webp",
+  "image_sha256": "f5ab25a3634b73c5a28ddc23a7d3ec21c038b37b53399170c1a9a2000c22ef0d",
+  "width": 800,
+  "height": 400,
+  "mounts": "workspace_sqlite_recovered_assets /data",
+  "wiped_volume": "workspace_moss_assets",
+  "after_wipe_slug": "client-restore-note",
+  "after_wipe_live": true,
+  "after_wipe_media_sha256": "f5ab25a3634b73c5a28ddc23a7d3ec21c038b37b53399170c1a9a2000c22ef0d"
+}

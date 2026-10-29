@@ -1,0 +1,6 @@
+$ docker compose up --build -d
+cwd: /workspace
+started: 2026-10-29T05:51:15Z
+exit: 0
+seconds: 6.06
+--- output ---

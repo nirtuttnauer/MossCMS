@@ -1,0 +1,8 @@
+$ sudo nginx -t -c /tmp/moss-027-tls/nginx.conf
+cwd: /workspace
+started: 2026-10-29T05:51:09Z
+exit: 0
+seconds: 0.01
+--- output ---
+nginx: the configuration file /tmp/moss-027-tls/nginx.conf syntax is ok
+nginx: configuration file /tmp/moss-027-tls/nginx.conf test is successful

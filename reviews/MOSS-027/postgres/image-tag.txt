@@ -1,0 +1,6 @@
+$ docker image tag mosscms:local mosscms:backup-20261029T055151Z
+cwd: /workspace
+started: 2026-10-29T05:51:52Z
+exit: 0
+seconds: 0.03
+--- output ---

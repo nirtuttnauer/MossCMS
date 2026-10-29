@@ -1,0 +1,5 @@
+$ docker compose run --rm --no-deps -T --entrypoint tar app -C /data -czf - .
+exit: 0
+bytes: 9736
+stderr:
+

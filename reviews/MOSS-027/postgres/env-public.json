@@ -1,0 +1,12 @@
+{
+  "MOSS_PUBLIC_URL": "https://cms.moss.test:8443",
+  "POSTGRES_DB": "mosscms",
+  "POSTGRES_USER": "mosscms",
+  "MOSS_ENV": "production",
+  "MOSS_SKIP_AUTH": "false",
+  "MOSS_USE_SQLITE": "false",
+  "MOSS_ORIGINS": "https://cms.moss.test:8443",
+  "MOSS_PORT": "8001",
+  "MOSS_WEBHOOK_ORIGINS": "http://example-site:5174",
+  "MOSS_IMAGE": "mosscms:local"
+}

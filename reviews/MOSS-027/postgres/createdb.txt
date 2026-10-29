@@ -1,0 +1,6 @@
+$ docker compose exec -T db sh -c createdb -U "$POSTGRES_USER" mosscms_recovery
+cwd: /workspace
+started: 2026-10-29T05:51:52Z
+exit: 0
+seconds: 0.13
+--- output ---

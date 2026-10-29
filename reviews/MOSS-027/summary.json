@@ -1,0 +1,55 @@
+{
+  "started": "2026-10-29T05:51:08Z",
+  "finished": "2026-10-29T05:53:43Z",
+  "ok": true,
+  "git_sha": "28c3dc969c4d5d36a6aa08c4f0103a5b512cd03a",
+  "fingerprint": {
+    "database_matches_backup_source": true,
+    "media_matches": true,
+    "table_counts": {
+      "alembic_version": 1,
+      "assets": 1,
+      "audit": 38,
+      "content_types": 6,
+      "draft_receipts": 0,
+      "entries": 18,
+      "entry_field_indexes": 204,
+      "memberships": 2,
+      "oauth_identities": 0,
+      "preview_grants": 2,
+      "projects": 2,
+      "publication_events": 14,
+      "revisions": 18,
+      "schema_revisions": 6,
+      "tokens": 8,
+      "users": 1,
+      "webhook_deliveries": 0,
+      "webhooks": 0,
+      "website_paths": 8
+    },
+    "media_count": 4
+  },
+  "backup": {
+    "dump_bytes": 68617,
+    "dump_sha256": "75f2fad8af6b3a8f729486a7d57c9addaabe5bfcf282b1d4fe47901a2afc9e01",
+    "media_bytes": 695,
+    "media_sha256": "4f2073dab409db05544fd1f67e25832561aa606ae4eb26a648a8197a26d20245",
+    "image": "mosscms:backup-20261029T055151Z",
+    "image_id": "sha256:7f0c73b05fbd201a7cebc20cbd780d627f934981bf0fb74c4b47f5d89e099a47"
+  },
+  "databases_after_wipe": "mosscms_recovery",
+  "original_volume_removed": "workspace_moss_assets",
+  "scheduled": {
+    "entry": {
+      "slug": "scheduled-restore-note",
+      "status": "published",
+      "isLive": true,
+      "scheduledAt": null
+    },
+    "page_status": 200,
+    "at": "2026-10-29T05:53:12Z"
+  },
+  "sqlite_slug": "client-restore-note",
+  "sqlite_media": true,
+  "sqlite_wiped_volume": "workspace_moss_assets"
+}

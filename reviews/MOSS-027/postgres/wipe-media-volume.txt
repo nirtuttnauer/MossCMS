@@ -1,0 +1,7 @@
+$ docker volume rm workspace_moss_assets
+cwd: /workspace
+started: 2026-10-29T05:53:12Z
+exit: 0
+seconds: 0.01
+--- output ---
+workspace_moss_assets
