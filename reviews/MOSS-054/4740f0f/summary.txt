@@ -1,0 +1,6 @@
+label: local
+sha: 4740f0f8a77aebaaaeea962690accf4836909fe1
+short_sha: 4740f0f
+started: 2026-10-29T05:45:36Z
+git status --porcelain: empty
+verify.sh: gitleaks failed with exit 1

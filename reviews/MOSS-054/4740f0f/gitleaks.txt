@@ -1,0 +1,12 @@
+label: local
+date: 2026-10-29T05:50:32Z
+sha: 4740f0f8a77aebaaaeea962690accf4836909fe1
+workdir: .
+command:
+gitleaks detect --source . --redact=100 --no-banner --exit-code 1
+GITHUB_WORKSPACE=/workspace
+---- output ----
+5:50AM INF 113 commits scanned.
+5:50AM INF scanned ~8407889 bytes (8.41 MB) in 431ms
+5:50AM WRN leaks found: 2
+exit_code: 1

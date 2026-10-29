@@ -1,0 +1,16 @@
+label: local
+date: 2026-10-29T05:50:07Z
+sha: 4740f0f8a77aebaaaeea962690accf4836909fe1
+workdir: example-site
+command:
+npm ci
+GITHUB_WORKSPACE=/workspace
+---- output ----
+
+added 167 packages, and audited 168 packages in 2s
+
+80 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+exit_code: 0

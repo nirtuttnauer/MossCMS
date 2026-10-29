@@ -101,6 +101,26 @@ local
 
 `e8ec4cb` is the script replayed onto `d9db93d` (main, MOSS-032). `git status --porcelain` was empty. `scripts/verify.sh MOSS-054` exited 0. SQLite collected 435, **431 passed, 4 deselected, 0 skipped**. PostgreSQL collected 435, **435 passed, 0 skipped**. Web 317 and example-site 46 were unchanged. Audits and gitleaks were clean. 435 ≥ 403. Logs: [e8ec4cb](e8ec4cb/).
 
+## Run after MOSS-033, not merged
+
+local
+
+`4740f0f8a77aebaaaeea962690accf4836909fe1` is the script replayed onto `ae66eb0` (main, MOSS-033). `git status --porcelain` was empty. 2026-10-29T05:45:36Z through the gitleaks step. `scripts/verify.sh MOSS-054` exited 1.
+
+| Check | Exit | Result |
+| --- | --- | --- |
+| SQLite required run | 0 | 439 collected, **435 passed, 4 deselected, 0 skipped** |
+| PostgreSQL required run | 0 | 439 collected, **439 passed, 0 skipped** |
+| web | 0 | 317 passed |
+| example-site | 0 | 46 passed, 0 failed, 0 skipped |
+| `pip-audit` | 0 | No known vulnerabilities found |
+| `npm audit` (web, example-site, ci) | 0 | found 0 vulnerabilities |
+| `gitleaks detect` | 1 | 2 `generic-api-key` hits |
+
+439 ≥ 403. Zero runtime skips. The same four PostgreSQL ids are deselected on SQLite and passed on PostgreSQL.
+
+gitleaks stopped the run before production Docker. Both hits are the fixture `"secret": "moss033-skip-secret"` in `api/tests/test_delivery_authorization.py` (lines 686 and 693), added on main by MOSS-033 (`ae66eb0`). No allowlist, baseline, or audit ignore was added. Logs: [4740f0f](4740f0f/).
+
 ## Red-first tests
 
 `python3 scripts/test_verify.py` on this script, before the clean run above. Each case exits non-zero, and the script stops on the first failure.

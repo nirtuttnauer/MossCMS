@@ -1,0 +1,10 @@
+label: local
+date: 2026-10-29T05:45:36Z
+sha: 4740f0f8a77aebaaaeea962690accf4836909fe1
+workdir: api
+command:
+uv run mypy app
+GITHUB_WORKSPACE=/workspace
+---- output ----
+Success: no issues found in 28 source files
+exit_code: 0
