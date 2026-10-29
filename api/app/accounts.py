@@ -10,6 +10,7 @@ from sqlalchemy import delete, func, select, text
 
 from .development import DEVELOPMENT_USER_ID
 from .models import Membership, OAuthIdentity, Project, Token, User, now
+from .permissions import ROLE_EXPLANATIONS, allowed_roles, capabilities_for, validate_field_rules
 from .security import (
     CmsError,
     audit,
@@ -262,12 +263,25 @@ def team(request: Request):
         pending = session.scalars(
             select(Token).where(Token.project_id == c["project_id"], Token.kind == "invite", Token.expires_at > now())
         ).all()
+        project = session.get(Project, c["project_id"])
         return {
-            "members": [{"id": user.id, "name": user.name, "email": user.email, "role": role} for user, role in rows],
+            "members": [
+                {
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "role": role,
+                    "capabilities": sorted(capabilities_for(role, project.custom_permissions)),
+                }
+                for user, role in rows
+            ],
             "invitations": [
                 {"id": t.id, "email": t.email, "role": t.role, "expiresAt": t.expires_at.isoformat() + "Z"}
                 for t in pending
             ],
+            "customPermissions": bool(project.custom_permissions),
+            "fieldRules": project.field_rules or {},
+            "explanations": ROLE_EXPLANATIONS,
         }
 
 
@@ -275,9 +289,10 @@ def team(request: Request):
 def invite(body: Invitation, request: Request):
     with request.app.state.db.begin() as session:
         c = context(request, session)
-        require(c, "admin", write=True)
-        if body.role not in {"admin", "editor", "reader"}:
-            raise CmsError("Choose admin, editor, or reader.")
+        require(c, capability="team", write=True)
+        project = session.get(Project, c["project_id"])
+        if body.role not in allowed_roles(project.custom_permissions):
+            raise CmsError("Choose an available role. Author and publisher roles require custom permissions.")
         email = valid_email(body.email)
         user = session.scalar(select(User).where(User.email == email))
         if user and session.get(Membership, (c["project_id"], user.id)):
@@ -314,8 +329,9 @@ def checked_membership(session, c, user_id):
 def change_role(user_id: str, body: ChangeRole, request: Request):
     with request.app.state.db.begin() as session:
         c = context(request, session)
-        if body.role not in {"admin", "editor", "reader"}:
-            raise CmsError("Choose admin, editor, or reader.")
+        project = session.get(Project, c["project_id"])
+        if body.role not in allowed_roles(project.custom_permissions):
+            raise CmsError("Choose an available role. Author and publisher roles require custom permissions.")
         if body.role == "admin":
             require(c, "admin", write=True)
             member = session.get(Membership, (c["project_id"], user_id))
@@ -364,6 +380,32 @@ def create_project(body: ProjectInput, request: Request):
             session.add(Membership(project_id=project.id, user_id=c["user"].id, role="admin"))
         audit(session, project.id, c["actor"], "project.create")
         return {"id": project.id, "name": project.name}
+
+
+class PermissionInput(BaseModel):
+    enabled: bool
+    fieldRules: dict = Field(default_factory=dict)
+
+
+@router.patch("/api/project/permissions")
+def update_permissions(body: PermissionInput, request: Request):
+    with request.app.state.db.begin() as session:
+        c = context(request, session)
+        require(c, capability="team", write=True)
+        project = session.get(Project, c["project_id"])
+        rules = validate_field_rules(body.fieldRules) if body.enabled else {}
+        if not body.enabled:
+            extra = session.scalar(
+                select(Membership.user_id).where(
+                    Membership.project_id == project.id, Membership.role.in_(["author", "publisher"])
+                )
+            )
+            if extra:
+                raise CmsError("Change author and publisher members before turning custom permissions off.", "CONFLICT")
+        project.custom_permissions = body.enabled
+        project.field_rules = rules
+        audit(session, project.id, c["actor"], "project.permissions", enabled=body.enabled)
+    return {"ok": True}
 
 
 @router.patch("/api/project")

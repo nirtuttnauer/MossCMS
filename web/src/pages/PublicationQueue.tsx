@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CalendarClock } from 'lucide-react';
+import { can } from '../lib/access'
 import { Button } from '../components/ui/button';
 import { gql, message, type Entry, type ContentType, type Project } from '../lib/api';
 import { EntryEditor } from './EntryEditor';
@@ -128,8 +129,8 @@ export function PublicationQueue({ types, role, onChanged, project }: {
                 <p className="form-error">{entry.scheduleError.code}: {entry.scheduleError.message} · failed {time(entry.scheduleError.failedAt)}</p>
               )}
             </div>
-            <Button variant="outline" onClick={() => setEditor(entry)}>{role === 'reader' ? 'View' : 'Edit / replace schedule'}</Button>
-            {role !== 'reader' && (
+            <Button variant="outline" onClick={() => setEditor(entry)}>{can(role, 'edit') ? 'Edit / replace schedule' : 'View'}</Button>
+            {can(role, 'schedule') && (
               <>
                 {entry.scheduleError && (
                   <Button disabled={busy} onClick={() => action(entry, 'retryPublication')}>Retry captured revision</Button>

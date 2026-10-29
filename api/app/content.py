@@ -81,22 +81,50 @@ def get_entry(session, identity, id):
 
 
 def entry_dict(session, identity, record):
+    from .permissions import field_visible, present_snapshot, redact, rule_paths
+
     definition = session.get(ContentType, record.type_id)
     delivery = identity.get("delivery")
-    data = record.published_data or {} if identity.get("delivery") else record.data
-    if identity.get("delivery"):
+    allowed = None if delivery else rule_paths(identity, definition.key, "read")
+    data = record.published_data or {} if delivery else record.data
+    if delivery:
         data = public_data(definition.fields, data)
+    else:
+        data = redact(data, definition.fields, "", allowed)
+    hide_title = not delivery and not field_visible(identity, definition, "title")
+    private_title = delivery and any(f["name"] == "title" and f.get("private") for f in definition.fields)
+    if private_title:
+        title = record.published_slug
+    elif delivery:
+        title = record.published_title
+    elif hide_title:
+        title = record.slug
+    else:
+        title = record.title
+    published = (
+        None
+        if delivery or record.published_data is None
+        else redact(record.published_data, definition.fields, "", allowed)
+    )
+    snapshot = None
+    if not delivery and record.published_slug is not None:
+        snapshot = present_snapshot(
+            identity,
+            definition,
+            {
+                "slug": record.published_slug,
+                "title": record.published_title,
+                "data": record.published_data,
+                "revision": record.published_revision,
+                "schemaVersion": record.published_schema_version,
+                "publishedAt": record.published_at.isoformat() + "Z" if record.published_at else None,
+            },
+        )
     return {
         "id": record.id,
         "typeKey": definition.key,
         "slug": record.published_slug if delivery else record.slug,
-        "title": (
-            record.published_slug
-            if any(f["name"] == "title" and f.get("private") for f in definition.fields)
-            else record.published_title
-        )
-        if delivery
-        else record.title,
+        "title": title,
         "data": data,
         "status": "published" if delivery else record.status,
         "version": record.published_revision if delivery else record.version,
@@ -115,19 +143,14 @@ def entry_dict(session, identity, record):
         "publishedRevision": record.published_revision,
         "scheduledRevision": None if delivery else record.scheduled_revision,
         "scheduleError": None if delivery else record.schedule_error,
-        "publishedData": None if delivery else record.published_data,
+        "publishedData": published,
         "publishedSlug": None if delivery else record.published_slug,
-        "publishedTitle": None if delivery else record.published_title,
-        "publishedSnapshot": None
-        if delivery or record.published_slug is None
-        else {
-            "slug": record.published_slug,
-            "title": record.published_title,
-            "data": record.published_data,
-            "revision": record.published_revision,
-            "schemaVersion": record.published_schema_version,
-            "publishedAt": record.published_at.isoformat() + "Z" if record.published_at else None,
-        },
+        "publishedTitle": None if delivery else record.published_slug if hide_title else record.published_title,
+        "publishedSnapshot": snapshot,
+        "reviewState": None if delivery else record.review_state,
+        "approvedRevision": None if delivery else record.approved_revision,
+        "reviewerId": None if delivery else record.reviewer_id,
+        "reviewAuthorId": None if delivery else record.review_author_id,
     }
 
 
@@ -159,6 +182,8 @@ def entry_page(
     include_total=True,
 ):
     require(identity)
+    from .permissions import field_visible, hidden_title_type_ids
+
     if not 1 <= first <= 100 or sort not in {"updated_desc", "updated_asc", "title_asc", "title_desc"}:
         raise CmsError("Use a page size of 1–100 and a supported sort order.")
     if order_by is not None and (not type_key or sort != "updated_desc"):
@@ -198,6 +223,12 @@ def entry_page(
             else:
                 # Keep the searchable column visible to the index while excluding private titles.
                 title_match = and_(Entry.type_id.not_in(private_title_types(session, identity)), title_match)
+        if not identity.get("delivery"):
+            hidden_titles = hidden_title_type_ids(session, identity)
+            if type_key and not field_visible(identity, definition, "title"):
+                title_match = false()
+            elif hidden_titles:
+                title_match = and_(Entry.type_id.not_in(hidden_titles), title_match)
         query = query.where(
             or_(
                 title_match,
@@ -210,6 +241,8 @@ def entry_page(
             raise CmsError("Field filters require a content type and at most ten exact-match fields.")
         fields = {f["name"]: f for f in get_type(session, identity, type_key).fields}
         for key, value in filters.items():
+            if not identity.get("delivery") and not field_visible(identity, definition, key):
+                raise CmsError("Filter on a visible scalar field.")
             if (
                 key not in fields
                 or fields[key].get("localized")
@@ -269,6 +302,8 @@ def entry_page(
     if order_by is not None:
         from .ordering import field_page
 
+        if not identity.get("delivery") and not field_visible(identity, definition, order_by["field"]):
+            raise CmsError("Filter on a visible scalar field.")
         items, cursor, has_next = field_page(session, identity, definition, query, order_by, first, after)
         return {
             "nodes": [entry_dict(session, identity, record) for record in items],
@@ -381,6 +416,7 @@ def summarize_status(record):
 def clear_schedule(record):
     record.scheduled_at = record.scheduled_data = record.scheduled_slug = record.scheduled_title = None
     record.scheduled_revision = record.scheduled_schema_version = record.schedule_error = None
+    record.schedule_actor_id = None
 
 
 def website_path(definition, slug, data, fields=None):
@@ -505,9 +541,12 @@ def publish_snapshot(record, definition, data, slug, title, number):
 def save_entry(
     session, identity, type_key, slug, data, status="draft", id=None, version=None, scheduled_at=None, restoring=False
 ):
-    require(identity, "editor", write=True)
+    require(identity, capability="create" if not id else "edit", write=True)
+    if status == "published":
+        require(identity, capability="publish", write=True)
+    elif status == "scheduled":
+        require(identity, capability="schedule", write=True)
     definition = get_type(session, identity, type_key)
-    validate_data(definition.fields, data, session, identity["project_id"])
     slug = slugify(slug)
     if status not in {"draft", "published", "scheduled"}:
         raise CmsError("Use draft, published, or scheduled status.")
@@ -543,6 +582,20 @@ def save_entry(
             field_path="slug",
             reason="slug_conflict",
         )
+    from .permissions import merge_write, rule_paths
+    from .releases import entry_in_open_release
+    from .reviews import invalidate_review, require_approval
+
+    data = merge_write(
+        record.data if id else {},
+        data,
+        definition.fields,
+        "",
+        rule_paths(identity, definition.key, "write"),
+    )
+    validate_data(definition.fields, data, session, identity["project_id"])
+    if status in {"published", "scheduled"} and entry_in_open_release(session, identity["project_id"], id):
+        raise CmsError("Remove this entry from its open release before publishing or scheduling it separately.")
     if not id:
         session.add(record)
     record.slug = slug
@@ -553,6 +606,10 @@ def save_entry(
         title = title.get(project.default_locale) or title.get("en") or next(iter(title.values()), slug)
     record.title = str(title)[:200]
     record.data = deepcopy(data)
+    with session.no_autoflush:
+        invalidate_review(session, record, definition)
+        if status in {"published", "scheduled"}:
+            require_approval(session, record, definition, data, slug)
     record.status = "draft" if restoring else status
     if status == "scheduled":
         record.scheduled_at = schedule
@@ -560,6 +617,7 @@ def save_entry(
         record.scheduled_slug, record.scheduled_title = slug, record.title
         record.scheduled_schema_version = definition.version
         record.schedule_error = None
+        record.schedule_actor_id = identity["user"].id
     summarize_status(record)
     record.updated_at = now()
     record.author_id = identity["user"].id
@@ -654,7 +712,7 @@ def save_entry_receipt(session, identity, key, type_key, slug, data, status, id,
 
 def move_entry(session, identity, id, type_key, version):
     """Change an entry's type without replacing its ID, history or publishing schedule."""
-    require(identity, "admin", write=True)
+    require(identity, capability="schema", write=True)
     record = get_entry(session, identity, id)
     if record.version != version:
         raise CmsError("This entry changed. Reload before moving it.", "CONFLICT")
@@ -690,7 +748,7 @@ def move_entry(session, identity, id, type_key, version):
 
 def retry_publication(session, identity, id, version):
     """Requeue the failed immutable capture; never silently substitute newer edits."""
-    require(identity, "editor", write=True)
+    require(identity, capability="schedule", write=True)
     record = get_entry(session, identity, id)
     if record.version != version:
         raise CmsError("This entry changed. Reload before retrying.", "CONFLICT")
@@ -709,6 +767,10 @@ def retry_publication(session, identity, id, version):
     )
     if collision:
         raise CmsError("The captured URL is still in use. Resolve the conflict or replace the schedule.", "CONFLICT")
+    from .reviews import assert_captured_publication
+
+    assert_captured_publication(session, record, definition, record.scheduled_data, record.scheduled_slug)
+    record.schedule_actor_id = identity["user"].id
     record.scheduled_at = now()
     record.schedule_error = None
     record.updated_at = now()
@@ -726,8 +788,12 @@ def retry_publication(session, identity, id, version):
 
 
 def publication_action(session, identity, id, version, unpublish=False):
-    require(identity, "editor", write=True)
+    require(identity, capability="publish" if unpublish else "schedule", write=True)
     record = get_entry(session, identity, id)
+    from .releases import entry_in_open_release
+
+    if entry_in_open_release(session, identity["project_id"], id):
+        raise CmsError("Remove this entry from its open release before changing publication separately.")
     if record.version != version:
         raise CmsError("This entry changed. Reload before changing publication.", "CONFLICT")
     if record.status == "deleted":
@@ -752,8 +818,14 @@ def publication_action(session, identity, id, version, unpublish=False):
 
 
 def archive_entry(session, identity, id, version):
-    require(identity, "editor", write=True)
+    require(identity, capability="edit", write=True)
     record = get_entry(session, identity, id)
+    if record.published_slug or record.scheduled_at:
+        require(identity, capability="publish", write=True)
+    from .releases import entry_in_open_release
+
+    if entry_in_open_release(session, identity["project_id"], id):
+        raise CmsError("Remove this entry from its open release before moving it to trash.")
     if record.version != version:
         raise CmsError("This entry changed. Reload before deleting.", "CONFLICT")
     emit(session, record, "trashed", record.published_revision, record.published_slug)
@@ -787,7 +859,7 @@ def restore_entry(session, identity, id, number, version):
 
 
 def save_type(session, identity, key, name, fields, version=None, migration=None):
-    require(identity, "admin", write=True)
+    require(identity, capability="schema", write=True)
     session.scalar(select(Project.id).where(Project.id == identity["project_id"]).with_for_update())
     if not NAME.fullmatch(key) or not name.strip() or len(name) > 100:
         raise CmsError("Use a content type key beginning with a lower-case letter and a name of 1–100 characters.")
@@ -847,6 +919,9 @@ def save_type(session, identity, key, name, fields, version=None, migration=None
                 if entry.scheduled_data is not None:
                     entry.scheduled_data = transform(entry.scheduled_data)
                     entry.scheduled_schema_version = record.version + 1
+                from .reviews import clear_review
+
+                clear_review(entry)
                 entry.updated_at = now()
                 revision(session, identity, entry)
         record.version += 1
@@ -862,6 +937,9 @@ def save_type(session, identity, key, name, fields, version=None, migration=None
 
 def publish_due(factory):
     with factory.begin() as session:
+        from .releases import publish_due_releases
+
+        publish_due_releases(session)
         for record in session.scalars(
             select(Entry)
             .where(Entry.status != "deleted", Entry.scheduled_at <= now())
@@ -874,6 +952,11 @@ def publish_due(factory):
                     if record.scheduled_data is None or not record.scheduled_slug or captured is None:
                         raise CmsError("Scheduled snapshot is missing; save a new schedule.")
                     validate_data(definition.fields, record.scheduled_data, session, record.project_id)
+                    from .reviews import assert_captured_publication
+
+                    assert_captured_publication(
+                        session, record, definition, record.scheduled_data, record.scheduled_slug
+                    )
                     previous_slug = record.published_slug
                     reserve_website_paths(session, record, definition, record.scheduled_slug, record.scheduled_data)
                     publish_snapshot(
