@@ -1,0 +1,17 @@
+COMMAND: uv run ruff check app tests migrations && uv run ruff format --check app tests migrations
+[1;32mAll checks passed![0m
+ruff_check:0
+82 files already formatted
+ruff_format:0
+COMMAND: scripts and telemetry ruff
+[1;32mAll checks passed![0m
+ruff_scripts:0
+14 files already formatted
+ruff_scripts_format:0
+[1;32mAll checks passed![0m
+ruff_telemetry:0
+1 file already formatted
+ruff_telemetry_format:0
+COMMAND: uv run mypy app
+Success: no issues found in 27 source files
+mypy:0

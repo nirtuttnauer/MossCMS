@@ -1,0 +1,12 @@
+COMMAND: gitleaks detect --source . --redact --verbose
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+4:59AM INF 90 commits scanned.
+4:59AM INF scanned ~6736068 bytes (6.74 MB) in 404ms
+4:59AM INF no leaks found
+gitleaks:0

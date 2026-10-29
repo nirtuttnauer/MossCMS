@@ -1,0 +1,24 @@
+COMMAND: otel collector smoke
+DATE: 2026-10-29T05:02:56Z
+Unable to find image 'otel/opentelemetry-collector-contrib:0.156.0@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108' locally
+docker.io/otel/opentelemetry-collector-contrib@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108: Pulling from otel/opentelemetry-collector-contrib
+b5b237935aff: Pulling fs layer
+ae97a339ae88: Pulling fs layer
+4aade0010a3c: Pulling fs layer
+4aade0010a3c: Download complete
+ae97a339ae88: Download complete
+4aade0010a3c: Pull complete
+b5b237935aff: Download complete
+ae97a339ae88: Pull complete
+b5b237935aff: Pull complete
+Digest: sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108
+Status: Downloaded newer image for otel/opentelemetry-collector-contrib@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108
+0b3d356ab057579a8c42365ded48e9034f9d9c2b3a984ef354cc2d57bf07f08f
+docker_run:0
+/workspace/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+/workspace/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5: AuthlibDeprecationWarning: The httpx module is deprecated; please use httpx2 instead.
+  from ._compat import httpx2
+{"requestId": "8b806396-78e5-4669-80c2-f22f8a6364d6", "graphqlErrorCodes": ["GRAPHQL_VALIDATION"]}
+Telemetry smoke evidence: /tmp/moss-otel-evidence/collector-smoke.json
+smoke:0
