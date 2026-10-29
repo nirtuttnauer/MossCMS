@@ -10,7 +10,7 @@ To use SQLite without a separate database service, add `--sqlite` to the configu
 
 By default Compose builds `mosscms:local` from this checkout (`pull_policy: build`) and does not pull an app image. For a published Docker Hub image, set both `MOSS_IMAGE` (a published `nirtuttnauer/mosscms` version or digest) and `MOSS_PULL_POLICY=missing` in `.env`, run `docker compose pull app db`, then `docker compose up --no-build -d --wait app`. The same configuration, volumes and recovery tools apply. See [Docker images and Compose](docker.md).
 
-Terminate TLS at a reverse proxy. Keep the default loopback bindings (CMS 8001, website 5174); PostgreSQL has no published host port. Allow required request/upload sizes and timeouts. Proxy website `/api/events` with streaming enabled and buffering disabled; polling remains a recovery path. Do not cache preview pages or `/api/preview`, and do not log preview bodies, cookies, bearer tokens or authorization headers. Keep the website's server routes available; uploading only its static build is insufficient.
+Terminate TLS at a reverse proxy, and add Content-Security-Policy and Strict-Transport-Security there. The procedure, the header values, and the curl and console checks are in the [client hardening guide](client-hardening.md). Run one app process even when the database is PostgreSQL. Setup, sign-in, and invitation rate limits live in that process's memory (`app.state.login_attempts` in `api/app/main.py`, enforced by `rate_limit` in `api/app/accounts.py`) and are not shared with a second process. Keep the default loopback bindings (CMS 8001, website 5174); PostgreSQL has no published host port. Allow required request/upload sizes and timeouts. Proxy website `/api/events` with streaming enabled and buffering disabled; polling remains a recovery path. Do not cache preview pages or `/api/preview`, and do not log preview bodies, cookies, bearer tokens or authorization headers. Keep the website's server routes available; uploading only its static build is insufficient.
 
 | Location | Setting | Purpose |
 | --- | --- | --- |
@@ -47,8 +47,27 @@ For local media retain the `moss_assets` volume. For S3 retain private bucket ob
 | Preview denied | Check grant expiry/revocation, issuer editor membership, token workspace/type scope and exact preview origins; regenerate after saving current revision |
 | Broken images | Check asset backend, original/variant presence, signed URL expiry and token scope; older assets need reupload for variants |
 | Slow request | Correlate `X-Request-ID`, GraphQL `extensions.requestId`, `Server-Timing` and structured duration logs; admin `/metrics` checks aggregate API state |
+| Cannot sign in | Follow [Reset a password without email](#reset-a-password-without-email). MossCMS has no mail delivery |
 
 Logs intentionally omit submitted bodies, query strings, secrets and GraphQL query text. Protect application/proxy logs and database dumps. API shutdown waits for active worker work before disposing database connections. Normal publication transactions never wait for network callbacks.
+
+## Reset a password without email
+
+MossCMS has no mail delivery. Use this when an account owner cannot sign in. The same steps are in the [client hardening guide](client-hardening.md#reset-a-password-without-email).
+
+1. Confirm the account email. From the repository root, with the app container running:
+
+   ```sh
+   docker compose exec app python -m app.cli reset-password --email person@example.com
+   ```
+
+   The command prints one line: `MOSS_PUBLIC_URL` plus `/#reset/` and a token. That line is the secret. Share it with the account owner through a channel you trust. The audit log records `account.recovery.issue` and the account id. The token is only in the printed line. `MOSS_PUBLIC_URL` must be the origin the owner can open, without a trailing slash. A trailing slash in the setting is removed from the printed link.
+
+2. The owner opens the link, enters that same email, and sets a new password of 12–128 characters.
+
+3. The new password works immediately. The previous password stops working. Existing sessions for that account are signed out.
+
+The link works once. A later visit reports that the link is invalid or expired, and the password stays as it was. An unused link expires one day after it was issued; expiry is checked against the server clock. Running the command again deletes any unused link for that account and prints a new one. Omitting `--email` exits with `--email is required`. An unknown email exits with `Account not found` and prints no link.
 
 ## Backup with writers stopped
 

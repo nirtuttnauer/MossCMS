@@ -1,0 +1,34 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /workspace/api
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 35 items / 33 deselected / 2 selected
+
+tests/test_slugs.py FF                                                   [100%]
+
+=================================== FAILURES ===================================
+____________________ test_allowing_two_scripts_is_rejected _____________________
+tests/test_slugs.py:62: in test_allowing_two_scripts_is_rejected
+    assert not allows_scripts({"Hebrew", "Arabic"})
+E   AssertionError: assert not True
+E    +  where True = allows_scripts({'Arabic', 'Hebrew'})
+___________________ test_shared_slug_vectors[hebrew-arabic] ____________________
+tests/test_slugs.py:35: in test_shared_slug_vectors
+    with pytest.raises(CmsError) as caught:
+E   Failed: DID NOT RAISE CmsError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /workspace/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5
+  /workspace/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5: AuthlibDeprecationWarning: The httpx module is deprecated; please use httpx2 instead.
+    from ._compat import httpx2
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_slugs.py::test_allowing_two_scripts_is_rejected - Assertion...
+FAILED tests/test_slugs.py::test_shared_slug_vectors[hebrew-arabic] - Failed:...
+================= 2 failed, 33 deselected, 2 warnings in 0.06s =================
+PY_TWO:1

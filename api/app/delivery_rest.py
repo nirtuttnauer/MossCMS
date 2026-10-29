@@ -12,14 +12,15 @@ from fastapi.responses import JSONResponse
 from . import content
 from .graphql import resolved_image_assets
 from .models import ContentType
-from .schema import public_fields
+from .schema import LOCALE, public_fields
 from .security import CmsError, identify, require
 
 logger = logging.getLogger("mosscms")
 
 # Byte length of the filters query value as it appears in the request, before URL-decoding.
 MAX_FILTERS_BYTES = 4096
-ENTRY_PARAMETERS = {"typeKey", "search", "sort", "first", "after", "filters", "orderBy", "direction", "total"}
+ENTRY_PARAMETERS = {"typeKey", "search", "sort", "first", "after", "filters", "orderBy", "direction", "total", "locale"}
+ITEM_PARAMETERS = {"locale"}
 PAGE_SIZE = "Use a page size of 1–100 and a supported sort order."
 
 
@@ -100,6 +101,60 @@ def load_filters(query_string: bytes):
     return parse_filters(decoded)
 
 
+def parse_locale(value: str | None) -> str | None:
+    """Locale lookup key. Omitted leaves maps intact; a present key selects that translation."""
+    if value is None:
+        return None
+    if not LOCALE.fullmatch(value):
+        raise CmsError("Use a valid locale code.")
+    return value
+
+
+def project_locale(fields, data, locale):
+    """Select `locale` from every localized public field, the way a GraphQL field argument does."""
+    if not isinstance(data, dict):
+        return data
+    projected = {}
+    for field in fields:
+        if field.get("private"):
+            continue
+        projected[field["name"]] = project_locale_value(field, data.get(field["name"]), locale)
+    return projected
+
+
+def project_locale_value(field, value, locale):
+    if field.get("private") or value is None:
+        return None
+    if field.get("localized"):
+        value = value.get(locale) if isinstance(value, dict) else None
+        if value is None:
+            return None
+        field = {**field, "localized": False}
+    kind = field["type"]
+    if kind == "object":
+        return project_locale(field.get("fields") or [], value, locale) if isinstance(value, dict) else None
+    if kind == "list":
+        if not isinstance(value, list):
+            return None
+        return [project_locale_value(field["item"], item, locale) for item in value]
+    return value
+
+
+def apply_locale(context, documents, locale):
+    if locale is None:
+        return documents
+    definitions = {}
+    projected = []
+    for document in documents:
+        key = document["typeKey"]
+        if key not in definitions:
+            definitions[key] = content.get_type(context["session"], context, key)
+        projected.append(
+            {**document, "data": project_locale(definitions[key].fields, document.get("data") or {}, locale)}
+        )
+    return projected
+
+
 def parse_first(value: str | None) -> int:
     if value is None:
         return 20
@@ -166,6 +221,7 @@ def entries_payload(context):
         include_total = True
     else:
         raise CmsError("total must be true or false.")
+    locale = parse_locale(params.get("locale"))
     page = content.entry_page(
         context["session"],
         context,
@@ -178,16 +234,22 @@ def entries_payload(context):
         order_by={"field": order_name, "direction": direction} if order_name else None,
         include_total=include_total,
     )
-    body = {"nodes": page["nodes"], "endCursor": page["endCursor"], "hasNextPage": page["hasNextPage"]}
+    body = {
+        "nodes": apply_locale(context, page["nodes"], locale),
+        "endCursor": page["endCursor"],
+        "hasNextPage": page["hasNextPage"],
+    }
     if include_total:
         body["total"] = page["total"]
     return body
 
 
 def entry_payload(context, entry_id):
-    ensure_known_parameters(context["request"], set())
+    ensure_known_parameters(context["request"], ITEM_PARAMETERS)
     session = context["session"]
-    return content.entry_dict(session, context, content.get_entry(session, context, entry_id))
+    locale = parse_locale(context["request"].query_params.get("locale"))
+    document = content.entry_dict(session, context, content.get_entry(session, context, entry_id))
+    return apply_locale(context, [document], locale)[0]
 
 
 def resolved_payload(context, entry_id):

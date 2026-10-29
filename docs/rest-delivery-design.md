@@ -55,11 +55,11 @@ A type document is `{ "id", "key", "name", "fields", "version" }` with `fields` 
 
 `/delivery/entries/{id}/resolved-assets` returns a list of `{ "id", "name", "mime", "size", "url", "width", "height", "variants" }`. `variants` is the list `variant_metadata` already builds (`width`, `height`, `size`, `url`). The helper reads `published_data` because the context is a delivery context, keeps image MIME types, and stops at the 50 ids `image_asset_ids` keeps. Assets are limited to the token's project.
 
-`data` on an entry is `public_data` of `published_data`. Localized values stay maps of locale to value. Reference and asset fields stay ids. REST does not take the generated GraphQL `locale` argument and does not expand references. A client that needs a referenced entry calls `GET /delivery/entries/{id}`.
+`data` on an entry is `public_data` of `published_data`. With no `locale` parameter, localized values stay maps of locale to value. `locale` on the list and on `GET /delivery/entries/{id}` selects that code from every localized public field, including fields nested in objects and lists. The lookup is the one a GraphQL field `locale` argument uses: the value at that key, or null when the key is absent. There is no fallback to the workspace default or to `en`. Reference and asset fields stay ids. REST does not expand references. A client that needs a referenced entry calls `GET /delivery/entries/{id}`.
 
 ### Query parameters
 
-`/delivery/entries` accepts only the parameters below. Every other parameter, on this route or any other delivery route, is HTTP 422 with `{"detail": "Unknown delivery parameter.", "code": "VALIDATION"}`. The handler rejects the request before it calls `entry_page`. `status`, `snapshot`, `slug`, and `scheduledAt` are unknown parameters.
+`/delivery/entries` accepts only the parameters below. `GET /delivery/entries/{id}` accepts only `locale`. Every other parameter on those routes, and every parameter on the other delivery routes, is HTTP 422 with `{"detail": "Unknown delivery parameter.", "code": "VALIDATION"}`. The handler rejects the request before it calls `entry_page`. `status`, `snapshot`, `slug`, and `scheduledAt` are unknown parameters.
 
 | Parameter | Rule |
 | --- | --- |
@@ -72,6 +72,7 @@ A type document is `{ "id", "key", "name", "fields", "version" }` with `fields` 
 | `orderBy` | Optional field name. Requires `typeKey`. Combined with a `sort` other than `updated_desc`, `entry_page` raises `Field ordering requires a content type; use either sort or orderBy.` The field must be a visible non-localized scalar on the published index. A private field raises `Order by a visible, non-localized scalar field.` |
 | `direction` | `asc` or `desc`, and only together with `orderBy`. Default `asc`, which is `OrderDirection.ASC`. Any other spelling is 422. |
 | `total` | `true` or `false`. Default `false`. `true` passes `include_total=True` and adds `total` to the body. |
+| `locale` | Optional. A stored locale code: `en`, `he`, `en-US`. Applied to `data` after the page is read. Omitted, the locale maps are unchanged. Any other spelling is 422 `Use a valid locale code.` Order, cursors, filters, search, and `total` ignore it. The same parameter on `GET /delivery/entries/{id}` projects that one document. |
 
 Generated `allCms{Type}` lists drop the cursor. REST does not. The list route returns `endCursor` and `hasNextPage` from `entry_page`.
 
@@ -149,7 +150,7 @@ On success the handler commits the session, as the GraphQL route does. On failur
 
 - `first` defaults to 20 and is an integer from 1 to 100. The query reads `first + 1` rows. `hasNextPage` is true when that extra row exists. `nodes` is the first `first` rows.
 - With no `orderBy`, the sort key is `published_at` or the delivery title, then `id`, in the requested direction. `endCursor` is the cursor `entry_page` already encodes: URL-safe base64 of JSON `[value, id, sort]`. The `sort` stored in the cursor has to match the requested sort. A timestamp value is parsed with `datetime.fromisoformat`. Clients send that string back as `after` and do not build their own.
-- `endCursor` is null when the page has no rows. It is set when the page has a row, including the last page. Clients stop when `hasNextPage` is false.
+- `endCursor` is null when the page has no rows. It is set when the page has a row, including the last page. Clients stop when `hasNextPage` is false. `locale` does not change the cursor or the page membership. It only replaces localized values inside `data`.
 - `orderBy` uses `ordering.field_page` on the `published` snapshot index. Nulls sort in a separate tail. That cursor is a different opaque string (URL-safe base64 of `{"scope", "id", "null", "value"}`). `scope` binds the project, type, field, field type, snapshot `published`, and direction. Clients treat it as opaque. The response still calls it `endCursor`.
 - `total`, when requested, is the count `entry_page` computes for the same filter, including the published field index. The default list does not compute it.
 
@@ -198,3 +199,7 @@ Register the routes in `create_app` next to `POST /delivery/graphql`. Share the 
 The implementation tests should cover a delivery bearer token and a rejected session token, `skip_auth` still requiring a delivery token, empty and named scopes, a draft and a scheduled-only entry staying hidden while the live snapshot is returned, a later draft edit and a failed schedule leaving the body and ETag unchanged, private nested fields and a private title, cursor bounds and `orderBy` on the published index, `total` omitted unless requested, 304 when `If-None-Match` repeats the list or entry ETag, no `ETag` on a 404, `no-store` and no `ETag` on resolved assets, and no cacheable delivery document mounted under `/api`. Those checks are input to QA. They are not the final acceptance criteria.
 
 **Approved by CTO (Oct 29, 2026).**
+
+## MOSS-032
+
+List paging, filters, and `orderBy` stay on `entry_page`, so a delivery REST page matches the delivery `entries` connection for the same arguments. `locale` is the list and item parameter that matches a GraphQL field `locale` argument. Parity tests call both protocols.

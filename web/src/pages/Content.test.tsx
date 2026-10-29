@@ -419,3 +419,14 @@ test('schema field sort reaches GraphQL and resets when switching to all content
   await waitFor(() => expect((screen.getByLabelText('Sort entries') as HTMLSelectElement).value).toBe('updated_desc'))
   expect(location.hash).not.toContain('field%3A')
 })
+
+test('a hebrew title suggests the normalized slug', async () => {
+  const { EntryEditor } = await import('./EntryEditor')
+  vi.mocked(gql).mockImplementation(async () => ({ entries: { nodes: [] }, assets: [] }))
+  render(<EntryEditor entry={null} initialType="article" types={types} editable onClose={vi.fn()} onSaved={vi.fn()} />)
+  fireEvent.change(screen.getByLabelText(/^title/), { target: { value: 'מדריך התקנה' } })
+  const slugInput = screen.getByLabelText(/^Slug/) as HTMLInputElement
+  expect(slugInput.value).toBe('מדריך-התקנה')
+  fireEvent.change(slugInput, { target: { value: 'React במובייל 2026' } })
+  expect(slugInput.value).toBe('react-במובייל-2026')
+})
