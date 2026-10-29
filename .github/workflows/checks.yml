@@ -81,7 +81,7 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm ci
         working-directory: web
-      - run: npm run check && npm test && npm run build && npm audit --audit-level=high
+      - run: npm run check && npm test && npm run build
         working-directory: web
   example_site:
     runs-on: ubuntu-latest
@@ -94,7 +94,7 @@ jobs:
           cache-dependency-path: example-site/package-lock.json
       - run: npm ci
         working-directory: example-site
-      - run: npm run check && npm test && npm run build && npm audit --audit-level=high
+      - run: npm run check && npm test && npm run build
         working-directory: example-site
   production_docker:
     runs-on: ubuntu-24.04
@@ -136,3 +136,11 @@ jobs:
       - name: Remove disposable production stack
         if: always()
         run: docker compose -f ci/compose.yaml -p mosscms-smoke down --volumes
+  audits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+      - name: QA gate
+        run: scripts/verify.sh hosted
