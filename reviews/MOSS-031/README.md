@@ -2,20 +2,20 @@
 
 local
 
-Recorded 29 October 2026 (UTC). The API required runs below executed against `20cedbe307318e7dbabf0ee87e68f02a4228b16f` with a clean working tree. This evidence commit only updates the run record.
+Recorded 29 October 2026 (UTC). The API required runs below executed against `60b80bdf6603672a21b6cc46a5892de7aebe16e2` with a clean working tree. This evidence commit only updates the run record.
 
 ## Code under test
 
 | | |
 | --- | --- |
-| SHA tested | `20cedbe307318e7dbabf0ee87e68f02a4228b16f` |
+| SHA tested | `60b80bdf6603672a21b6cc46a5892de7aebe16e2` |
 | Branch | `cursor/rest-delivery-entries-dc8d` |
-| Parent | `2d4c6082d308c638c981a3ed6a26f02142ac2532` (main, MOSS-045) |
+| What that SHA is | merge of delivery REST `20cedbe307318e7dbabf0ee87e68f02a4228b16f` with main `73e1ebe89a41fc81d332264c2c199ffbf26701ad` (MOSS-010) |
 | Baseline | `3a87c73c8e925973608e373863813163b41f04a9` |
 | Main required-run baseline | `d50e2788485e4ef0c65598c4c2f2bd7536e1ed96` (MOSS-023/024): collected 403, SQLite 399 passed / 4 deselected / 0 skipped, PostgreSQL 403 passed / 0 skipped |
-| `git status --porcelain` at the start of the API rerun | empty (clean) |
-| API rerun | 2026-10-29T05:06:10Z through 2026-10-29T05:08:28Z |
-| Earlier checks on the same application bytes | 2026-10-29T04:55:50Z through 2026-10-29T05:03:15Z |
+| `git status --porcelain` at the start of this API run | empty (clean) |
+| This API run | 2026-10-29T05:10:01Z through 2026-10-29T05:12:22Z |
+| Earlier checks on the delivery implementation | 2026-10-29T04:55:50Z through 2026-10-29T05:08:28Z, SHA `20cedbe` |
 | Python / uv | 3.12.3 / 0.12.23 |
 | ruff / mypy / pip-audit | 0.16.10 / 2.4.0 / 2.10.1 |
 | Node / npm | v22.23.4 / 10.9.9 |
@@ -24,7 +24,7 @@ Recorded 29 October 2026 (UTC). The API required runs below executed against `20
 
 `20cedbe` adds `GET`/`HEAD` `/delivery` routes for types, entries, resolved assets, redirects, and reserved paths. They call `identify(..., delivery=True)`, `require`, `public_fields` / `public_data`, `entry_page`, `get_entry`, and `resolved_image_assets` unchanged. The GraphQL ETag block is the shared `delivery_representation` helper. `MAX_FILTERS_BYTES = 4096` is the raw `filters` query-parameter length, counted before URL-decoding and before `parse_filters`. The design status line is `approved by CTO (Oct 29, 2026)`.
 
-The checkout during the API rerun was `7da1dc5`, which adds only `reviews/MOSS-031` on top of `20cedbe`. No application, test, lockfile, or workflow file differs. Lint, web, example-site, audits, OTLP, production Docker, and the mutation checks ran on that same application source before a documentation-only rebase onto `2d4c608`. `git diff` of `api`, `web`, `example-site`, `ci`, `docs`, and `.github` between that source and `20cedbe` is empty.
+`60b80bd` merges that implementation with main after MOSS-010. `git diff 20cedbe 60b80bd` does not change `api/app`, `api/tests/test_delivery_rest.py`, or `docs/rest-delivery-design.md`. MOSS-010 adds three Compose config tests, so the required runs were repeated on the merge. Lint, web, example-site, audits, OTLP, production Docker, and the mutation checks ran on the delivery implementation. `ci/compose.yaml` is unchanged by MOSS-010, so the production smoke still matches this tree. The mutated lines in `security.py` and `delivery_rest.py` are unchanged.
 
 ## Commands
 
@@ -76,9 +76,9 @@ The OTLP step used the pinned image `otel/opentelemetry-collector-contrib:0.156.
 | ruff check scripts, example-site setup, telemetry smoke | 0 | all checks passed |
 | ruff format check of those files | 0 | 14 files and 1 file already formatted |
 | `uv run mypy app` | 0 | no issues in 28 source files |
-| SQLite required run | 0 | collected 412, **408 passed, 4 deselected, 0 skipped**, 6 warnings in 57.94s |
-| PostgreSQL 17 required run | 0 | collected 412, **412 passed, 0 deselected, 0 skipped**, 6 warnings in 123.49s |
-| `tests/verify_required_runs.py` | 0 | union of passed ids is 412 |
+| SQLite required run | 0 | collected 415, **411 passed, 4 deselected, 0 skipped**, 6 warnings in 55.99s |
+| PostgreSQL 17 required run | 0 | collected 415, **415 passed, 0 deselected, 0 skipped**, 6 warnings in 120.83s |
+| `tests/verify_required_runs.py` | 0 | union of passed ids is 415 |
 | `pip-audit` 2.10.1 | 0 | No known vulnerabilities found |
 | `cd web && npm run check` | 0 | `tsc -b` |
 | `cd web && npm test` | 0 | 35 files, 317 tests passed |
@@ -98,13 +98,13 @@ The OTLP step used the pinned image `otel/opentelemetry-collector-contrib:0.156.
 
 The four ids deselected on SQLite are the committed list in `api/tests/required_runs.json`. No xfail. `tests/test_compose.py` executed in both required runs.
 
-Against `3a87c73` (398 passed / 4 skipped on SQLite, 402 passed on PostgreSQL) this run is above the baseline. Against the MOSS-024 required-run counts (399 / 403) this run is +9 API tests, the nine tests in `api/tests/test_delivery_rest.py`. Web stayed at 317. The example site stayed at 46.
+Against `3a87c73` (398 passed / 4 skipped on SQLite, 402 passed on PostgreSQL) this run is above the baseline. Against the MOSS-024 required-run counts (399 / 403) this run adds the nine tests in `api/tests/test_delivery_rest.py` and the three Compose tests that landed with MOSS-010. Web stayed at 317. The example site stayed at 46.
 
-Logs: [pytest-sqlite.txt](20cedbe/pytest-sqlite.txt), [pytest-postgres.txt](20cedbe/pytest-postgres.txt), [verify.txt](20cedbe/verify.txt), [lint.txt](20cedbe/lint.txt), [web.txt](20cedbe/web.txt), [example-site.txt](20cedbe/example-site.txt), [pip-audit.txt](20cedbe/pip-audit.txt), [ci-npm-audit.txt](20cedbe/ci-npm-audit.txt), [otel.txt](20cedbe/otel.txt), [docker-build.txt](20cedbe/docker-build.txt), [playwright-install.txt](20cedbe/playwright-install.txt), [compose-up.txt](20cedbe/compose-up.txt), [production-playwright.txt](20cedbe/production-playwright.txt), [compose-down.txt](20cedbe/compose-down.txt).
+Logs for this run: [pytest-sqlite.txt](60b80bd/pytest-sqlite.txt), [pytest-postgres.txt](60b80bd/pytest-postgres.txt), [verify.txt](60b80bd/verify.txt). Earlier logs on the same delivery source: [lint.txt](20cedbe/lint.txt), [web.txt](20cedbe/web.txt), [example-site.txt](20cedbe/example-site.txt), [pip-audit.txt](20cedbe/pip-audit.txt), [ci-npm-audit.txt](20cedbe/ci-npm-audit.txt), [otel.txt](20cedbe/otel.txt), [docker-build.txt](20cedbe/docker-build.txt), [playwright-install.txt](20cedbe/playwright-install.txt), [compose-up.txt](20cedbe/compose-up.txt), [production-playwright.txt](20cedbe/production-playwright.txt), [compose-down.txt](20cedbe/compose-down.txt).
 
 ## Mutation checks
 
-Each guard was removed or switched on this source, the focused test was run, and the source was restored before the API required runs above. All three mutated runs exited 1. The restored tree is the tree that was tested (`filters_measured_length` returns `len(raw)`; the delivery kind check is present).
+Each guard was removed or switched on the delivery source, the focused test was run, and the source was restored before the API required runs. All three mutated runs exited 1. Those lines are unchanged at `60b80bd`: `filters_measured_length` returns `len(raw)`, and the delivery kind check is present.
 
 1. Session-cookie guard. In `identify`, the delivery kind check was removed so any unexpired token was accepted:
 
