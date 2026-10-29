@@ -494,6 +494,43 @@ def test_private_history_uses_its_original_content_type_after_move(workspace):
         assert b"historical private sentinel" not in archive.read("provenance.ndjson")
 
 
+def _replace_slugs(slug):
+    def mutate(files):
+        rows = [json.loads(line) for line in files["entries.ndjson"].splitlines()]
+        for row in rows:
+            for kind in ("draft", "published", "scheduled"):
+                row[kind]["slug"] = slug
+        files["entries.ndjson"] = b"\n".join(json.dumps(row, ensure_ascii=False).encode() for row in rows) + b"\n"
+
+    return mutate
+
+
+def test_import_accepts_normalized_hebrew_and_rejects_unnormalized_slugs(workspace):
+    w = workspace
+    seed(w, 1)
+    export(w)
+    rewrite(w, _replace_slugs("מדריך-התקנה"))
+    applied = transfer(w, apply=True)
+    with w.factory() as session:
+        record = session.get(Entry, applied["mapping"]["entries"]["entry-0"])
+        assert record.slug == "מדריך-התקנה"
+        imported = session.scalar(select(Revision).where(Revision.entry_id == record.id)).snapshot["imported"]["entry"]
+        assert imported["published"]["slug"] == "מדריך-התקנה"
+        assert imported["scheduled"]["slug"] == "מדריך-התקנה"
+    second = w.root / "unnormalized.zip"
+    export_workspace(w.factory, w.settings, "source", "admin@example.com", second)
+    w.archive = second
+    rewrite(w, _replace_slugs("מדריך\u200bהתקנה"))
+    with pytest.raises(CmsError, match="Invalid draft/type/slug"):
+        import_workspace(w.factory, w.settings, "second", "admin@example.com", second, apply=True)
+    assert_empty_project(w, "second")
+
+
+def assert_empty_project(w, project_id):
+    with w.factory() as session:
+        assert session.scalar(select(func.count()).select_from(Entry).where(Entry.project_id == project_id)) == 0
+
+
 def test_trash_stays_trashed_and_public_history_titles_are_preserved(workspace):
     w = workspace
     seed(w)

@@ -28,18 +28,8 @@ from .indexing import SORT_PREFIX_BYTES, indexed_value, scalar_fields
 from .outbox import emit
 from .schema import NAME, public_data, reference_targets, validate_data, validate_fields
 from .security import CmsError, audit, require
+from .slugs import encode_website_path, slugify
 from .transforms import transform_data, validate_steps
-
-
-def slugify(value):
-    result = re.sub(r"[^a-z0-9]+", "-", value.strip().lower()).strip("-")
-    if not result or len(result) > 220:
-        raise CmsError(
-            "Slug must contain letters or numbers and be at most 220 characters.",
-            field_path="slug",
-            reason="invalid_slug",
-        )
-    return result
 
 
 def scoped(session, model, identity):
@@ -467,7 +457,7 @@ def website_reserved_paths(session, identity):
     )
     if identity.get("delivery") and identity["scopes"]:
         query = query.where(ContentType.key.in_(identity["scopes"]))
-    return list(session.scalars(query).all())
+    return [encode_website_path(path) for path in session.scalars(query).all()]
 
 
 def website_redirects(session, identity):
@@ -489,7 +479,13 @@ def website_redirects(session, identity):
             continue
         target = website_path(definition, entry.published_slug, entry.published_data)
         if target and target != claim.path:
-            mappings.append({"from": claim.path, "to": target, "entryId": entry.id})
+            mappings.append(
+                {
+                    "from": encode_website_path(claim.path),
+                    "to": encode_website_path(target),
+                    "entryId": entry.id,
+                }
+            )
     return mappings
 
 

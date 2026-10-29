@@ -1,0 +1,200 @@
+{
+  "limits": {
+    "characters": 220,
+    "utf8Bytes": 600
+  },
+  "stripRanges": [
+    [
+      "200B",
+      "200F"
+    ],
+    [
+      "202A",
+      "202E"
+    ],
+    [
+      "2066",
+      "2069"
+    ],
+    [
+      "FEFF",
+      "FEFF"
+    ]
+  ],
+  "cases": [
+    {
+      "id": "hebrew-title",
+      "input": "מדריך התקנה",
+      "slug": "מדריך-התקנה",
+      "encoded": "%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%94%D7%AA%D7%A7%D7%A0%D7%94",
+      "websitePath": "/blog/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%94%D7%AA%D7%A7%D7%A0%D7%94"
+    },
+    {
+      "id": "react-mobile",
+      "input": "React במובייל 2026",
+      "slug": "react-במובייל-2026"
+    },
+    {
+      "id": "nextjs-hebrew",
+      "input": "Nextjs מדריך",
+      "slug": "nextjs-מדריך",
+      "encoded": "nextjs-%D7%9E%D7%93%D7%A8%D7%99%D7%9A",
+      "websitePath": "/nextjs-%D7%9E%D7%93%D7%A8%D7%99%D7%9A"
+    },
+    {
+      "id": "ascii-words",
+      "input": "  Hello, World!  ",
+      "slug": "hello-world"
+    },
+    {
+      "id": "ascii-collapse",
+      "input": "hello--world",
+      "slug": "hello-world"
+    },
+    {
+      "id": "ascii-underscore",
+      "input": "hello_world",
+      "slug": "hello-world"
+    },
+    {
+      "id": "ascii-plus",
+      "input": "C++",
+      "slug": "c"
+    },
+    {
+      "id": "ascii-mixed-case",
+      "input": "MiXeD",
+      "slug": "mixed"
+    },
+    {
+      "id": "digits",
+      "input": "2026",
+      "slug": "2026"
+    },
+    {
+      "id": "already-normalized",
+      "input": "already-ok",
+      "slug": "already-ok"
+    },
+    {
+      "id": "empty",
+      "input": "   ",
+      "error": "invalid_slug"
+    },
+    {
+      "id": "punctuation",
+      "input": "!!!",
+      "error": "invalid_slug"
+    },
+    {
+      "id": "niqqud-presentation",
+      "input": "שׁ",
+      "slug": "שׁ"
+    },
+    {
+      "id": "niqqud-decomposed",
+      "input": "שׁ",
+      "slug": "שׁ"
+    },
+    {
+      "id": "latin-nfd",
+      "input": "é",
+      "slug": "é"
+    },
+    {
+      "id": "latin-uppercase-accent",
+      "input": "É",
+      "slug": "é"
+    },
+    {
+      "id": "strip-before-nfc",
+      "input": "e​́",
+      "slug": "é"
+    },
+    {
+      "id": "casefold-eszett",
+      "input": "Straße",
+      "slug": "strasse"
+    },
+    {
+      "id": "casefold-sigma",
+      "input": "ςΣ",
+      "slug": "σσ"
+    },
+    {
+      "id": "casefold-i",
+      "input": "İ",
+      "slug": "i̇"
+    },
+    {
+      "id": "latin-cyrillic",
+      "input": "pаypal",
+      "error": "invalid_slug"
+    },
+    {
+      "id": "latin-greek",
+      "input": "pαypal",
+      "error": "invalid_slug"
+    },
+    {
+      "id": "cyrillic-only",
+      "input": "абв",
+      "slug": "абв"
+    },
+    {
+      "id": "greek-only",
+      "input": "αλφα",
+      "slug": "αλφα"
+    },
+    {
+      "id": "hebrew-arabic",
+      "input": "שלוםمرحبا",
+      "error": "invalid_slug"
+    },
+    {
+      "id": "double-encoded",
+      "input": "%25D7%259E",
+      "error": "invalid_slug"
+    },
+    {
+      "id": "percent-encoded",
+      "input": "%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%94%D7%AA%D7%A7%D7%A0%D7%94",
+      "slug": "מדריך-התקנה"
+    },
+    {
+      "id": "percent-encoded-lowercase",
+      "input": "%d7%9e%d7%93%d7%a8%d7%99%d7%9a",
+      "slug": "מדריך"
+    },
+    {
+      "id": "slash",
+      "input": "foo/bar",
+      "slug": "foo-bar"
+    },
+    {
+      "id": "encoded-slash",
+      "input": "foo%2Fbar",
+      "slug": "foo-bar"
+    },
+    {
+      "id": "dotdot",
+      "input": "..",
+      "error": "invalid_slug"
+    },
+    {
+      "id": "encoded-slash-only",
+      "input": "%2F",
+      "error": "invalid_slug"
+    },
+    {
+      "id": "encoded-traversal",
+      "input": "..%2F..",
+      "error": "invalid_slug"
+    },
+    {
+      "id": "encoded-zwsp",
+      "input": "hello%E2%80%8Bworld",
+      "slug": "helloworld"
+    }
+  ]
+}
