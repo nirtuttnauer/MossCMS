@@ -12,16 +12,25 @@ import { RevisionCompare, type Revision } from '../components/RevisionCompare'
 import { isEntryValid, validateEntry } from '../lib/validation'
 import { initialData } from '../lib/fields'
 import { creationLabels, timestamp, typeOrder, type DuplicationSource, type EntryPage as Page } from '../lib/entries'
-import { ApiError, getContext, draftReceiptQuery, entryFields, gql, message, saveEntryMutation, slugify, type Asset, type ContentType, type Entry } from '../lib/api'
+import { ApiError, getContext, draftReceiptQuery, entryFields, gql, message, saveEntryMutation, type Asset, type ContentType, type Entry } from '../lib/api'
+import { canonicalSlug, encodeWebsitePath, slugify } from '../lib/slugify'
 
 function localDateTime(value: Date) {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}T${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`
+}
+function suggestedSlug(value: string) {
+  try {
+    return slugify(value)
+  } catch {
+    return canonicalSlug(value)
+  }
 }
 function publicPath(definition: ContentType, slug: string, data: Record<string, unknown>) {
   const key = definition.key
   const kind = definition.fields.find(field => field.name === 'kind')
   if (key === 'sitePage' && (slug === 'home' || kind && !kind.private && data.kind === 'home')) return '/'
-  return `${key === 'sitePost' ? '/blog/' : key === 'siteProject' ? '/projects/' : '/'}${slug}`
+  const prefix = key === 'sitePost' ? '/blog/' : key === 'siteProject' ? '/projects/' : '/'
+  return encodeWebsitePath(`${prefix}${slug}`)
 }
 function dataForType(definition: ContentType, defaultLocale = 'en') {
   const data = initialData(definition.fields, defaultLocale)
@@ -270,7 +279,7 @@ export function EntryEditor({
               setData(old => ({ ...old, [field.name]: value }))
               if (field.name === 'title' && !slugEdited) {
                 const title = typeof value === 'string' ? value : value && typeof value === 'object' ? Object.values(value)[0] : ''
-                setSlug(slugify(String(title || '')))
+                setSlug(suggestedSlug(String(title || '')))
               }
             }}
             projectId={projectId}
@@ -296,7 +305,7 @@ export function EntryEditor({
           onChange={event => {
             setSlugEdited(true)
             clearError('slug')
-            setSlug(slugify(event.target.value))
+            setSlug(suggestedSlug(event.target.value))
           }}
         />
         </section>

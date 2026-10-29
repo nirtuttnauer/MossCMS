@@ -68,6 +68,23 @@ test('recorded history takes precedence over an incidental legacy alias', () => 
   assert.equal(routePage([incidental], '/old', redirects), incidental);
 });
 
+test('hebrew nextjs route resolves from the raw slug and the percent-encoded URL', async () => {
+  const { readFileSync } = await import('node:fs');
+  const vectors = JSON.parse(readFileSync(new URL('../../shared/slug-vectors.json', import.meta.url), 'utf8'));
+  const route = vectors.cases.find(item => item.id === 'nextjs-hebrew');
+  const hebrew = vectors.cases.find(item => item.id === 'hebrew-title');
+  const page = { slug: route.slug };
+  const post = { slug: `blog/${hebrew.slug}` };
+  assert.equal(pagePath(page), route.websitePath);
+  assert.equal(routePage([page], route.websitePath), page);
+  assert.equal(routePage([page], `/${route.slug}`), page);
+  assert.equal(pagePath(post), hebrew.websitePath);
+  assert.equal(routePage([post], hebrew.websitePath), post);
+  assert.equal(routePage([post], `/blog/${hebrew.slug}`), post);
+  assert.equal(routePage([page], '/..%2F..%2Fetc'), undefined);
+  assert.equal(routePage([post], '/%2F'), undefined);
+});
+
 test('unpublished reserved URLs return unavailable instead of another entry legacy alias', () => {
   const incidental = { id: 'other', slug: 'projects/old', aliases: ['old'] };
   assert.equal(routePage([incidental], '/old', [], ['/old']), undefined);

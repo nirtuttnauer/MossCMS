@@ -1,0 +1,54 @@
+
+ RUN  v4.1.12 /workspace/web
+
+ ❯ src/lib/slugify.test.ts (38 tests | 2 failed) 16ms
+     × 'hebrew-arabic' 4ms
+     × rejects a second non-Latin script and still accepts Hebrew with Latin 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/slugify.test.ts > shared slug vectors > 'hebrew-arabic'
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ src/lib/slugify.test.ts:25:41
+     23|     } else {
+     24|       expect(item.error).toBe('invalid_slug')
+     25|       expect(() => slugify(item.input)).toThrow('invalid_slug')
+       |                                         ^
+     26|     }
+     27|     if (item.encoded) expect(encodeURIComponent(item.slug ?? '')).toBe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/lib/slugify.test.ts > shared slug vectors > rejects a second non-Latin script and still accepts Hebrew with Latin
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/lib/slugify.test.ts:43:58
+     41|
+     42|   it('rejects a second non-Latin script and still accepts Hebrew with …
+     43|     expect(allowsScripts(new Set(['Hebrew', 'Arabic']))).toBe(false)
+       |                                                          ^
+     44|     expect(allowsScripts(new Set(['Latin', 'Hebrew']))).toBe(true)
+     45|     expect(allowsScripts(new Set(['Latin', 'Cyrillic']))).toBe(false)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 36 passed (38)
+   Start at  05:45:08
+   Duration  494ms (transform 53ms, setup 0ms, import 67ms, tests 16ms, environment 305ms)
+
+VITEST_TWO:1
