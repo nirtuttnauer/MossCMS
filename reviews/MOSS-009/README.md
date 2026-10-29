@@ -201,3 +201,15 @@ Logs: [pytest-sqlite.txt](96997ed/pytest-sqlite.txt), [pytest-postgres.txt](9699
 `python3 scripts/check_changelog.py` exits 1 because `d9db93d` and `ae66eb0` are not cited. That is the same failure `main` has without this branch. This branch's guide commit is cited. Log: [changelog.txt](18ee0d8/changelog.txt).
 
 Logs: [pytest-sqlite.txt](18ee0d8/pytest-sqlite.txt), [pytest-postgres.txt](18ee0d8/pytest-postgres.txt), [verify.txt](18ee0d8/verify.txt), [ruff-check.txt](18ee0d8/ruff-check.txt), [ruff-format.txt](18ee0d8/ruff-format.txt), [mypy.txt](18ee0d8/mypy.txt), [web-test.txt](18ee0d8/web-test.txt), [example-site-test.txt](18ee0d8/example-site-test.txt).
+
+## local, after the squash onto main
+
+Pull request 31 squash-merged as `43a93fc58007e82f11789d3c255820551bd249b1` at 2026-10-29T05:58:52Z. That commit is the user-visible change. The pre-squash guide SHA `7c3914c37003a94015f13fb0cce3bae5ed9b5d91` is not in `git log 3a87c73..HEAD` on `main`, so the Unreleased bullet now cites `43a93fc58007e82f11789d3c255820551bd249b1` and still links pull request 31. `gh pr view 31` reports that oid as `mergeCommit`. This follow-up changes only `CHANGELOG.md` and `reviews/`, which `scripts/check_changelog.py` does not treat as user-visible.
+
+Recorded 2026-10-29T06:01:20Z on `main` at `43a93fc58007e82f11789d3c255820551bd249b1` with the citation already edited in the working tree. Labeled `local`.
+
+```
+python3 scripts/check_changelog.py
+```
+
+Exit 1. The only missing commits are the same two that `main` already failed to cite before this ticket: `d9db93d18128033ae326e159b2171b6cee4adc82` and `ae66eb0a9218cce4d24a45fa887126ea974013b8`. Log: [changelog.txt](43a93fc/changelog.txt).
