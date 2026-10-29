@@ -1,0 +1,16 @@
+# npm audit report
+
+@vitest/mocker  <=4.1.11
+Severity: moderate
+Vitest: Code injection via unauthenticated manual mock registration - https://github.com/advisories/GHSA-qxg6-89mg-rqv8
+Vitest: Windows backslash traversal bypasses the @vitest/mocker redirect allowlist fix - https://github.com/advisories/GHSA-xp26-3454-mjgp
+fix available via `npm audit fix`
+node_modules/@vitest/mocker
+  vitest  2.1.0-beta.1 - 4.1.11
+  Depends on vulnerable versions of @vitest/mocker
+  node_modules/vitest
+
+2 moderate severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
