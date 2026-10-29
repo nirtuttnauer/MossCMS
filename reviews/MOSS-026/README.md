@@ -246,3 +246,30 @@ The gitignored rehearsal `.env` files were moved aside for the same `load_dotenv
 415 ≥ 402. The four SQLite deselections are the same committed PostgreSQL-only ids, and they passed in the PostgreSQL run. No new skip or xfail. Counts match the MOSS-031 run already on `main`. `web/` and `example-site/` sources are unchanged from the `a84eebd` run, so the earlier npm audit and pip-audit results still describe those lockfiles. `api/uv.lock` is unchanged from `1a005f2`.
 
 Logs: [pytest-sqlite.txt](e991dd2/pytest-sqlite.txt), [pytest-postgres.txt](e991dd2/pytest-postgres.txt), [verify.txt](e991dd2/verify.txt), [ruff-check.txt](e991dd2/ruff-check.txt), [ruff-format.txt](e991dd2/ruff-format.txt), [ruff-scripts.txt](e991dd2/ruff-scripts.txt), [ruff-scripts-format.txt](e991dd2/ruff-scripts-format.txt), [mypy.txt](e991dd2/mypy.txt), [web-check.txt](e991dd2/web-check.txt), [web-test.txt](e991dd2/web-test.txt), [web-build.txt](e991dd2/web-build.txt), [example-site-check.txt](e991dd2/example-site-check.txt), [example-site-test.txt](e991dd2/example-site-test.txt), [example-site-build.txt](e991dd2/example-site-build.txt).
+
+## local, after merging MOSS-056
+
+`main` moved again to `9a4c81c` (MOSS-056). Merged here as `835fbf612895e18aec4c8508eae2b236a3cdd0b4`. This run is labeled `local`. The rehearsal deploy remains the `a84eebd` record.
+
+| | |
+| --- | --- |
+| SHA tested | `835fbf612895e18aec4c8508eae2b236a3cdd0b4` |
+| `git status --porcelain` | empty |
+| Date | 2026-10-29T05:21:31Z through 2026-10-29T05:25Z |
+
+Ignored rehearsal `.env` files were moved aside for `load_dotenv()`, then restored. `UV_NO_ENV_FILE=1`.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| ruff check app, tests, migrations | 0 | all checks passed |
+| ruff format check | 0 | 85 files already formatted |
+| ruff check/format scripts, setup, telemetry smoke | 0 | all checks passed; 16 files formatted |
+| `mypy app` | 0 | no issues in 28 source files |
+| `python3 scripts/check_dependabot.py` | 0 | schema valid; uv, npm, github-actions, and docker manifests covered |
+| SQLite required run | 0 | collected 433, **429 passed, 4 deselected, 0 skipped**, 6 warnings in 62.66s |
+| PostgreSQL required run | 0 | collected 433, **433 passed, 0 skipped**, 6 warnings in 124.29s |
+| `tests/verify_required_runs.py` | 0 | union of passed ids is 433 |
+
+433 ≥ 402 at `3a87c73`. Counts match the MOSS-056 run on `9a4c81c`. The four SQLite deselections are the committed PostgreSQL-only tests and passed on PostgreSQL. No new skip or xfail. `web` and `example-site` sources are unchanged from the `e991dd2` run (317 and 46 tests).
+
+Logs: [pytest-sqlite.txt](835fbf6/pytest-sqlite.txt), [pytest-postgres.txt](835fbf6/pytest-postgres.txt), [verify.txt](835fbf6/verify.txt), [ruff-check.txt](835fbf6/ruff-check.txt), [ruff-format.txt](835fbf6/ruff-format.txt), [ruff-scripts.txt](835fbf6/ruff-scripts.txt), [ruff-scripts-format.txt](835fbf6/ruff-scripts-format.txt), [mypy.txt](835fbf6/mypy.txt), [dependabot.txt](835fbf6/dependabot.txt).
