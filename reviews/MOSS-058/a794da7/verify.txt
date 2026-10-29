@@ -1,0 +1,21 @@
+=== verify ===
+{
+  "ok": true,
+  "runs": {
+    "sqlite": {
+      "collected": 487,
+      "passed": 483,
+      "deselected": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "postgres": {
+      "collected": 487,
+      "passed": 487,
+      "deselected": 0,
+      "failed": 0,
+      "skipped": 0
+    }
+  }
+}
+VERIFY:0
