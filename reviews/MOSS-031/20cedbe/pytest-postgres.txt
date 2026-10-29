@@ -4,7 +4,7 @@ rootdir: /workspace/api
 configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.15.1
-collected 411 items
+collected 412 items
 
 tests/test_autosave.py ....                                              [  0%]
 tests/test_benchmark.py ...........                                      [  3%]
@@ -29,12 +29,13 @@ tests/test_publication.py .......                                        [ 60%]
 tests/test_query_limits.py ..................                            [ 64%]
 tests/test_rate_limit.py .......                                         [ 66%]
 tests/test_release_scripts.py .....................                      [ 71%]
+tests/test_required_runs.py .                                            [ 71%]
 tests/test_resolved_assets.py ....                                       [ 72%]
 tests/test_schema.py .....                                               [ 73%]
 tests/test_schema_cache.py ......                                        [ 75%]
 tests/test_search.py ............                                        [ 78%]
 tests/test_seo.py ...................                                    [ 82%]
-tests/test_snapshot_migration.py .                                       [ 82%]
+tests/test_snapshot_migration.py .                                       [ 83%]
 tests/test_static.py .                                                   [ 83%]
 tests/test_storage.py ...................                                [ 87%]
 tests/test_telemetry.py .................                                [ 91%]
@@ -61,4 +62,5 @@ tests/test_cms.py::test_migration_preserves_legacy_articles
     cursor.execute(statement, parameters)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================== 411 passed, 6 warnings in 96.20s (0:01:36) ==================
+================= 412 passed, 6 warnings in 123.49s (0:02:03) ==================
+PG17_EXIT:0

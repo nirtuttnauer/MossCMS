@@ -1,7 +1,0 @@
-label: local
-sha: c62ec2c61f9fe60f56cf93df55d4486e3fccf471
-command: uv export --frozen --all-groups --no-emit-project -o /tmp/moss-031-requirements.txt && uv run --with pip-audit pip-audit --progress-spinner off -r /tmp/moss-031-requirements.txt
-ignores: none
-exit_code: 0
----- output ----
-No known vulnerabilities found

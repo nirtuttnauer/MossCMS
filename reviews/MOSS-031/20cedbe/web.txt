@@ -1,10 +1,8 @@
-command: npm run check
+=== web check test build audit ===
 
 > mosscms-admin@0.1.0 check
 > tsc -b
 
-check_exit:0
-command: npm test
 
 > mosscms-admin@0.1.0 test
 > vitest run
@@ -29,11 +27,9 @@ Not implemented: Window's scrollTo() method
 
  Test Files  35 passed (35)
       Tests  317 passed (317)
-   Start at  04:48:25
-   Duration  16.46s (transform 1.71s, setup 0ms, import 8.05s, tests 22.58s, environment 13.66s)
+   Start at  04:55:56
+   Duration  18.01s (transform 2.15s, setup 0ms, import 9.48s, tests 25.22s, environment 14.29s)
 
-test_exit:0
-command: npm run build
 
 > mosscms-admin@0.1.0 build
 > tsc -b && vite build
@@ -52,11 +48,9 @@ dist/assets/index-DeHdh3wb.js      500.85 kB │ gzip: 156.61 kB
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 7.00s
-build_exit:0
-command: npm audit --audit-level=high
+✓ built in 7.12s
 found 0 vulnerabilities
-audit_high_exit:0
-command: npm audit
+HIGH_EXIT:0
+=== web npm audit ===
 found 0 vulnerabilities
-audit_exit:0
+AUDIT_EXIT:0

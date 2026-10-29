@@ -4,35 +4,34 @@ rootdir: /workspace/api
 configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.15.1
-collected 411 items
+collected 412 items / 4 deselected / 408 selected
 
 tests/test_autosave.py ....                                              [  0%]
 tests/test_benchmark.py ...........                                      [  3%]
 tests/test_cli.py ..............                                         [  7%]
 tests/test_cms.py .......................                                [ 12%]
 tests/test_compose.py .....                                              [ 13%]
-tests/test_concurrency.py s                                              [ 14%]
 tests/test_config.py ..............................                      [ 21%]
 tests/test_delivery_rest.py .........                                    [ 23%]
 tests/test_images.py ................                                    [ 27%]
-tests/test_indexing.py ...............s                                  [ 31%]
+tests/test_indexing.py ...............                                   [ 31%]
 tests/test_media_links.py ......                                         [ 32%]
 tests/test_migrate.py ......                                             [ 34%]
 tests/test_operator_scripts.py .........................                 [ 40%]
 tests/test_ordering.py .......................                           [ 45%]
 tests/test_outbox.py ...........                                         [ 48%]
 tests/test_portability.py .......................                        [ 54%]
-tests/test_postgres_product_migration.py s                               [ 54%]
 tests/test_preview.py .....                                              [ 55%]
 tests/test_product_improvements.py ............                          [ 58%]
 tests/test_publication.py .......                                        [ 60%]
 tests/test_query_limits.py ..................                            [ 64%]
 tests/test_rate_limit.py .......                                         [ 66%]
 tests/test_release_scripts.py .....................                      [ 71%]
+tests/test_required_runs.py .                                            [ 71%]
 tests/test_resolved_assets.py ....                                       [ 72%]
 tests/test_schema.py .....                                               [ 73%]
 tests/test_schema_cache.py ......                                        [ 75%]
-tests/test_search.py ...........s                                        [ 78%]
+tests/test_search.py ...........                                         [ 77%]
 tests/test_seo.py ...................                                    [ 82%]
 tests/test_snapshot_migration.py .                                       [ 82%]
 tests/test_static.py .                                                   [ 83%]
@@ -61,9 +60,5 @@ tests/test_cms.py::test_migration_preserves_legacy_articles
     cursor.execute(statement, parameters)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-=========================== short test summary info ============================
-SKIPPED [1] tests/test_concurrency.py:13: PostgreSQL row-lock rehearsal
-SKIPPED [1] tests/test_indexing.py:503: PostgreSQL generic prepared plans
-SKIPPED [1] tests/test_postgres_product_migration.py:11: PostgreSQL forward-upgrade rehearsal
-SKIPPED [1] tests/test_search.py:109: PostgreSQL trigram search
-============ 407 passed, 4 skipped, 6 warnings in 66.63s (0:01:06) =============
+================ 408 passed, 4 deselected, 6 warnings in 57.94s ================
+SQLITE_EXIT:0
