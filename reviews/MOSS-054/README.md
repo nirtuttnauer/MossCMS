@@ -95,6 +95,12 @@ local
 
 `d870650c9f21be9dacbb3b24007c6599cea36593` is the same script and evidence replayed onto `5804733` (main, MOSS-057 changelog). `git status --porcelain` was empty. 2026-10-29T05:34:26Z through 2026-10-29T05:39:17Z. `scripts/verify.sh MOSS-054` exited 0. Counts were unchanged from `431fb3a`: SQLite 429 passed, 4 deselected, 0 skipped; PostgreSQL 433 passed, 0 skipped; web 317; example-site 46 passed, 0 failed, 0 skipped. `pip-audit`, `npm audit`, and gitleaks were clean. Logs: [d870650](d870650/).
 
+## Run after MOSS-032
+
+local
+
+`e8ec4cb` is the script replayed onto `d9db93d` (main, MOSS-032). `git status --porcelain` was empty. `scripts/verify.sh MOSS-054` exited 0. SQLite collected 435, **431 passed, 4 deselected, 0 skipped**. PostgreSQL collected 435, **435 passed, 0 skipped**. Web 317 and example-site 46 were unchanged. Audits and gitleaks were clean. 435 ≥ 403. Logs: [e8ec4cb](e8ec4cb/).
+
 ## Red-first tests
 
 `python3 scripts/test_verify.py` on this script, before the clean run above. Each case exits non-zero, and the script stops on the first failure.

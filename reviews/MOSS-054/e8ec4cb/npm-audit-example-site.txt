@@ -1,0 +1,10 @@
+label: local
+date: 2026-10-29T05:44:40Z
+sha: e8ec4cb2b621a37c0fc5ffae453ab7d910b6aabf
+workdir: example-site
+command:
+npm audit
+GITHUB_WORKSPACE=/workspace
+---- output ----
+found 0 vulnerabilities
+exit_code: 0

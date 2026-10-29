@@ -1,0 +1,28 @@
+label: local
+date: 2026-10-29T05:43:39Z
+sha: e8ec4cb2b621a37c0fc5ffae453ab7d910b6aabf
+workdir: api
+command:
+uv run python tests/verify_required_runs.py
+GITHUB_WORKSPACE=/workspace
+---- output ----
+{
+  "ok": true,
+  "runs": {
+    "sqlite": {
+      "collected": 435,
+      "passed": 431,
+      "deselected": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "postgres": {
+      "collected": 435,
+      "passed": 435,
+      "deselected": 0,
+      "failed": 0,
+      "skipped": 0
+    }
+  }
+}
+exit_code: 0
