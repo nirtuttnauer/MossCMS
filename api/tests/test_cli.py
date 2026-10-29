@@ -1,10 +1,14 @@
 import sys
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import ANY, MagicMock, call
 
 import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import func, select
 
-from app import cli
+from app import accounts, cli, security
+from app.models import Audit, Token
 
 
 @pytest.fixture
@@ -186,3 +190,95 @@ def test_claim_workspace_is_scoped_and_refuses_existing_members(client, admin, a
         assert session.scalar(select(Membership.user_id).where(Membership.project_id == other_id)) is None
     with pytest.raises(SystemExit):
         cli.main()
+
+
+def _bind_operator_cli(app, monkeypatch, public_url):
+    monkeypatch.setattr(cli, "load_dotenv", lambda: None)
+    monkeypatch.setattr(
+        cli,
+        "Settings",
+        lambda: SimpleNamespace(validate=lambda: SimpleNamespace(database_url="test", public_url=public_url)),
+    )
+    monkeypatch.setattr(cli, "database", lambda url: (MagicMock(), app.state.db))
+
+
+def _issue_reset(app, monkeypatch, capsys, email, public_url="https://cms.example.test/"):
+    _bind_operator_cli(app, monkeypatch, public_url)
+    monkeypatch.setattr(sys, "argv", ["moss", "reset-password", "--email", email])
+    cli.main()
+    output = capsys.readouterr()
+    assert output.err == ""
+    link = output.out.strip()
+    prefix = public_url.rstrip("/") + "/#reset/"
+    assert link.startswith(prefix)
+    token = link.removeprefix(prefix)
+    assert token and "/" not in token
+    return token
+
+
+def _accept(http, token, password):
+    return http.post(
+        "/auth/accept",
+        json={"token": token, "email": "admin@example.com", "password": password, "name": "Admin"},
+    )
+
+
+def test_reset_password_cli_link_replaces_the_password_once(client, admin, app, monkeypatch, capsys):
+    replaced = _issue_reset(app, monkeypatch, capsys, " Admin@Example.com ")
+    current = _issue_reset(app, monkeypatch, capsys, "admin@example.com")
+    assert replaced != current
+    with app.state.db() as session:
+        assert session.get(Token, security.digest(replaced)) is None
+        assert session.get(Token, security.digest(current)).kind == "reset"
+        issued = session.scalars(select(Audit).where(Audit.action == "account.recovery.issue")).all()
+        assert len(issued) == 2
+        assert {row.actor for row in issued} == {"operator"}
+        assert all(row.details["userId"] for row in issued)
+    assert _accept(client, replaced, "unused-password-value").status_code == 400
+    owner = TestClient(app)
+    assert _accept(owner, current, "replacement-password").status_code == 200
+    assert client.get("/auth/me").status_code == 401
+    assert _accept(owner, current, "replacement-password").status_code == 400
+    assert (
+        owner.post("/auth/login", json={"email": "admin@example.com", "password": "secure-test-password"}).status_code
+        == 401
+    )
+    assert (
+        owner.post("/auth/login", json={"email": "admin@example.com", "password": "replacement-password"}).status_code
+        == 200
+    )
+
+
+def test_reset_password_cli_link_expires_on_an_injected_clock(client, admin, app, monkeypatch, capsys):
+    start = datetime(2026, 10, 29, 12, 0, 0)
+    clock = {"at": start}
+
+    def frozen_now():
+        return clock["at"]
+
+    monkeypatch.setattr(security, "now", frozen_now)
+    monkeypatch.setattr(accounts, "now", frozen_now)
+    early = _issue_reset(app, monkeypatch, capsys, "admin@example.com")
+    clock["at"] = start + timedelta(days=1) - timedelta(seconds=1)
+    owner = TestClient(app)
+    assert _accept(owner, early, "replacement-password").status_code == 200
+    late = _issue_reset(app, monkeypatch, capsys, "admin@example.com")
+    clock["at"] = clock["at"] + timedelta(days=1)
+    expired = _accept(TestClient(app), late, "another-password-value")
+    assert expired.status_code == 400
+    assert expired.json()["detail"] == "This invitation or recovery link is invalid or expired."
+    with app.state.db() as session:
+        assert session.get(Token, security.digest(late)) is not None
+        assert session.scalar(select(func.count()).select_from(Token).where(Token.kind == "reset")) == 1
+    assert (
+        owner.post("/auth/login", json={"email": "admin@example.com", "password": "secure-test-password"}).status_code
+        == 401
+    )
+    assert (
+        owner.post("/auth/login", json={"email": "admin@example.com", "password": "replacement-password"}).status_code
+        == 200
+    )
+    assert (
+        owner.post("/auth/login", json={"email": "admin@example.com", "password": "another-password-value"}).status_code
+        == 401
+    )
