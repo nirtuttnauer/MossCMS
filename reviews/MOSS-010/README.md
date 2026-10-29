@@ -9,8 +9,9 @@ Recorded 29 October 2026 (UTC). Option A: Compose builds the app image from this
 | | |
 | --- | --- |
 | SHA tested | `853363af4d744f4b2bd0504c4c1eb1b04a0c6a08` |
+| Rebased code commit | `1b26f0fb07617e5d55303df2d25441281347f0d5` on `2d4c608` (main, after MOSS-045). `git diff 853363a 1b26f0f` is empty for `compose.yaml`, `compose.database.true.yaml`, `.env.example`, `docs/docker.md`, `docs/deployment-recovery.md`, and `api/tests/test_compose.py`. README also contains the MOSS-045 sentence that landed on main. |
 | Branch | `cursor/moss-010-local-compose-image-13cd` |
-| Parent | `a84eebd8c2fea163f60674c5e54ba03a7a2ae573` (main, after MOSS-024) |
+| Parent at test time | `a84eebd8c2fea163f60674c5e54ba03a7a2ae573` (main, after MOSS-024) |
 | Baseline | `3a87c73c8e925973608e373863813163b41f04a9` |
 | Previous main | `a84eebd8c2fea163f60674c5e54ba03a7a2ae573` (same tests as `d50e278`, 403 collected) |
 | `git status --porcelain` at the start of this run | empty (clean) |
