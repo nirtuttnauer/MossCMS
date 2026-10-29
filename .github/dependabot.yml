@@ -1,40 +1,46 @@
 # yaml-language-server: $schema=https://json.schemastore.org/dependabot-2.0.json
-# Weekly version updates for every manifest. Each ecosystem keeps a small open
-# pull request limit. SECURITY.md stays with MOSS-004.
+# Monthly version updates, one group per ecosystem, with a low open pull request
+# limit. MOSS-004 covers only SECURITY.md.
 version: 2
 updates:
   - package-ecosystem: "uv"
     directory: "/api"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    groups:
+      uv:
+        patterns:
+          - "*"
   - package-ecosystem: "npm"
-    directory: "/web"
+    directories:
+      - "/web"
+      - "/example-site"
+      - "/ci"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-  - package-ecosystem: "npm"
-    directory: "/example-site"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-  - package-ecosystem: "npm"
-    directory: "/ci"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    groups:
+      npm:
+        patterns:
+          - "*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
-    directory: "/"
+    directories:
+      - "/"
+      - "/example-site"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-  - package-ecosystem: "docker"
-    directory: "/example-site"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    groups:
+      docker:
+        patterns:
+          - "*"

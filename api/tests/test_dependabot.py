@@ -37,25 +37,33 @@ def test_ticket_command_and_nested_dockerfile_are_discovered():
     assert ".github/workflows/docker.yml" in paths
 
 
-def test_parser_reads_weekly_limit_and_ignores_comments():
+def test_parser_reads_monthly_group_and_ignores_comments():
     document = MODULE.parse_yaml(
         """
         # comment
         version: 2
         updates:
-          - package-ecosystem: "uv" # api
-            directory: '/api'
+          - package-ecosystem: "npm" # manifests
+            directories:
+              - "/web"
+              - "/example-site"
+              - "/ci"
             schedule:
-              interval: weekly
-            open-pull-requests-limit: 5
+              interval: monthly
+            open-pull-requests-limit: 3
+            groups:
+              npm:
+                patterns:
+                  - "*"
         """
     )
     assert document["version"] == 2
     entry = document["updates"][0]
-    assert entry["package-ecosystem"] == "uv"
-    assert entry["directory"] == "/api"
-    assert entry["schedule"]["interval"] == "weekly"
-    assert entry["open-pull-requests-limit"] == 5
+    assert entry["package-ecosystem"] == "npm"
+    assert entry["directories"] == ["/web", "/example-site", "/ci"]
+    assert entry["schedule"]["interval"] == "monthly"
+    assert entry["open-pull-requests-limit"] == 3
+    assert entry["groups"]["npm"]["patterns"] == ["*"]
 
 
 def _document():
@@ -131,35 +139,30 @@ def test_workflow_directory_is_the_repository_root():
     assert problems
 
 
-def test_open_pull_request_limit_must_stay_small_and_weekly():
-    daily = [
-        {
-            "package-ecosystem": "npm",
-            "directory": "/web",
-            "schedule": {"interval": "daily"},
-            "open-pull-requests-limit": 5,
-        }
-    ]
-    unlimited = [
-        {
-            "package-ecosystem": "npm",
-            "directory": "/web",
-            "schedule": {"interval": "weekly"},
-            "open-pull-requests-limit": 10,
-        }
-    ]
-    assert MODULE.policy_problems(daily)
-    assert MODULE.policy_problems(unlimited)
-    assert (
-        MODULE.policy_problems(
-            [
-                {
-                    "package-ecosystem": "npm",
-                    "directory": "/web",
-                    "schedule": {"interval": "weekly"},
-                    "open-pull-requests-limit": 5,
-                }
-            ]
-        )
-        == []
-    )
+def _npm_entry(**overrides):
+    entry = {
+        "package-ecosystem": "npm",
+        "directories": ["/web", "/example-site", "/ci"],
+        "schedule": {"interval": "monthly"},
+        "open-pull-requests-limit": 3,
+        "groups": {"npm": {"patterns": ["*"]}},
+    }
+    entry.update(overrides)
+    return entry
+
+
+def test_schedule_limit_and_group_stay_small():
+    assert MODULE.entry_policy_problems(0, _npm_entry()) == []
+    assert MODULE.entry_policy_problems(0, _npm_entry(schedule={"interval": "weekly"}))
+    assert MODULE.entry_policy_problems(0, _npm_entry(**{"open-pull-requests-limit": 5}))
+    assert MODULE.entry_policy_problems(0, _npm_entry(**{"open-pull-requests-limit": 10}))
+    assert MODULE.entry_policy_problems(0, _npm_entry(groups={"npm": {"patterns": ["vite"]}}))
+
+
+def test_one_update_entry_per_ecosystem():
+    document = _document()
+    assert [entry["package-ecosystem"] for entry in document["updates"]] == list(MODULE.EXPECTED_ECOSYSTEMS)
+    assert MODULE.policy_problems(document["updates"]) == []
+    split = [dict(entry) for entry in document["updates"]]
+    split.append(dict(split[1]))
+    assert MODULE.policy_problems(split)

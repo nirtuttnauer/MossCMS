@@ -11,6 +11,9 @@ repository root, so ``git ls-files '*Dockerfile'`` is unioned in. That covers
 
 The YAML is checked against the vendored SchemaStore Dependabot 2.0 schema
 (draft-07, https://json.schemastore.org/dependabot-2.0.json).
+
+Version updates run monthly. Each ecosystem is one update entry with one group
+matching every dependency, and ``open-pull-requests-limit`` is 3.
 """
 
 import hashlib
@@ -25,7 +28,8 @@ CONFIG_PATH = ROOT / ".github" / "dependabot.yml"
 SCHEMA_PATH = ROOT / ".github" / "dependabot-2.0.schema.json"
 SCHEMA_SHA256 = "f310bfb4960eea6a5fb7d75de54ab49ba36f947757c8f4d5de88d3ea8ac51d3f"
 TICKET_PATHSPECS = ["*package.json", "*pyproject.toml", "Dockerfile", ".github/workflows"]
-SMALL_PULL_REQUEST_LIMIT = 5
+EXPECTED_ECOSYSTEMS = ("uv", "npm", "github-actions", "docker")
+OPEN_PULL_REQUEST_LIMIT = 3
 
 _DOUBLE_ESCAPES = {
     '"': '"',
@@ -431,23 +435,42 @@ def coverage_problems(paths, updates):
     return problems
 
 
-def policy_problems(updates):
+def entry_policy_problems(index, entry):
     problems = []
+    if not isinstance(entry, dict):
+        return [f"updates[{index}] is not a mapping"]
+    ecosystem = entry.get("package-ecosystem")
+    schedule = entry.get("schedule")
+    interval = schedule.get("interval") if isinstance(schedule, dict) else None
+    if interval != "monthly":
+        problems.append(f"updates[{index}] must use a monthly schedule")
+    limit = entry.get("open-pull-requests-limit")
+    if isinstance(limit, bool) or limit != OPEN_PULL_REQUEST_LIMIT:
+        problems.append(f"updates[{index}] open-pull-requests-limit must be {OPEN_PULL_REQUEST_LIMIT}")
+    groups = entry.get("groups")
+    patterns = None
+    if isinstance(groups, dict):
+        spec = groups.get(ecosystem)
+        if isinstance(spec, dict):
+            patterns = spec.get("patterns")
+    if not isinstance(groups, dict) or set(groups) != {ecosystem} or patterns != ["*"]:
+        problems.append(f"updates[{index}] must group the {ecosystem} ecosystem with patterns: ['*']")
+    return problems
+
+
+def policy_problems(updates):
     if not isinstance(updates, list):
-        return problems
+        return ["updates must be a list"]
+    problems = []
+    seen = []
     for index, entry in enumerate(updates):
-        if not isinstance(entry, dict):
-            problems.append(f"updates[{index}] is not a mapping")
-            continue
-        schedule = entry.get("schedule")
-        interval = schedule.get("interval") if isinstance(schedule, dict) else None
-        if interval != "weekly":
-            problems.append(f"updates[{index}] must use a weekly schedule")
-        limit = entry.get("open-pull-requests-limit")
-        if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= SMALL_PULL_REQUEST_LIMIT:
-            problems.append(
-                f"updates[{index}] open-pull-requests-limit must be an integer from 1 to {SMALL_PULL_REQUEST_LIMIT}"
-            )
+        problems.extend(entry_policy_problems(index, entry))
+        if isinstance(entry, dict):
+            seen.append(entry.get("package-ecosystem"))
+    if sorted(item for item in seen if isinstance(item, str)) != sorted(EXPECTED_ECOSYSTEMS) or len(seen) != len(
+        EXPECTED_ECOSYSTEMS
+    ):
+        problems.append("updates must contain one group for each ecosystem: " + ", ".join(EXPECTED_ECOSYSTEMS))
     return problems
 
 
