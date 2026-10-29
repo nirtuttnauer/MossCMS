@@ -174,3 +174,30 @@ The ticket does not name an audit. `npm audit` was run because the repository's 
 `python3 scripts/check_changelog.py` exits 1 on this branch and on `main` at `d9db93d` for the same pre-existing reason: `d9db93d18128033ae326e159b2171b6cee4adc82` is not cited. This branch's guide commit `7c3914c37003a94015f13fb0cce3bae5ed9b5d91` is cited from pull request 31. The changelog commit and this evidence commit touch only `CHANGELOG.md` or `reviews/`, which that script does not treat as user-visible. Log: [changelog.txt](96997ed/changelog.txt).
 
 Logs: [pytest-sqlite.txt](96997ed/pytest-sqlite.txt), [pytest-postgres.txt](96997ed/pytest-postgres.txt), [verify.txt](96997ed/verify.txt), [ruff-check.txt](96997ed/ruff-check.txt), [ruff-format.txt](96997ed/ruff-format.txt), [ruff-scripts.txt](96997ed/ruff-scripts.txt), [ruff-scripts-format.txt](96997ed/ruff-scripts-format.txt), [ruff-telemetry.txt](96997ed/ruff-telemetry.txt), [ruff-telemetry-format.txt](96997ed/ruff-telemetry-format.txt), [mypy.txt](96997ed/mypy.txt), [dependabot.txt](96997ed/dependabot.txt).
+
+## local, after merging main through MOSS-058
+
+`main` gained MOSS-033 and MOSS-058 while this branch was open. Those commits were merged in, not rebased, so the published guide commit stays `7c3914c37003a94015f13fb0cce3bae5ed9b5d91`. This run is labeled `local`. `MOSS_*` was unset. `UV_NO_ENV_FILE=1`.
+
+| | |
+| --- | --- |
+| SHA tested | `18ee0d8da2fc4c063480451e67c0826833a6695f` |
+| Date | 2026-10-29T05:54:31Z through 2026-10-29T05:58:07Z |
+| PostgreSQL | 16.15, role `ubuntu`, database `ubuntu` |
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| ruff check | 0 | all checks passed |
+| ruff format check | 0 | 89 files already formatted |
+| `mypy app` | 0 | no issues in 29 source files |
+| SQLite required run | 0 | collected 487, **483 passed, 4 deselected, 0 skipped**, 6 warnings in 68.94s |
+| PostgreSQL required run | 0 | collected 487, **487 passed, 0 skipped**, 6 warnings in 103.21s |
+| `tests/verify_required_runs.py` | 0 | `"ok": true` |
+| web `npm test` | 0 | 36 files, 356 tests passed |
+| example-site `npm test` | 0 | 47 passed, 0 failed, 0 skipped |
+
+487 ≥ 402 at `3a87c73`. The four SQLite deselections are the committed PostgreSQL-only ids and passed on PostgreSQL. No new skip or xfail. Counts match the MOSS-058 run on `main`.
+
+`python3 scripts/check_changelog.py` exits 1 because `d9db93d` and `ae66eb0` are not cited. That is the same failure `main` has without this branch. This branch's guide commit is cited. Log: [changelog.txt](18ee0d8/changelog.txt).
+
+Logs: [pytest-sqlite.txt](18ee0d8/pytest-sqlite.txt), [pytest-postgres.txt](18ee0d8/pytest-postgres.txt), [verify.txt](18ee0d8/verify.txt), [ruff-check.txt](18ee0d8/ruff-check.txt), [ruff-format.txt](18ee0d8/ruff-format.txt), [mypy.txt](18ee0d8/mypy.txt), [web-test.txt](18ee0d8/web-test.txt), [example-site-test.txt](18ee0d8/example-site-test.txt).

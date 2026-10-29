@@ -1,0 +1,28 @@
+
+> mosscms-admin@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /workspace/web
+
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+
+ Test Files  36 passed (36)
+      Tests  356 passed (356)
+   Start at  05:57:49
+   Duration  13.42s (transform 1.22s, setup 0ms, import 6.70s, tests 18.24s, environment 11.47s)
+
