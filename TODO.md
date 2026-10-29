@@ -47,12 +47,20 @@ All 34 baseline tasks, including optional P3 schema tools, were approved and imp
 
 Delivered scope includes independent live/draft/scheduled snapshots, explicit publication actions, autosave/conflict recovery, Markdown, saved website previews, responsive covers/galleries, public paths/metadata/feeds, failure queues, outbox/signed webhooks/SSE with polling, uncertain-save reconciliation, schema previews/migration suggestions and larger-schema tools. [Editor guide](docs/editor-workflows.md) and [operator guide](docs/deployment-recovery.md) describe the shipped behavior.
 
-## Verification — 8 October 2026
+## Verification
 
-- Ruff lint/format and mypy passed; PostgreSQL: 47 tests passed; SQLite: 46 passed and one PostgreSQL concurrency test skipped.
-- Admin: 33 tests passed. Website: seven server tests passed. Both frontends passed TypeScript and production builds, and both locked npm graphs had zero reported audit vulnerabilities.
-- Both production Docker images built and passed runtime import checks. A separate isolated Compose recovery started the API successfully after matched-image database/media restore, including original/variant objects and populated-volume refusal.
+Suite counts below are copied from the [MOSS-024 local release run](reviews/MOSS-024/README.md), recorded 29 October 2026 (local) at `d50e2788485e4ef0c65598c4c2f2bd7536e1ed96`. Logs for that SHA are in `reviews/MOSS-024/d50e278/`.
+
+- Ruff check, Ruff format, and mypy passed (`Success: no issues found in 27 source files`). SQLite required run (`-m "not postgres"`): collected 403 items / 4 deselected / 399 selected; 399 passed, 4 deselected, 0 skipped, 6 warnings in 69.03s. PostgreSQL required run: collected 403 items; 403 passed, 0 skipped, 6 warnings in 145.05s. `tests/verify_required_runs.py` reported `"ok": true` (sqlite passed 399, postgres passed 403).
+- Admin (`web`): 35 files, 317 tests passed. Example website server: 46 passed, 0 failed, 0 skipped. Both frontends passed TypeScript checks and production builds. `npm audit` reported `found 0 vulnerabilities` for `web`, `example-site`, and `ci`. `pip-audit` reported `No known vulnerabilities found`.
+- Production image `mosscms:smoke` built. The `ci` Playwright rerun recorded 2 passed (2.7s). The first Compose `--wait` exited 1 because the host firewall dropped the bridge; the rerun of the same image was healthy (`RERUN_UP_EXIT: 0`, `RERUN_TEST_EXIT: 0`).
+
+## Release acceptance — 8 October 2026
+
+The notes below are that day's release-acceptance observations.
+
 - A schema `0001` fixture was dumped/restored into separate databases and upgraded to `0008`, preserving 1,004 entries, IDs, working values/slugs/status/version and history. Two real HTTP walkthroughs covered publication, captured schedules, preview isolation/revocation, images, routes, metadata, feeds and webhook freshness.
 - Measured local HTTP p95 save: 64 ms; website freshness: 1.08 s; ten-entry schedule batch: 2.98 s after due time. Polling recovery took about 10.06 s. These are small local samples, not production/full-Compose load or browser paint measurements.
+- A separate isolated Compose recovery started the API successfully after matched-image database/media restore, including original/variant objects and populated-volume refusal.
 
 See [release acceptance evidence](docs/release-acceptance-2026-10-08.md) and its raw observations for conditions, failures fixed and limitations. External OAuth exchanges, a real S3 bucket, public TLS/DNS/deployment, browser visual/assistive-technology review and full Compose load testing remain unverified. Rich-text fields store compatible Markdown strings; a block-document editor is deferred. Unselected schema ideas are listed in [TYPE_IMPROVEMENTS.md](TYPE_IMPROVEMENTS.md).

@@ -1,0 +1,25 @@
+LABEL: local
+SHA: b9c336d397b37c9075bad0765fb375c0c513faaa
+CWD: /workspace
+COMMAND: bash -lc cd /workspace/ci && npm test
+START: 2026-10-29T04:58:36Z
+
+> test
+> playwright test
+
+
+Running 2 tests using 1 worker
+
+(node:13664) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 production.spec.mjs:7:1 › production readiness and packaged branding assets (378ms)
+  ✓  2 production.spec.mjs:21:1 › production setup, login and branding on desktop and mobile (1.5s)
+
+  2 passed (3.0s)
+
+To open last HTML report run:
+
+  npx playwright show-report
+
+EXIT: 0
+END: 2026-10-29T04:58:40Z
