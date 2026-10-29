@@ -4,6 +4,8 @@ local
 
 Recorded 29 October 2026 (UTC). `scripts/verify.sh` runs the commands in `.github/workflows/checks.yml`, then `pip-audit` against `api/uv.lock`, a default `npm audit`, and `gitleaks`. It refuses a dirty tree. A runtime skip or xfail fails the run. There is no allowed-skip list and no audit ignore. PostgreSQL-only tests use the `postgres` marker and are excluded from the SQLite required run with `-m "not postgres"` before they execute.
 
+Two clean runs are recorded. `a185dc3` is the script on the suite that matched the MOSS-023 counts exactly. `431fb3a` is that same script rebased onto main after MOSS-010, MOSS-031, and MOSS-056, which added API tests. 433 collected is above the MOSS-023 baseline of 403. Zero skipped in both runs.
+
 ## Code under test
 
 | | |
@@ -66,6 +68,26 @@ The four ids deselected on SQLite and passed on PostgreSQL:
 | production image, compose, Playwright, teardown | 0 | 2 passed in 2.9s, stack removed |
 
 No `--ignore-vuln`, npm override, or gitleaks allowlist was added.
+
+## Rebased run on current main
+
+local
+
+`431fb3a8527427a80982b9b98ddd42e875294cf2` is `a185dc3` replayed onto `28c3dc9` (main after MOSS-026, which includes MOSS-010, MOSS-031, and MOSS-056). `git status --porcelain` was empty. 2026-10-29T05:28:32Z through 2026-10-29T05:33:28Z. Same toolchain as the run above. `scripts/verify.sh MOSS-054` exited 0.
+
+| Run | Collected | Passed | Deselected | Skipped |
+| --- | --- | --- | --- | --- |
+| SQLite `-m "not postgres"` | 433 | 429 | 4 | 0 |
+| PostgreSQL, no marker filter | 433 | 433 | 0 | 0 |
+| web |  | 317 (35 files) |  | 0 |
+| example-site |  | 46 |  | 0 |
+| production Playwright |  | 2 |  | 0 |
+
+The same four PostgreSQL ids are deselected on SQLite and passed on PostgreSQL. `tests/verify_required_runs.py` reported the union is 433. SQLite finished in 64.02s (429 passed, 4 deselected, 0 skipped). PostgreSQL finished in 126.26s (433 passed, 0 skipped). mypy reported 28 source files. ruff format reported 85 API files and 17 script files. `pip-audit` reported no known vulnerabilities. `npm audit` reported 0 vulnerabilities for web, example-site, and ci. gitleaks scanned 106 commits and found no leaks. Playwright reported 2 passed.
+
+433 ≥ 403. The extra 30 API tests come from main, not from this ticket. This ticket adds no API, web, or example-site test.
+
+Logs: [431fb3a](431fb3a/).
 
 ## Red-first tests
 
