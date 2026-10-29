@@ -3,7 +3,9 @@ services:
     extends:
       file: compose.database.${MOSS_USE_SQLITE:-false}.yaml
       service: app
-    image: ${MOSS_IMAGE:-nirtuttnauer/mosscms:latest}
+    # Local build. A published image is opt-in: set MOSS_IMAGE and MOSS_PULL_POLICY=missing.
+    image: ${MOSS_IMAGE:-mosscms:local}
+    pull_policy: ${MOSS_PULL_POLICY:-build}
     build:
       context: .
       args:

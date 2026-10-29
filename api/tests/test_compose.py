@@ -29,12 +29,14 @@ def compose(tmp_path):
         "MOSS_API_URL=http://app:8001\nMOSS_PROJECT_ID=fixture\nMOSS_DELIVERY_TOKEN=fixture-token\n"
     )
 
-    def config(flag, website=False, postgres=True):
+    def config(flag, website=False, postgres=True, extra=None):
         values = {"MOSS_SECRET_KEY": "s" * 40, "MOSS_SETUP_TOKEN": "t" * 30}
         if flag is not None:
             values["MOSS_USE_SQLITE"] = flag
         if postgres:
             values.update(POSTGRES_DB="fixture", POSTGRES_USER="fixture", POSTGRES_PASSWORD="fixture-password")
+        if extra:
+            values.update(extra)
         file = tmp_path / "fixture.env"
         file.write_text("\n".join(f"{key}={value}" for key, value in values.items()))
         environment = {
@@ -88,3 +90,35 @@ def test_postgres_compose_still_requires_credentials(compose):
     result = compose("false", postgres=False)
     assert result.returncode != 0
     assert "POSTGRES_" in result.stderr
+
+
+def test_default_app_image_builds_locally(compose):
+    result = compose(None)
+    assert result.returncode == 0, result.stderr
+    app = json.loads(result.stdout)["services"]["app"]
+    assert app["image"] == "mosscms:local"
+    assert app["pull_policy"] == "build"
+    assert app["build"]["context"]
+    assert "nirtuttnauer/mosscms" not in app["image"]
+
+
+def test_sqlite_stub_reuses_local_image_without_pulling(compose):
+    result = compose("true", postgres=False)
+    assert result.returncode == 0, result.stderr
+    services = json.loads(result.stdout)["services"]
+    assert services["app"]["image"] == "mosscms:local"
+    assert services["app"]["pull_policy"] == "build"
+    assert services["db"]["image"] == "mosscms:local"
+    assert services["db"]["pull_policy"] == "never"
+
+
+def test_published_image_is_opt_in(compose):
+    result = compose(
+        "false",
+        extra={"MOSS_IMAGE": "nirtuttnauer/mosscms:1.2.3", "MOSS_PULL_POLICY": "missing"},
+    )
+    assert result.returncode == 0, result.stderr
+    app = json.loads(result.stdout)["services"]["app"]
+    assert app["image"] == "nirtuttnauer/mosscms:1.2.3"
+    assert app["pull_policy"] == "missing"
+    assert app["build"]["context"]
