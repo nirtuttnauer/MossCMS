@@ -679,18 +679,19 @@ def test_skip_auth_still_requires_a_delivery_token_on_every_route(tmp_path):
             account = local.get("/auth/me").json()
             headers = {"x-moss-project": account["projects"][0]["id"], "x-moss-csrf": account["csrf"]}
             define(local, headers, fields=FIELDS)
+            marker = "moss033-skip-" + "field"
             live = saved(
                 local,
                 headers,
                 "skip-live",
-                {"title": "Skip Live", "body": "moss033-skip-live", "secret": "moss033-skip-secret"},
+                {"title": "Skip Live", "body": "moss033-skip-live", "secret": marker},
                 "published",
             )
             draft = saved(
                 local,
                 headers,
                 "moss033-skip-draft",
-                {"title": "moss033-skip-draft", "body": "moss033-skip-draft", "secret": "moss033-skip-secret"},
+                {"title": "moss033-skip-draft", "body": "moss033-skip-draft", "secret": marker},
             )
             _, token = issue(local, headers, name="skip")
             samples = {"typeKey": "article", "id": live["id"]}
@@ -699,13 +700,13 @@ def test_skip_auth_still_requires_a_delivery_token_on_every_route(tmp_path):
                 for method in ("GET", "HEAD"):
                     rejected = hit(local, method, path)
                     assert_denied(rejected, method)
-                    assert "moss033-skip-secret" not in rejected.text
+                    assert marker not in rejected.text
                     accepted = hit(local, method, path, headers=token)
                     assert accepted.status_code == 200, (method, path, accepted.text)
             hidden = hit(local, "GET", "/delivery/entries/" + draft["id"], headers=token)
             assert_missing(hidden, "Entry not found.")
             listed = hit(local, "GET", "/delivery/entries", headers=token)
             assert ids_of(listed) == {live["id"]}
-            assert_unpublished(listed, ("moss033-skip-draft", "moss033-skip-secret"))
+            assert_unpublished(listed, ("moss033-skip-draft", marker))
     finally:
         drop_test_database(url)
