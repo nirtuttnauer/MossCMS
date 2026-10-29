@@ -8,9 +8,10 @@ Recorded 29 October 2026 (UTC). Dev dependencies are included. `npm audit` is th
 
 | | |
 | --- | --- |
-| SHA | `ffbdc3685d684c676af9846d20b25954902b8fab` |
+| SHA tested | `ffbdc3685d684c676af9846d20b25954902b8fab` |
+| Rebased code commit | `e2b9996` on `8f4c76e6cc1ab8dcb9db0d24e7cee664539c3e80` |
 | Branch | `cursor/moss-025-npm-audit-d37d` |
-| Parent | `b306d3f0e609347735880be2a3d487b1ac1500a2` (main, MOSS-001 Pillow 13) |
+| Parent at test time | `b306d3f0e609347735880be2a3d487b1ac1500a2` (main, MOSS-001 Pillow 13) |
 | Baseline | `3a87c73c8e925973608e373863813163b41f04a9` |
 | `git status --porcelain` at the start of this run | empty (clean) |
 | Date | 2026-10-29T04:03:56Z through 2026-10-29T04:06Z |
@@ -18,7 +19,7 @@ Recorded 29 October 2026 (UTC). Dev dependencies are included. `npm audit` is th
 | Python / uv | 3.12.3 / 0.12.23 |
 | PostgreSQL | 16.15 on 127.0.0.1:5432, role `pg` |
 
-`ffbdc36` is the vitest lockfile fix rebased onto `b306d3f`. This directory is the run record for that SHA. The evidence commit that adds this directory does not change lockfiles or tests.
+`ffbdc36` is the vitest lockfile fix on `b306d3f`. After that run, main moved to `8f4c76e` (GitHub Actions pinned to full commit SHAs). Rebase replayed the same vitest patch as `e2b9996`. `git diff ffbdc36 e2b9996` is only `.github/workflows/checks.yml` and `.github/workflows/docker.yml`. Lockfiles and tests are unchanged, so the results below still apply. This directory does not change lockfiles or tests.
 
 ## Baseline audit at `3a87c73`
 
