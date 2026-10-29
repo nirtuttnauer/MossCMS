@@ -1,0 +1,73 @@
+label: local
+date: 2026-10-29T05:21:01Z
+sha: a185dc3afc51ee124409721cc9b90fd5029f369d
+workdir: api
+command:
+uv run pytest -m "not postgres"
+MOSS_USE_SQLITE=false
+MOSS_REQUIRED_RUN=sqlite
+GITHUB_WORKSPACE=/workspace
+---- output ----
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /workspace/api
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1
+collected 403 items / 4 deselected / 399 selected
+
+tests/test_autosave.py ....                                              [  1%]
+tests/test_benchmark.py ...........                                      [  3%]
+tests/test_cli.py ..............                                         [  7%]
+tests/test_cms.py .......................                                [ 13%]
+tests/test_compose.py .....                                              [ 14%]
+tests/test_config.py ..............................                      [ 21%]
+tests/test_images.py ................                                    [ 25%]
+tests/test_indexing.py ...............                                   [ 29%]
+tests/test_media_links.py ......                                         [ 31%]
+tests/test_migrate.py ......                                             [ 32%]
+tests/test_operator_scripts.py .........................                 [ 38%]
+tests/test_ordering.py .......................                           [ 44%]
+tests/test_outbox.py ...........                                         [ 47%]
+tests/test_portability.py .......................                        [ 53%]
+tests/test_preview.py .....                                              [ 54%]
+tests/test_product_improvements.py ............                          [ 57%]
+tests/test_publication.py .......                                        [ 59%]
+tests/test_query_limits.py ..................                            [ 63%]
+tests/test_rate_limit.py .......                                         [ 65%]
+tests/test_release_scripts.py .....................                      [ 70%]
+tests/test_required_runs.py .                                            [ 70%]
+tests/test_resolved_assets.py ....                                       [ 71%]
+tests/test_schema.py .....                                               [ 73%]
+tests/test_schema_cache.py ......                                        [ 74%]
+tests/test_search.py ...........                                         [ 77%]
+tests/test_seo.py ...................                                    [ 82%]
+tests/test_snapshot_migration.py .                                       [ 82%]
+tests/test_static.py .                                                   [ 82%]
+tests/test_storage.py ...................                                [ 87%]
+tests/test_telemetry.py .................                                [ 91%]
+tests/test_transforms.py ..........                                      [ 94%]
+tests/test_webhooks.py .........                                         [ 96%]
+tests/test_website_setup.py .......                                      [ 98%]
+tests/test_workflows.py .                                                [ 98%]
+tests/test_workspace_migration.py ......                                 [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /workspace/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5
+  /workspace/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5: AuthlibDeprecationWarning: The httpx module is deprecated; please use httpx2 instead.
+    from ._compat import httpx2
+
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+  /workspace/api/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1192: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
+    cursor.execute(statement, parameters)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========== 399 passed, 4 deselected, 6 warnings in 60.25s (0:01:00) ===========
+exit_code: 0

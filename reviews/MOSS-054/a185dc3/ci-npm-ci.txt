@@ -1,0 +1,13 @@
+label: local
+date: 2026-10-29T05:25:30Z
+sha: a185dc3afc51ee124409721cc9b90fd5029f369d
+workdir: ci
+command:
+npm ci
+GITHUB_WORKSPACE=/workspace
+---- output ----
+
+added 3 packages, and audited 4 packages in 360ms
+
+found 0 vulnerabilities
+exit_code: 0
