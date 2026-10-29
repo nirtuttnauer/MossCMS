@@ -446,18 +446,13 @@ The API suite uses isolated temporary databases. `MOSS_USE_SQLITE=false` keeps t
 ```sh
 MOSS_USE_SQLITE=false MOSS_REQUIRED_RUN=postgres MOSS_TEST_DATABASE_URL='postgresql+psycopg://USER:***@HOST:5432/DB' uv run pytest
 uv run python tests/verify_required_runs.py
-uv export --frozen --all-groups --no-emit-project -o /tmp/moss-requirements.txt
-uv run --with pip-audit==2.10.1 pip-audit --progress-spinner off -r /tmp/moss-requirements.txt
 ```
-
-`uv export --frozen` reads `api/uv.lock`. `pip-audit` uses the default PyPI advisory service and has no ignore list.
 
 ```sh
 cd web
 npm run check
 npm test
 npm run build
-npm audit
 ```
 
 ```sh
@@ -465,13 +460,12 @@ cd example-site
 npm run check
 npm test
 npm run build
-npm audit
 ```
 
-`npm audit` includes dev dependencies and fails on any advisory. From the repository root, gitleaks 8.30.1 fails on any finding:
+Audits are `scripts/verify.sh` from MOSS-054, so the local gate and CI stay the same script. From the repository root, CI runs:
 
 ```sh
-gitleaks detect --source . --redact --verbose
+scripts/verify.sh hosted
 ```
 
 CI runs the same checks. Tests cover authorization and workspace boundaries, token scopes/drafts/private fields, team roles, recovery, schema changes, revisions, scheduling, assets, generated GraphQL types, legacy migration, and core frontend interactions. External OAuth and S3 services require your credentials; unit coverage does not establish that a particular provider or bucket is configured correctly.

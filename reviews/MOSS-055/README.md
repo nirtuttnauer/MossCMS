@@ -2,7 +2,11 @@
 
 local
 
-Recorded 29 October 2026 (UTC). CI now runs the same audits as the QA gate: `npm audit` with dev dependencies included and no `--audit-level`, `pip-audit` 2.10.1 on the frozen `api/uv.lock` with no ignore list, and gitleaks 8.30.1 with no allowlist. No audit exception, override, or skip was added.
+CI does not inline npm audit, pip-audit, or gitleaks. The `audits` job checks out with the existing SHA-pinned `actions/checkout` and runs `scripts/verify.sh hosted`. That script is MOSS-054. It is not on `main` as of `73e1ebe89a41fc81d332264c2c199ffbf26701ad` (`git cat-file -e origin/main:scripts/verify.sh` fails). This pull request stays open until MOSS-054 merges. No new Action was added. Branch protection is unchanged.
+
+The notes below are the earlier run of those audit commands before they were removed from the workflow, so the gate would not be copied in two places. They are not the current CI steps.
+
+Recorded 29 October 2026 (UTC). No audit exception, override, or skip was added.
 
 ## Code under test
 
@@ -25,17 +29,15 @@ The suite ran on `dfe7eda`, then the branch was rebased onto main `2d4c608`. `gi
 
 MOSS-045's README and TODO edits are still present. This branch does not change `checks.yml` relative to that rebase except for the audit steps in this ticket.
 
-## What CI runs
+## Earlier inlined commands
 
-`.github/workflows/checks.yml`:
+These commands were run locally before Architecture moved them into `scripts/verify.sh`. They are not steps in `.github/workflows/checks.yml` anymore.
 
-- `web` and `example-site`: `npm audit` (the `--audit-level=high` flag is gone). Dev dependencies stay included. There is no `--omit=dev`.
+- `web` and `example-site`: `npm audit` (no `--audit-level`, dev dependencies included, no `--omit=dev`).
 - `api`: `uv export --frozen --all-groups --no-emit-project` from `api/uv.lock`, then `uv run --with pip-audit==2.10.1 pip-audit --progress-spinner off -r /tmp/moss-requirements.txt`. No `--ignore-vuln`.
-- `gitleaks`: checkout is `actions/checkout@11d5960a326750d5838078e36cf38b85af677262` (`# v4.4.0`), full history. The job installs gitleaks 8.30.1 after checking sha256 `551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb`, then runs `gitleaks detect --source . --redact --verbose`.
+- gitleaks 8.30.1: `gitleaks detect --source . --redact --verbose`.
 
-No new third-party Action was added. Every external `uses:` remains a full commit SHA with a version comment. The local reusable workflow `./.github/workflows/checks.yml` is unchanged. actionlint 1.7.12 with shellcheck exited 0. Log: [75e7889/actionlint.txt](75e7889/actionlint.txt).
-
-These jobs fail the workflow when they find an advisory or a leak. They are not a GitHub branch-protection gate. The merge decision is this local run.
+actionlint 1.7.12 with shellcheck exited 0 on the workflow as it was then. Log: [75e7889/actionlint.txt](75e7889/actionlint.txt).
 
 ## Positive control
 
