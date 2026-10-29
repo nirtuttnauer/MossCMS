@@ -1,0 +1,165 @@
+===== changelog =====
+cmd: python3 scripts/check_changelog.py
+start: 2026-10-29T05:24:30Z
+exit: 0
+end: 2026-10-29T05:24:33Z
+cmd: rg private-name and employer-domain patterns, then test exit 1
+start: 2026-10-29T05:24:33Z
+rg_raw_exit: 1
+rg matches: 0
+exit: 0
+===== gitleaks =====
+cmd: gitleaks detect --no-banner --redact --log-opts=27ccf24ebf5dab51a8cc40ac675374fdbd5a20d2^..27ccf24ebf5dab51a8cc40ac675374fdbd5a20d2 --source /workspace
+start: 2026-10-29T05:24:33Z
+exit: 0
+end: 2026-10-29T05:24:34Z
+start postgres pull 2026-10-29T05:24:34Z
+postgres pull exit: 0
+postgres ready exit: 0
+===== ruff-check =====
+cmd: uv run ruff check app tests migrations
+start: 2026-10-29T05:24:35Z
+exit: 0
+end: 2026-10-29T05:24:35Z
+===== ruff-format =====
+cmd: uv run ruff format --check app tests migrations
+start: 2026-10-29T05:24:35Z
+exit: 0
+end: 2026-10-29T05:24:35Z
+===== ruff-scripts-check =====
+cmd: uv run ruff check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
+start: 2026-10-29T05:24:35Z
+exit: 0
+end: 2026-10-29T05:24:35Z
+===== ruff-scripts-format =====
+cmd: uv run ruff format --check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
+start: 2026-10-29T05:24:35Z
+exit: 0
+end: 2026-10-29T05:24:35Z
+===== ruff-telemetry-check =====
+cmd: uv run ruff check --config pyproject.toml ../ci/telemetry_smoke.py
+start: 2026-10-29T05:24:35Z
+exit: 0
+end: 2026-10-29T05:24:36Z
+===== ruff-telemetry-format =====
+cmd: uv run ruff format --check --config pyproject.toml ../ci/telemetry_smoke.py
+start: 2026-10-29T05:24:36Z
+exit: 0
+end: 2026-10-29T05:24:36Z
+===== mypy =====
+cmd: uv run mypy app
+start: 2026-10-29T05:24:36Z
+exit: 0
+end: 2026-10-29T05:24:36Z
+===== pytest-sqlite =====
+cmd: env MOSS_USE_SQLITE=false MOSS_REQUIRED_RUN=sqlite uv run pytest -m not postgres -ra --tb=line
+start: 2026-10-29T05:24:36Z
+exit: 0
+end: 2026-10-29T05:25:48Z
+===== pytest-postgres =====
+cmd: env MOSS_USE_SQLITE=false MOSS_REQUIRED_RUN=postgres MOSS_TEST_DATABASE_URL=postgresql+psycopg://pg:pgtestpw@127.0.0.1:5432/postgres uv run pytest -ra --tb=line
+start: 2026-10-29T05:25:48Z
+exit: 0
+end: 2026-10-29T05:28:04Z
+===== verify =====
+cmd: uv run python tests/verify_required_runs.py
+start: 2026-10-29T05:28:04Z
+exit: 0
+end: 2026-10-29T05:28:04Z
+===== otel-start =====
+cmd: docker run --rm -d --name moss-otel-smoke -p 127.0.0.1:14318:4318 -p 127.0.0.1:19464:9464 -v /workspace/ops/otel-collector.yaml:/etc/otelcol/config.yaml:ro otel/opentelemetry-collector-contrib:0.156.0@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108 --config=/etc/otelcol/config.yaml
+start: 2026-10-29T05:28:04Z
+exit: 0
+end: 2026-10-29T05:28:04Z
+===== otel =====
+cmd: env MOSS_USE_SQLITE=false PYTHONPATH=. uv run python ../ci/telemetry_smoke.py --endpoint http://127.0.0.1:14318 --metrics-url http://127.0.0.1:19464/metrics --output /tmp/moss-otel-evidence/collector-smoke.json
+start: 2026-10-29T05:28:07Z
+exit: 0
+end: 2026-10-29T05:28:10Z
+===== pip-audit-export =====
+cmd: uv export --frozen --all-groups --no-emit-project -o /tmp/moss-057-requirements.txt
+start: 2026-10-29T05:28:10Z
+exit: 0
+end: 2026-10-29T05:28:10Z
+===== pip-audit =====
+cmd: uv run --with pip-audit pip-audit --progress-spinner off -r /tmp/moss-057-requirements.txt
+start: 2026-10-29T05:28:10Z
+exit: 0
+end: 2026-10-29T05:28:17Z
+===== web-ci =====
+cmd: npm ci
+start: 2026-10-29T05:28:17Z
+exit: 0
+end: 2026-10-29T05:28:19Z
+===== web =====
+cmd: bash -lc npm run check && npm test && npm run build && npm audit --audit-level=high
+start: 2026-10-29T05:28:19Z
+exit: 0
+end: 2026-10-29T05:28:47Z
+===== web-audit =====
+cmd: npm audit
+start: 2026-10-29T05:28:47Z
+exit: 0
+end: 2026-10-29T05:28:48Z
+===== web-audit-json =====
+cmd: npm audit --json
+start: 2026-10-29T05:28:48Z
+exit: 0
+end: 2026-10-29T05:28:48Z
+===== example-ci =====
+cmd: npm ci
+start: 2026-10-29T05:28:48Z
+exit: 0
+end: 2026-10-29T05:28:50Z
+===== example =====
+cmd: bash -lc npm run check && npm test && npm run build && npm audit --audit-level=high
+start: 2026-10-29T05:28:50Z
+exit: 0
+end: 2026-10-29T05:29:01Z
+===== example-audit =====
+cmd: npm audit
+start: 2026-10-29T05:29:01Z
+exit: 0
+end: 2026-10-29T05:29:01Z
+===== example-audit-json =====
+cmd: npm audit --json
+start: 2026-10-29T05:29:01Z
+exit: 0
+end: 2026-10-29T05:29:02Z
+===== ci-ci =====
+cmd: npm ci
+start: 2026-10-29T05:29:02Z
+exit: 0
+end: 2026-10-29T05:29:02Z
+===== ci-audit =====
+cmd: npm audit
+start: 2026-10-29T05:29:02Z
+exit: 0
+end: 2026-10-29T05:29:02Z
+===== ci-audit-json =====
+cmd: npm audit --json
+start: 2026-10-29T05:29:02Z
+exit: 0
+end: 2026-10-29T05:29:03Z
+===== playwright =====
+cmd: sudo -E env PATH=/home/ubuntu/.local/bin:/home/ubuntu/.local/bin:/home/ubuntu/.local/bin:/home/ubuntu/.local/bin:/usr/local/cargo/bin:/exec-daemon:/exec-daemon/tools:/usr/local/cargo/bin:/home/ubuntu/.nvm/versions/node/v22.23.4/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin npx playwright install --with-deps chromium
+start: 2026-10-29T05:29:03Z
+exit: 0
+end: 2026-10-29T05:29:05Z
+===== docker-build =====
+cmd: docker build --tag mosscms:smoke .
+start: 2026-10-29T05:29:05Z
+exit: 0
+end: 2026-10-29T05:29:06Z
+===== compose-up =====
+cmd: docker compose -f ci/compose.yaml -p mosscms-smoke up --no-build -d --wait --wait-timeout 180
+start: 2026-10-29T05:29:06Z
+exit: 0
+end: 2026-10-29T05:29:14Z
+===== playwright-test =====
+cmd: npm test
+start: 2026-10-29T05:29:14Z
+exit: 0
+end: 2026-10-29T05:29:17Z
+SUITE_FAIL=0
+end: 2026-10-29T05:29:18Z
