@@ -359,7 +359,7 @@ python3 scripts/configure.py --production --public-url https://cms.example.com
 docker compose up --build -d
 ```
 
-Terminate TLS at a reverse proxy and proxy to the default `127.0.0.1:8001` binding. Set `MOSS_PUBLIC_URL` to the canonical HTTPS origin and `MOSS_ORIGINS` to an explicit comma-separated list of trusted HTTPS browser origins. Avoid wildcard CORS. PostgreSQL has no published host port. The app runs without root, with a read-only root filesystem and separate writable media/temp volumes. Production rejects missing secrets, SQLite without `MOSS_USE_SQLITE=true`, default PostgreSQL passwords, and HTTP origins.
+Terminate TLS at a reverse proxy and proxy to the default `127.0.0.1:8001` binding. Set `MOSS_PUBLIC_URL` to the canonical HTTPS origin and `MOSS_ORIGINS` to an explicit comma-separated list of trusted HTTPS browser origins. Avoid wildcard CORS. PostgreSQL has no published host port. The app runs without root, with a read-only root filesystem and separate writable media/temp volumes. Production rejects missing secrets, SQLite without `MOSS_USE_SQLITE=true`, default PostgreSQL passwords, and HTTP origins. Run one app process: the sign-in rate limit is stored in that process's memory. The [client hardening guide](docs/client-hardening.md) sets Content-Security-Policy and Strict-Transport-Security on the proxy and records the curl and admin-console checks.
 
 For an existing database, changing `.env` alone does not rotate its password: change the PostgreSQL role password through an operator connection and update `.env` together. Preserve secret values for upgrades. Changing `MOSS_SECRET_KEY` invalidates pending OAuth state and signed media links. Protect database backups because they include account/session data.
 
@@ -489,6 +489,7 @@ If an older bypass setup left the workspace without members, recover only that w
 | --- | --- |
 | Run or publish a Docker image | [Docker setup and publishing](docs/docker.md) |
 | Operate, upgrade, or recover an instance | [Deployment and recovery](docs/deployment-recovery.md) |
+| Terminate TLS and set CSP, HSTS, origins, and secrets | [Client hardening](docs/client-hardening.md) |
 | Understand autosave, conflicts, revisions, or draft previews | [Editor workflows](docs/editor-workflows.md) |
 | Understand publishing and scheduling guarantees | [Publication contract](docs/publication-contract.md) |
 | Work with Markdown, images, or storage limits | [Markdown](docs/markdown.md), [images](docs/images.md) |

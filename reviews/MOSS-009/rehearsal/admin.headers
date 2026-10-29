@@ -1,0 +1,19 @@
+HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Date: Thu, 29 Oct 2026 05:36:44 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 397
+Connection: keep-alive
+cache-control: no-cache
+accept-ranges: bytes
+last-modified: Thu, 29 Oct 2026 05:32:46 GMT
+etag: "4216ef87c9b5fe4c0bed40f100bd7c10"
+vary: Origin
+x-request-id: 84312261-29e7-4dc5-b3ae-7860252aebde
+server-timing: app;dur=3.7
+x-content-type-options: nosniff
+referrer-policy: same-origin
+x-frame-options: DENY
+Strict-Transport-Security: max-age=300
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests
+
