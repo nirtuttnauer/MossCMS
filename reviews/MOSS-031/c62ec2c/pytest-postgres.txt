@@ -1,0 +1,64 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /workspace/api
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1
+collected 411 items
+
+tests/test_autosave.py ....                                              [  0%]
+tests/test_benchmark.py ...........                                      [  3%]
+tests/test_cli.py ..............                                         [  7%]
+tests/test_cms.py .......................                                [ 12%]
+tests/test_compose.py .....                                              [ 13%]
+tests/test_concurrency.py .                                              [ 14%]
+tests/test_config.py ..............................                      [ 21%]
+tests/test_delivery_rest.py .........                                    [ 23%]
+tests/test_images.py ................                                    [ 27%]
+tests/test_indexing.py ................                                  [ 31%]
+tests/test_media_links.py ......                                         [ 32%]
+tests/test_migrate.py ......                                             [ 34%]
+tests/test_operator_scripts.py .........................                 [ 40%]
+tests/test_ordering.py .......................                           [ 45%]
+tests/test_outbox.py ...........                                         [ 48%]
+tests/test_portability.py .......................                        [ 54%]
+tests/test_postgres_product_migration.py .                               [ 54%]
+tests/test_preview.py .....                                              [ 55%]
+tests/test_product_improvements.py ............                          [ 58%]
+tests/test_publication.py .......                                        [ 60%]
+tests/test_query_limits.py ..................                            [ 64%]
+tests/test_rate_limit.py .......                                         [ 66%]
+tests/test_release_scripts.py .....................                      [ 71%]
+tests/test_resolved_assets.py ....                                       [ 72%]
+tests/test_schema.py .....                                               [ 73%]
+tests/test_schema_cache.py ......                                        [ 75%]
+tests/test_search.py ............                                        [ 78%]
+tests/test_seo.py ...................                                    [ 82%]
+tests/test_snapshot_migration.py .                                       [ 82%]
+tests/test_static.py .                                                   [ 83%]
+tests/test_storage.py ...................                                [ 87%]
+tests/test_telemetry.py .................                                [ 91%]
+tests/test_transforms.py ..........                                      [ 94%]
+tests/test_webhooks.py .........                                         [ 96%]
+tests/test_website_setup.py .......                                      [ 98%]
+tests/test_workflows.py .                                                [ 98%]
+tests/test_workspace_migration.py ......                                 [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /workspace/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5
+  /workspace/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5: AuthlibDeprecationWarning: The httpx module is deprecated; please use httpx2 instead.
+    from ._compat import httpx2
+
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+  /workspace/api/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1192: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
+    cursor.execute(statement, parameters)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== 411 passed, 6 warnings in 96.20s (0:01:36) ==================

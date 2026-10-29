@@ -1,0 +1,6 @@
+command: npm audit --audit-level=high
+found 0 vulnerabilities
+audit_high_exit:0
+command: npm audit
+found 0 vulnerabilities
+audit_exit:0
