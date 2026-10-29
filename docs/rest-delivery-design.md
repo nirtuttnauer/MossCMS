@@ -83,17 +83,17 @@ Generated `allCms{Type}` lists drop the cursor. REST does not. The list route re
 
 Delivery GraphQL already refuses these. REST has no path for them.
 
-| Surface | Result today for a delivery token |
-| --- | --- |
-| `revisions` | 403 `Revision history is editorial only.` |
-| `assets`, `asset_page` | 403 `Use an asset field on published content.` |
-| `publication_queue` | 403 `Publication queues are editorial only.` |
-| `overview` | 403 `Overview is editorial only.` |
-| `content_groups` | 403 `Content groups are editorial only.` |
-| `seo_audit`, `seo_entry_audit` | 403 `SEO audits are editorial only.` |
-| `audit_log`, `schema_history` | 403, admin role required |
-| `draft_receipt` | 403, editor role required |
-| Mutations | The delivery schema is built with `mutation=None`. `require(..., write=True)` raises 403 `Delivery tokens cannot write content.` |
+| Surface | Delivery GraphQL today | REST |
+| --- | --- | --- |
+| `revisions` | HTTP 200, `extensions.code` `FORBIDDEN`, `Revision history is editorial only.` | 403, same `detail` and `code` |
+| `assets`, `asset_page` | HTTP 200, `FORBIDDEN`, `Use an asset field on published content.` | 403, same `detail` and `code` |
+| `publication_queue` | HTTP 200, `FORBIDDEN`, `Publication queues are editorial only.` | 403, same `detail` and `code` |
+| `overview` | HTTP 200, `FORBIDDEN`, `Overview is editorial only.` | 403, same `detail` and `code` |
+| `content_groups` | HTTP 200, `FORBIDDEN`, `Content groups are editorial only.` | 403, same `detail` and `code` |
+| `seo_audit`, `seo_entry_audit` | HTTP 200, `FORBIDDEN`, `SEO audits are editorial only.` | 403, same `detail` and `code` |
+| `audit_log`, `schema_history` | HTTP 200, `FORBIDDEN`, `Insufficient project permissions.` (`require` asks for admin; a delivery token is a reader) | 403, same body |
+| `draft_receipt` | HTTP 200, `FORBIDDEN`, `Insufficient project permissions.` (`require` asks for editor) | 403, same body |
+| Mutations | The delivery schema is built with `mutation=None`, so the document fails validation. `require(..., write=True)` raises `Delivery tokens cannot write content.` | No write route. A write flag on `require` is 403 with that `detail` and `code` |
 
 GraphQL query-depth and selection limits apply to GraphQL documents. REST does not run `bounded_query`. Page size, filter cardinality, and cursor checks in `entry_page` and `field_page` are the bounds.
 
