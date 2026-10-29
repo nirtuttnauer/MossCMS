@@ -4,7 +4,7 @@ rootdir: /workspace/api
 configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.15.1
-collected 435 items
+collected 441 items
 
 tests/test_autosave.py ....                                              [  0%]
 tests/test_benchmark.py ...........                                      [  3%]
@@ -13,30 +13,32 @@ tests/test_cms.py .......................                                [ 12%]
 tests/test_compose.py ........                                           [ 14%]
 tests/test_concurrency.py .                                              [ 14%]
 tests/test_config.py ..............................                      [ 21%]
-tests/test_delivery_rest.py .........                                    [ 23%]
-tests/test_dependabot.py ..................                              [ 27%]
-tests/test_images.py ................                                    [ 31%]
-tests/test_indexing.py ................                                  [ 34%]
-tests/test_media_links.py ......                                         [ 36%]
-tests/test_migrate.py ......                                             [ 37%]
-tests/test_operator_scripts.py .........................                 [ 43%]
-tests/test_ordering.py .......................                           [ 48%]
+tests/test_delivery_authorization.py ....                                [ 21%]
+tests/test_delivery_rest.py .........                                    [ 24%]
+tests/test_delivery_rest_parity.py ..                                    [ 24%]
+tests/test_dependabot.py ..................                              [ 28%]
+tests/test_images.py ................                                    [ 32%]
+tests/test_indexing.py ................                                  [ 35%]
+tests/test_media_links.py ......                                         [ 37%]
+tests/test_migrate.py ......                                             [ 38%]
+tests/test_operator_scripts.py .........................                 [ 44%]
+tests/test_ordering.py .......................                           [ 49%]
 tests/test_outbox.py ...........                                         [ 51%]
-tests/test_portability.py .......................                        [ 56%]
-tests/test_postgres_product_migration.py .                               [ 56%]
-tests/test_preview.py .....                                              [ 57%]
-tests/test_product_improvements.py ............                          [ 60%]
+tests/test_portability.py .......................                        [ 57%]
+tests/test_postgres_product_migration.py .                               [ 57%]
+tests/test_preview.py .....                                              [ 58%]
+tests/test_product_improvements.py ............                          [ 61%]
 tests/test_publication.py .......                                        [ 62%]
 tests/test_query_limits.py ..................                            [ 66%]
 tests/test_rate_limit.py .......                                         [ 68%]
-tests/test_release_scripts.py .....................                      [ 72%]
+tests/test_release_scripts.py .....................                      [ 73%]
 tests/test_required_runs.py .                                            [ 73%]
 tests/test_resolved_assets.py ....                                       [ 74%]
 tests/test_schema.py .....                                               [ 75%]
 tests/test_schema_cache.py ......                                        [ 76%]
 tests/test_search.py ............                                        [ 79%]
 tests/test_seo.py ...................                                    [ 83%]
-tests/test_snapshot_migration.py .                                       [ 83%]
+tests/test_snapshot_migration.py .                                       [ 84%]
 tests/test_static.py .                                                   [ 84%]
 tests/test_storage.py ...................                                [ 88%]
 tests/test_telemetry.py .................                                [ 92%]
@@ -63,4 +65,4 @@ tests/test_cms.py::test_migration_preserves_legacy_articles
     cursor.execute(statement, parameters)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================== 435 passed, 6 warnings in 95.48s (0:01:35) ==================
+================= 441 passed, 6 warnings in 104.24s (0:01:44) ==================
