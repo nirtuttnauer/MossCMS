@@ -1,0 +1,60 @@
+{
+  "label": "after-restore",
+  "ready": {
+    "status": 200,
+    "body": "{\"status\":\"ready\"}",
+    "request_id": "7fe8559e-b45f-41a2-a662-10e3ea90d657",
+    "server_timing": "app;dur=2.4"
+  },
+  "sign_in_email": "rehearsal-admin@example.com",
+  "project_ids": [
+    "394fcc3f-11d5-4044-8190-be277015d21a",
+    "cc8da371-8f3c-4071-bdeb-5278a4a773a0"
+  ],
+  "editorial_secret_present": true,
+  "editorial": {
+    "id": "66d41093-d3c3-47fc-b900-35b08962b007",
+    "slug": "client-restore-note",
+    "status": "published",
+    "isLive": true,
+    "publishedRevision": 1,
+    "revisions": [
+      1
+    ]
+  },
+  "draft_is_live": false,
+  "delivery_slugs": [
+    "client-restore-note"
+  ],
+  "delivery_contains_secret": false,
+  "delivery_secret_search_total": 0,
+  "preview_contains_secret": false,
+  "preview_title": "Hidden draft",
+  "media": {
+    "original_status": 200,
+    "original_type": "image/png",
+    "original_sha256": "f5ab25a3634b73c5a28ddc23a7d3ec21c038b37b53399170c1a9a2000c22ef0d",
+    "variant_status": 200,
+    "variant_type": "image/webp",
+    "variant_sha256": "4d5f731bc48151049bba43e764797f696f857c311de5c37f839163e5e251e69d",
+    "variant_bytes": 160,
+    "width": 800,
+    "height": 400,
+    "variant_widths": [
+      320,
+      640,
+      800
+    ]
+  },
+  "site_post_live": true,
+  "site_preview_body": "Private draft body.",
+  "site_page_status": 200,
+  "site_page_has_title": true,
+  "draft_page_status": 404,
+  "starter_status": 200,
+  "starter_has_title": true,
+  "sitemap_status": 200,
+  "sitemap_has_post": true,
+  "rss_status": 200,
+  "rss_has_post": true
+}

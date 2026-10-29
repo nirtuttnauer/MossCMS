@@ -1,0 +1,56 @@
+2026-10-29T05:51:09Z exit=0 sudo nginx -t -c /tmp/moss-027-tls/nginx.conf
+2026-10-29T05:51:09Z exit=0 sudo nginx -c /tmp/moss-027-tls/nginx.conf
+2026-10-29T05:51:09Z exit=0 python3 scripts/configure.py --production --public-url https://cms.moss.test:8443
+2026-10-29T05:51:09Z exit=0 docker compose down --remove-orphans -v
+2026-10-29T05:51:15Z exit=0 docker compose up --build -d
+2026-10-29T05:51:16Z exit=0 sudo iptables-legacy -A DOCKER-FORWARD -i br-75c9b85c71ee -j ACCEPT
+2026-10-29T05:51:18Z exit=0 python3 example-site/scripts/setup_moss.py --cms-url https://cms.moss.test:8443 --email rehearsal-admin@example.com --website-url https://site.moss.test:8444 --name Client restore site --headline Restored from a MossCMS backup.
+2026-10-29T05:51:35Z exit=0 docker compose --profile website up --build -d example-site
+2026-10-29T05:51:48Z exit=0 docker compose stop app example-site
+2026-10-29T05:51:51Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib
+root = pathlib.Path('/data')
+files = {}
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    files[str(path.relative_to(root))] = {
+        'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+        'bytes': path.stat().st_size,
+    }
+print(json.dumps({'count': len(files), 'files': files}, sort_keys=True))
+
+2026-10-29T05:51:52Z exit=0 python3 scripts/backup.py --directory /tmp/moss-027/backups
+2026-10-29T05:51:52Z exit=0 docker image inspect mosscms:local --format {{.Id}}
+2026-10-29T05:51:52Z exit=0 docker image tag mosscms:local mosscms:backup-20261029T055151Z
+2026-10-29T05:51:52Z exit=0 docker compose exec -T db sh -c createdb -U "$POSTGRES_USER" mosscms_recovery
+2026-10-29T05:51:53Z exit=0 python3 scripts/restore.py /tmp/moss-027/backups/20261029T055151Z.dump --target mosscms_recovery --confirm-target mosscms_recovery
+2026-10-29T05:51:53Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib
+root = pathlib.Path('/data')
+files = {}
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    files[str(path.relative_to(root))] = {
+        'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+        'bytes': path.stat().st_size,
+    }
+print(json.dumps({'count': len(files), 'files': files}, sort_keys=True))
+
+2026-10-29T05:51:54Z exit=0 python3 scripts/restore_media.py /tmp/moss-027/backups/20261029T055151Z.media.tar.gz --confirm-empty-volume
+2026-10-29T05:51:55Z exit=1 python3 scripts/restore_media.py /tmp/moss-027/backups/20261029T055151Z.media.tar.gz --confirm-empty-volume
+2026-10-29T05:51:58Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib
+root = pathlib.Path('/data')
+files = {}
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    files[str(path.relative_to(root))] = {
+        'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+        'bytes': path.stat().st_size,
+    }
+print(json.dumps({'count': len(files), 'files': files}, sort_keys=True))
+
+2026-10-29T05:52:00Z exit=0 docker compose up -d --no-deps --no-build app
+2026-10-29T05:52:09Z exit=0 docker compose --profile website up -d --no-build example-site
+2026-10-29T05:53:12Z exit=0 docker volume ls --format {{.Name}}
+2026-10-29T05:53:12Z exit=0 docker volume rm workspace_moss_assets
+2026-10-29T05:53:12Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'mosscms' AND pid <> pg_backend_pid();"
+2026-10-29T05:53:12Z exit=0 docker compose exec -T db sh -c dropdb -U "$POSTGRES_USER" --if-exists mosscms
+2026-10-29T05:53:12Z exit=0 docker volume ls --format {{.Name}}

@@ -1,0 +1,7 @@
+$ python3 scripts/restore.py /tmp/moss-027/backups/20261029T055151Z.dump --target mosscms_recovery --confirm-target mosscms_recovery
+cwd: /workspace
+started: 2026-10-29T05:51:53Z
+exit: 0
+seconds: 0.31
+--- output ---
+Restored into mosscms_recovery

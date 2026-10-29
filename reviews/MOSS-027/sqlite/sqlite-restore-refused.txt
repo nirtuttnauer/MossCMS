@@ -1,0 +1,16 @@
+$ python3 scripts/restore_media.py /tmp/moss-027/backups/20261029T055337Z.sqlite-data.tar.gz --confirm-empty-volume
+cwd: /workspace
+started: 2026-10-29T05:53:40Z
+exit: 1
+seconds: 0.60
+--- output ---
+The assets volume must be empty; existing files are never overwritten.
+
+Traceback (most recent call last):
+  File "/workspace/scripts/restore_media.py", line 50, in <module>
+    main()
+  File "/workspace/scripts/restore_media.py", line 29, in main
+    subprocess.run(
+  File "/usr/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['docker', 'compose', 'run', '--rm', '--no-deps', '-T', '--entrypoint', 'python', 'app', '-c', "\nimport pathlib, tarfile, sys\nroot = pathlib.Path('/data')\nif any(root.iterdir()):\n    sys.exit('The assets volume must be empty; existing files are never overwritten.')\nwith tarfile.open(fileobj=sys.stdin.buffer, mode='r|gz') as archive:\n    for member in archive:\n        destination = (root / member.name).resolve()\n        if not destination.is_relative_to(root) or member.issym() or member.islnk() or not (member.isfile() or member.isdir()):\n            sys.exit('Invalid archive member.')\n        archive.extract(member, root, filter='data')\nprint('Local media restored.')\n"]' returned non-zero exit status 1.

@@ -1,0 +1,6 @@
+$ docker compose down --remove-orphans
+cwd: /workspace
+started: 2026-10-29T05:53:23Z
+exit: 0
+seconds: 10.43
+--- output ---

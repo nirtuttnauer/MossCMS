@@ -1,0 +1,6 @@
+$ sudo iptables-legacy -A DOCKER-FORWARD -i br-75c9b85c71ee -j ACCEPT
+cwd: /workspace
+started: 2026-10-29T05:51:16Z
+exit: 0
+seconds: 0.01
+--- output ---

@@ -1,0 +1,6 @@
+$ docker compose stop app example-site
+cwd: /workspace
+started: 2026-10-29T05:51:48Z
+exit: 0
+seconds: 10.44
+--- output ---

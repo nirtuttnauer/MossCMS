@@ -1,0 +1,7 @@
+$ python3 scripts/configure.py --production --public-url https://cms.moss.test:8443
+cwd: /workspace
+started: 2026-10-29T05:51:09Z
+exit: 0
+seconds: 0.03
+--- output ---
+Configuration saved to .env. Use MOSS_SETUP_TOKEN from that file for the first administrator setup.
