@@ -1,0 +1,37 @@
+{
+  "stated_before_required_runs": true,
+  "time": "2026-10-29T04:32:36Z",
+  "sha": "d50e2788485e4ef0c65598c4c2f2bd7536e1ed96",
+  "collected": 403,
+  "manifest_problems": [],
+  "runs": {
+    "sqlite": {
+      "marker": "not postgres",
+      "collected": 403,
+      "deselected": 4,
+      "passed": 399,
+      "skipped": 0,
+      "deselected_ids": [
+        "tests/test_concurrency.py::test_postgres_workers_skip_locked_rows_and_claim_once",
+        "tests/test_indexing.py::test_common_string_count_avoids_per_match_probes_in_generic_postgres_plan",
+        "tests/test_postgres_product_migration.py::test_postgres_0009_preserves_localized_live_scheduled_and_revision_data",
+        "tests/test_search.py::test_generic_postgres_substring_plan_uses_trigrams_and_rechecks_matches"
+      ]
+    },
+    "postgres": {
+      "marker": "",
+      "collected": 403,
+      "deselected": 0,
+      "passed": 403,
+      "skipped": 0,
+      "deselected_ids": []
+    }
+  },
+  "baseline_3a87c73": {
+    "sha": "3a87c73c8e925973608e373863813163b41f04a9",
+    "collected": 402,
+    "sqlite_passed": 398,
+    "sqlite_runtime_skipped": 4,
+    "postgres_passed": 402
+  }
+}
