@@ -1,0 +1,81 @@
+LABEL: local
+SHA: b9c336d397b37c9075bad0765fb375c0c513faaa
+CWD: /workspace
+COMMAND: docker compose -f /workspace/ci/compose.yaml -p mosscms-smoke up --no-build -d --wait --wait-timeout 180
+START: 2026-10-29T04:58:25Z
+ db Pulling 
+ d5bf1ad711f7 Pulling fs layer 
+ d6e09b1bfe5f Pulling fs layer 
+ e018eb860c5e Pulling fs layer 
+ dddde5442af4 Pulling fs layer 
+ f5e975d661d7 Pulling fs layer 
+ 7a82a00c713d Pulling fs layer 
+ 7b229517ed22 Pulling fs layer 
+ fa5e490e3893 Pulling fs layer 
+ 694a01b64034 Pulling fs layer 
+ 9098654d3377 Pulling fs layer 
+ e22336567ca8 Download complete 
+ 694a01b64034 Downloading  10.49MB/112.4MB
+ 7b229517ed22 Download complete 
+ 9098654d3377 Download complete 
+ dddde5442af4 Download complete 
+ 7a82a00c713d Download complete 
+ fa5e490e3893 Download complete 
+ 112f26c8faed Download complete 
+ d5bf1ad711f7 Download complete 
+ d6e09b1bfe5f Download complete 
+ e018eb860c5e Download complete 
+ f5e975d661d7 Download complete 
+ 7b229517ed22 Pull complete 
+ 9098654d3377 Pull complete 
+ dddde5442af4 Extracting 1 s
+ 694a01b64034 Downloading  19.92MB/112.4MB
+ dddde5442af4 Pull complete 
+ fa5e490e3893 Pull complete 
+ 694a01b64034 Downloading  30.41MB/112.4MB
+ 694a01b64034 Downloading  39.85MB/112.4MB
+ 694a01b64034 Downloading  50.33MB/112.4MB
+ 694a01b64034 Downloading  59.77MB/112.4MB
+ 694a01b64034 Downloading  70.25MB/112.4MB
+ 694a01b64034 Downloading  79.69MB/112.4MB
+ 694a01b64034 Downloading  90.18MB/112.4MB
+ 694a01b64034 Downloading  99.61MB/112.4MB
+ 694a01b64034 Downloading  110.1MB/112.4MB
+ 694a01b64034 Download complete 
+ 694a01b64034 Extracting 1 s
+ 694a01b64034 Extracting 1 s
+ 694a01b64034 Extracting 1 s
+ 694a01b64034 Extracting 1 s
+ 694a01b64034 Extracting 1 s
+ 694a01b64034 Extracting 1 s
+ 694a01b64034 Extracting 1 s
+ 694a01b64034 Extracting 1 s
+ 694a01b64034 Extracting 1 s
+ 694a01b64034 Extracting 1 s
+ 694a01b64034 Extracting 1 s
+ 694a01b64034 Extracting 2 s
+ 7a82a00c713d Pull complete 
+ d5bf1ad711f7 Pull complete 
+ d6e09b1bfe5f Pull complete 
+ e018eb860c5e Pull complete 
+ f5e975d661d7 Pull complete 
+ 694a01b64034 Pull complete 
+ db Pulled 
+ Network mosscms-smoke_default  Creating
+ Network mosscms-smoke_default  Created
+ Container mosscms-smoke-db-1  Creating
+ Container mosscms-smoke-db-1  Created
+ Container mosscms-smoke-app-1  Creating
+ Container mosscms-smoke-app-1  Created
+ Container mosscms-smoke-db-1  Starting
+ Container mosscms-smoke-db-1  Started
+ Container mosscms-smoke-db-1  Waiting
+ Container mosscms-smoke-db-1  Healthy
+ Container mosscms-smoke-app-1  Starting
+ Container mosscms-smoke-app-1  Started
+ Container mosscms-smoke-app-1  Waiting
+ Container mosscms-smoke-db-1  Waiting
+ Container mosscms-smoke-db-1  Healthy
+ Container mosscms-smoke-app-1  Healthy
+EXIT: 0
+END: 2026-10-29T04:58:36Z

@@ -1,0 +1,8 @@
+LABEL: local
+SHA: b9c336d397b37c9075bad0765fb375c0c513faaa
+CWD: /workspace/api
+COMMAND: uv run ruff format --check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
+START: 2026-10-29T04:53:29Z
+14 files already formatted
+EXIT: 0
+END: 2026-10-29T04:53:29Z
