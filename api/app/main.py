@@ -1,7 +1,6 @@
 """MossCMS HTTP service. Editorial and delivery GraphQL have distinct permissions."""
 
 import asyncio
-import hashlib
 import json
 import logging
 import mimetypes
@@ -25,6 +24,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from .accounts import context, router as account_router
 from .config import Settings
 from .content import publish_due, scoped, website_path_conflict
+from .delivery_rest import delivery_representation, register_delivery_routes
 from .development import initialize_development
 from .graphql import generated_schema
 from .migrate import migrate
@@ -307,18 +307,9 @@ def create_app(settings=None):
             )
         for error in response_errors:
             error.setdefault("extensions", {})["requestId"] = request.state.request_id
-        headers = {
-            "Cache-Control": "private, no-cache" if delivery and not payload.get("errors") else "no-store",
-            "Vary": "Authorization, Origin",
-        }
-        if delivery and not payload.get("errors"):
-            etag = '"' + hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest() + '"'
-            headers["ETag"] = etag
-            if request.headers.get("if-none-match") == etag:
-                from fastapi import Response
+        return delivery_representation(request, payload, cacheable=bool(delivery and not payload.get("errors")))
 
-                return Response(status_code=304, headers=headers)
-        return JSONResponse(payload, headers=headers)
+    register_delivery_routes(app, factory, settings)
 
     static = Path(__file__).resolve().parents[1] / "static"
     # Slim runtimes may not have a system WebP MIME mapping.

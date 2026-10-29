@@ -1,0 +1,6 @@
+=== ci npm audit high ===
+found 0 vulnerabilities
+HIGH_EXIT:0
+=== ci npm audit ===
+found 0 vulnerabilities
+AUDIT_EXIT:0

@@ -28,6 +28,8 @@ One Docker image serves the API and admin from the same origin. Use PostgreSQL o
 
 MossCMS is an early-stage project with implemented editorial and delivery workflows. The feature descriptions below refer to the current `main` code. Tests and checked-in acceptance reports describe specific verified paths; they do not establish that every deployment, OAuth provider, or storage backend is qualified.
 
+The local suite recorded at `d50e2788485e4ef0c65598c4c2f2bd7536e1ed96` is [MOSS-024](reviews/MOSS-024/README.md) (29 October 2026): PostgreSQL 403 passed and 0 skipped, SQLite 399 passed with 4 deselected and 0 skipped, admin 317 passed, example-site server 46 passed and 0 skipped. [TODO.md](TODO.md) cites the same record.
+
 The [query-performance](https://github.com/nirtuttnauer/MossCMS/pull/3), [delivery-client](https://github.com/nirtuttnauer/MossCMS/pull/4), [observability](https://github.com/nirtuttnauer/MossCMS/pull/5), [workspace-portability](https://github.com/nirtuttnauer/MossCMS/pull/6), and [editor-workflow](https://github.com/nirtuttnauer/MossCMS/pull/7) changes were integrated into `main` on 21 October 2026. Their workflow guides describe the implemented paths and remaining limits.
 
 Self-hosting means owning HTTPS, access configuration, backups, upgrades, and recovery. Start with the [operator guide](docs/deployment-recovery.md) before exposing an instance beyond your development machine. SQLite is intended for one app instance; changing database backends does not migrate your data.
@@ -112,9 +114,20 @@ docker compose exec app python -m app.cli seed --project YOUR_WORKSPACE_ID
 
 </details>
 
+### Where the image comes from
+
+`python3 scripts/start.py` and `docker compose up` build the app image from this checkout. Compose tags that build `mosscms:local` and sets `pull_policy: build`, so startup does not pull an app image. PostgreSQL comes from the public `postgres:17-alpine` image. A published `nirtuttnauer/mosscms` image is optional; this checkout does not publish one. The example website stays a separate local build: `docker compose --profile website up --build -d example-site`.
+
 ### Run a published Docker Hub image
 
-The configured image repository is `nirtuttnauer/mosscms`. Registry publication depends on repository configuration; the source-build quickstart above does not require a published image. Images include the API and built admin, with the database mode selected by Compose. Once an image has been [published to Docker Hub](docs/docker.md#publish-to-docker-hub), run these commands from the cloned repository to start without building locally:
+Once an image has been [published to Docker Hub](docs/docker.md#publish-to-docker-hub), start that image instead of building. Add both lines to `.env`, using a published tag or digest:
+
+```
+MOSS_IMAGE=nirtuttnauer/mosscms:1.2.3
+MOSS_PULL_POLICY=missing
+```
+
+`MOSS_PULL_POLICY=missing` is required with `MOSS_IMAGE`. With the default `pull_policy: build`, Compose builds this checkout and tags the result with `MOSS_IMAGE`. From the cloned repository:
 
 ```sh
 python3 scripts/configure.py
@@ -124,11 +137,9 @@ docker compose up --no-build -d --wait app
 
 Open [localhost:8001](http://localhost:8001) and use `MOSS_SETUP_TOKEN` from `.env` to create the first administrator. Database and uploaded files persist in the same named volumes as a local build.
 
-Compose defaults to `nirtuttnauer/mosscms:latest`. Set `MOSS_IMAGE` in `.env` to an existing published tag or digest for a repeatable deployment. When registry publishing is configured, the workflow updates `latest` from `main` and creates version tags from matching Git tags. Git tags use a `vMAJOR.MINOR.PATCH` pattern; image tags omit the leading `v`. Its build targets are Linux AMD64 and ARM64. Use `MOSS_PORT` to change the host port; the container listens on 8001.
+Published images support `linux/amd64` and `linux/arm64`. When registry publishing is configured, the workflow updates `latest` from `main` and creates version tags from matching Git tags. Git tags use a `vMAJOR.MINOR.PATCH` pattern; image tags omit the leading `v`. Pin a version or digest for production. Use `MOSS_PORT` to change the host port; the container listens on 8001.
 
-To build from your checkout, keep using `docker compose up --build -d`. To avoid replacing a locally cached release tag, use `MOSS_IMAGE=mosscms:local docker compose up --build -d`. The optional example website is built separately with `docker compose --profile website up --build -d example-site`.
-
-See [Docker setup and publishing](docs/docker.md) for registry configuration and upgrade instructions.
+See [Docker setup and publishing](docs/docker.md) for how the local image is built, how a published image is selected, and how to upgrade.
 
 ## How it fits together
 

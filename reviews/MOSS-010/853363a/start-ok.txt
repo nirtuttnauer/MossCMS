@@ -1,0 +1,116 @@
+LABEL: local
+SHA: 853363af4d744f4b2bd0504c4c1eb1b04a0c6a08
+STATUS:
+DATE_START: 2026-10-29T05:04:39Z
+COMMAND: python3 scripts/start.py
+NOTE: host iptables-legacy FORWARD policy was set to ACCEPT so the compose bridge can forward. That is outside the repo.
+Configuration saved to .env. Use MOSS_SETUP_TOKEN from that file for the first administrator setup.
+ Image mosscms:local Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 528B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.42kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+#3 DONE 0.0s
+
+#4 [internal] load metadata for docker.io/library/python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
+#4 DONE 0.0s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 314B done
+#5 DONE 0.0s
+
+#6 [web-build 1/7] FROM docker.io/library/node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+#6 resolve docker.io/library/node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 done
+#6 DONE 0.0s
+
+#7 [api-deps 1/5] FROM docker.io/library/python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
+#7 resolve docker.io/library/python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d done
+#7 DONE 0.0s
+
+#8 [internal] load build context
+#8 transferring context: 5.22kB done
+#8 DONE 0.0s
+
+#9 [web-build 2/7] WORKDIR /web
+#9 CACHED
+
+#10 [web-build 5/7] RUN npm ci
+#10 CACHED
+
+#11 [web-build 3/7] COPY shared/ /shared/
+#11 CACHED
+
+#12 [web-build 6/7] COPY web/ ./
+#12 CACHED
+
+#13 [api-deps 2/5] WORKDIR /api
+#13 CACHED
+
+#14 [runtime 6/8] COPY api/migrations ./migrations
+#14 CACHED
+
+#15 [api-deps 4/5] COPY api/pyproject.toml api/uv.lock ./
+#15 CACHED
+
+#16 [runtime 4/8] COPY --from=api-deps /app/.venv /app/.venv
+#16 CACHED
+
+#17 [web-build 7/7] RUN npm run check && npm run build
+#17 CACHED
+
+#18 [runtime 2/8] WORKDIR /app
+#18 CACHED
+
+#19 [api-deps 5/5] RUN uv sync --locked --no-dev --no-install-project
+#19 CACHED
+
+#20 [runtime 5/8] COPY api/app ./app
+#20 CACHED
+
+#21 [runtime 3/8] RUN useradd --create-home --uid 10001 appuser && mkdir /data && chown appuser:appuser /data
+#21 CACHED
+
+#22 [runtime 7/8] COPY api/alembic.ini ./alembic.ini
+#22 CACHED
+
+#23 [api-deps 3/5] RUN pip install --no-cache-dir uv==0.12.23
+#23 CACHED
+
+#24 [web-build 4/7] COPY web/package.json web/package-lock.json ./
+#24 CACHED
+
+#25 [runtime 8/8] COPY --from=web-build /web/dist ./static
+#25 CACHED
+
+#26 exporting to image
+#26 exporting layers done
+#26 exporting manifest sha256:00ae15858ab2ac7556d2156763ee7c438fe92f55928f068662abceb16920409f done
+#26 exporting config sha256:29840737f341616e69a92b18eb8a6c745b5a3a000863863cd69dd3de84be77a0 done
+#26 exporting attestation manifest sha256:95f2de6b7eca803d8e0cf8c910dd6930dace9f6ef9840e2c32baa658fd3620ea done
+#26 exporting manifest list sha256:522a175805b0d26af7921e0d564a6635a22d4dadf10726f359b0d58e1cc7bea1 done
+#26 naming to docker.io/library/mosscms:local done
+#26 unpacking to docker.io/library/mosscms:local done
+#26 DONE 0.0s
+
+#27 resolving provenance for metadata file
+#27 DONE 0.0s
+ Image mosscms:local Built 
+ Container workspace-db-1 Running 
+ Container workspace-app-1 Running 
+ Container workspace-db-1 Waiting 
+ Container workspace-db-1 Healthy 
+ Container workspace-db-1 Waiting 
+ Container workspace-app-1 Waiting 
+ Container workspace-app-1 Healthy 
+ Container workspace-db-1 Healthy 
+
+MossCMS is ready: http://localhost:8001
+Create your administrator and workspace in that browser page.
+Private setup token redacted.
+EXIT: 0
+DATE_END: 2026-10-29T05:04:40Z

@@ -1,0 +1,10 @@
+LABEL: local
+SHA: b9c336d397b37c9075bad0765fb375c0c513faaa
+CWD: /workspace
+COMMAND: bash -lc sudo iptables-legacy -P FORWARD ACCEPT; sudo iptables -P FORWARD ACCEPT; echo FORWARD_LEGACY=$(sudo iptables-legacy -S | head -5); echo FORWARD_NFT=$(sudo iptables -S | head -5)
+START: 2026-10-29T04:58:25Z
+FORWARD_LEGACY=-P INPUT ACCEPT -P FORWARD ACCEPT -P OUTPUT ACCEPT -N DOCKER -N DOCKER-BRIDGE
+# Warning: iptables-legacy tables present, use iptables-legacy to see them
+FORWARD_NFT=-P INPUT ACCEPT -P FORWARD ACCEPT -P OUTPUT ACCEPT -N DOCKER -N DOCKER-BRIDGE
+EXIT: 0
+END: 2026-10-29T04:58:25Z
