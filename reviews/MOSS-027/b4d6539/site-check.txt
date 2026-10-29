@@ -1,0 +1,5 @@
+
+> moss-example-site@0.1.0 check
+> tsc --noEmit
+
+exit: 0

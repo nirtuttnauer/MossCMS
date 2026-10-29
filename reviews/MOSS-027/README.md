@@ -218,3 +218,34 @@ cd ../example-site && npm ci && npm run check && npm test && npm run build
 | example-site `npm run build` | 0 | vite build succeeded |
 
 Logs: [pytest-sqlite.txt](local/pytest-sqlite.txt), [pytest-postgres.txt](local/pytest-postgres.txt), [verify.txt](local/verify.txt), [ruff-check.txt](local/ruff-check.txt), [ruff-format.txt](local/ruff-format.txt), [ruff-scripts.txt](local/ruff-scripts.txt), [ruff-scripts-format.txt](local/ruff-scripts-format.txt), [mypy.txt](local/mypy.txt), [web-check.txt](local/web-check.txt), [web-test.txt](local/web-test.txt), [web-build.txt](local/web-build.txt), [site-check.txt](local/site-check.txt), [site-test.txt](local/site-test.txt), [site-build.txt](local/site-build.txt), [exits.txt](local/exits.txt).
+
+## local, after merging main
+
+`main` moved to `502ef42` (MOSS-009, MOSS-029, MOSS-032, MOSS-033, MOSS-057, MOSS-058) while this record was open. Those commits were merged into this branch. The rehearsal above stays the `28c3dc9` drill. `scripts/backup.py`, `scripts/restore.py`, and `scripts/restore_media.py` are unchanged from that drill. This section is the suite on the merged tree, still labeled `local`.
+
+| | |
+| --- | --- |
+| SHA tested | `b4d6539a97081e84f118a69242d141f1dd915876` |
+| `git status --porcelain` at the start | empty |
+| Date | 2026-10-29T06:06:34Z through 2026-10-29T06:11:23Z |
+| Compared with | `3a87c73` (402 collected) and the `28c3dc9` run above (433 collected) |
+
+Ignored rehearsal `.env` files stayed outside the tree. `UV_NO_ENV_FILE=1`.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| ruff check app, tests, migrations | 0 | all checks passed |
+| ruff format check | 0 | 89 files already formatted |
+| ruff check/format scripts, setup, changelog script | 0 | all checks passed; 17 files formatted |
+| `mypy app` | 0 | no issues in 29 source files |
+| SQLite required run | 0 | collected 489, **485 passed, 4 deselected, 0 skipped**, 6 warnings in 71.86s |
+| PostgreSQL required run | 0 | collected 489, **489 passed, 0 skipped**, 6 warnings in 142.23s |
+| `tests/verify_required_runs.py` | 0 | union of passed ids is 489 |
+| web check, test, build | 0 | `tsc -b`; 36 files, 356 tests; vite build |
+| example-site check, test, build | 0 | `tsc --noEmit`; 47 passed, 0 failed, 0 skipped; vite build |
+
+489 ≥ 402. The four SQLite deselections are the same committed PostgreSQL-only ids, and they passed in the PostgreSQL run. No new skip or xfail.
+
+`python3 scripts/check_changelog.py` exited 1. The same command on `origin/main` at `502ef42` exits 1 for the same three commits (`0784ceb`, `ae66eb0`, `d9db93d`). This branch does not add a product file, so it does not add that failure.
+
+Logs: [pytest-sqlite.txt](b4d6539/pytest-sqlite.txt), [pytest-postgres.txt](b4d6539/pytest-postgres.txt), [verify.txt](b4d6539/verify.txt), [ruff-check.txt](b4d6539/ruff-check.txt), [ruff-format.txt](b4d6539/ruff-format.txt), [ruff-scripts.txt](b4d6539/ruff-scripts.txt), [ruff-scripts-format.txt](b4d6539/ruff-scripts-format.txt), [mypy.txt](b4d6539/mypy.txt), [web-check.txt](b4d6539/web-check.txt), [web-test.txt](b4d6539/web-test.txt), [web-build.txt](b4d6539/web-build.txt), [site-check.txt](b4d6539/site-check.txt), [site-test.txt](b4d6539/site-test.txt), [site-build.txt](b4d6539/site-build.txt), [changelog.txt](b4d6539/changelog.txt), [exits.txt](b4d6539/exits.txt), [git-status-start.txt](b4d6539/git-status-start.txt).
