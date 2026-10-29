@@ -28,6 +28,8 @@ One Docker image serves the API and admin from the same origin. Use PostgreSQL o
 
 MossCMS is an early-stage project with implemented editorial and delivery workflows. The feature descriptions below refer to the current `main` code. Tests and checked-in acceptance reports describe specific verified paths; they do not establish that every deployment, OAuth provider, or storage backend is qualified.
 
+The local suite recorded at `d50e2788485e4ef0c65598c4c2f2bd7536e1ed96` is [MOSS-024](reviews/MOSS-024/README.md) (29 October 2026): PostgreSQL 403 passed and 0 skipped, SQLite 399 passed with 4 deselected and 0 skipped, admin 317 passed, example-site server 46 passed and 0 skipped. [TODO.md](TODO.md) cites the same record.
+
 The [query-performance](https://github.com/nirtuttnauer/MossCMS/pull/3), [delivery-client](https://github.com/nirtuttnauer/MossCMS/pull/4), [observability](https://github.com/nirtuttnauer/MossCMS/pull/5), [workspace-portability](https://github.com/nirtuttnauer/MossCMS/pull/6), and [editor-workflow](https://github.com/nirtuttnauer/MossCMS/pull/7) changes were integrated into `main` on 21 October 2026. Their workflow guides describe the implemented paths and remaining limits.
 
 Self-hosting means owning HTTPS, access configuration, backups, upgrades, and recovery. Start with the [operator guide](docs/deployment-recovery.md) before exposing an instance beyond your development machine. SQLite is intended for one app instance; changing database backends does not migrate your data.
