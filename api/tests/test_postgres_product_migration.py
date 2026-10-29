@@ -5,12 +5,14 @@ from sqlalchemy import MetaData, Table, create_engine, select
 
 from app.migrate import migrate
 from app.models import now
-from conftest import TEST_DATABASE_URL, database_url, drop_test_database
+from conftest import database_url, drop_test_database
+
+pytestmark = pytest.mark.postgres
 
 
-@pytest.mark.skipif(not TEST_DATABASE_URL.startswith("postgresql"), reason="PostgreSQL forward-upgrade rehearsal")
 def test_postgres_0009_preserves_localized_live_scheduled_and_revision_data(tmp_path):
     url = database_url(tmp_path)
+    assert url.startswith("postgresql")
     engine = create_engine(url)
     try:
         migrate(engine, "0008")

@@ -8,14 +8,16 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 
+pytestmark = pytest.mark.compose
+
 
 @pytest.fixture
 def compose(tmp_path):
     if not shutil.which("docker"):
-        pytest.skip("Docker Compose is required to validate deployment configuration.")
-    version = subprocess.run(["docker", "compose", "version"], capture_output=True)
+        pytest.fail("Docker is required to validate deployment configuration.")
+    version = subprocess.run(["docker", "compose", "version"], capture_output=True, text=True)
     if version.returncode:
-        pytest.skip("Docker Compose is unavailable.")
+        pytest.fail(f"Docker Compose is unavailable.\n{version.stderr}")
 
     project = tmp_path / "project"
     project.mkdir()

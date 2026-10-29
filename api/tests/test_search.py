@@ -104,9 +104,9 @@ def test_populated_search_upgrade_and_downgrade_preserve_entries(app, client, ad
     assert search(client, token(client, admin), "preserved", True)["total"] == 1
 
 
+@pytest.mark.postgres
 def test_generic_postgres_substring_plan_uses_trigrams_and_rechecks_matches(app, client, admin):
-    if app.state.engine.dialect.name != "postgresql":
-        pytest.skip("PostgreSQL trigram search")
+    assert app.state.engine.dialect.name == "postgresql"
     from psycopg.sql import Literal
 
     definition = define(client, admin)
