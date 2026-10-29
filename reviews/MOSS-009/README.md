@@ -142,3 +142,35 @@ cd ../ci && npm audit && npm audit --audit-level=high
 Logs: [ruff-check.txt](28c3dc9/ruff-check.txt), [ruff-format.txt](28c3dc9/ruff-format.txt), [ruff-scripts.txt](28c3dc9/ruff-scripts.txt), [ruff-scripts-format.txt](28c3dc9/ruff-scripts-format.txt), [ruff-telemetry.txt](28c3dc9/ruff-telemetry.txt), [ruff-telemetry-format.txt](28c3dc9/ruff-telemetry-format.txt), [mypy.txt](28c3dc9/mypy.txt), [dependabot.txt](28c3dc9/dependabot.txt), [pytest-sqlite.txt](28c3dc9/pytest-sqlite.txt), [pytest-postgres.txt](28c3dc9/pytest-postgres.txt), [verify.txt](28c3dc9/verify.txt), [web-check.txt](28c3dc9/web-check.txt), [web-test.txt](28c3dc9/web-test.txt), [web-build.txt](28c3dc9/web-build.txt), [web-audit.txt](28c3dc9/web-audit.txt), [web-audit-high.txt](28c3dc9/web-audit-high.txt), [example-site-ci.txt](28c3dc9/example-site-ci.txt), [example-site-check.txt](28c3dc9/example-site-check.txt), [example-site-test.txt](28c3dc9/example-site-test.txt), [example-site-build.txt](28c3dc9/example-site-build.txt), [example-site-audit.txt](28c3dc9/example-site-audit.txt), [example-site-audit-high.txt](28c3dc9/example-site-audit-high.txt), [ci-audit.txt](28c3dc9/ci-audit.txt), [ci-audit-high.txt](28c3dc9/ci-audit-high.txt).
 
 The ticket does not name an audit. `npm audit` was run because the repository's local check instructions include it. No ignore, allowlist, or override was added. The OTLP collector smoke and the production-image Playwright job were not re-run: this change does not modify the app, the image, or the workflows, and GitHub Actions is not used (no Actions quota). The compose-marked tests inside both pytest runs did execute.
+
+## local, after rebasing onto main
+
+`main` moved to `d9db93d18128033ae326e159b2171b6cee4adc82` (MOSS-032) while this branch was open. Rebased here. `web/` and `example-site/` are unchanged from the run above, so those counts still apply (317 and 46, both with 0 skipped). This section is the API suite on the rebased tree. Labeled `local`.
+
+| | |
+| --- | --- |
+| SHA tested | `96997ed694f32736e3c278ed0b529d4750283fd7` |
+| Parent on main | `d9db93d18128033ae326e159b2171b6cee4adc82` |
+| `git status --porcelain` | empty at the start of pytest |
+| Date | ruff, mypy, and the Dependabot check at 2026-10-29T05:44:30Z on `7c3914c` (same application files; the following commit only edits `CHANGELOG.md`). Pytest 2026-10-29T05:45:37Z through 2026-10-29T05:48:43Z on `96997ed` |
+| PostgreSQL | 16.15, role `ubuntu`, database `ubuntu`, local peer auth |
+
+`MOSS_*` was unset for pytest. `UV_NO_ENV_FILE=1`. An earlier attempt in the same shell inherited `MOSS_ENV=production` from the rehearsal process and failed at import; that attempt is not this result.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| ruff check app, tests, migrations | 0 | all checks passed |
+| ruff format check | 0 | 86 files already formatted |
+| ruff check scripts, setup, telemetry smoke | 0 | all checks passed |
+| ruff format check of those files | 0 | 16 files already formatted; telemetry smoke 1 file |
+| `mypy app` | 0 | no issues in 28 source files |
+| `scripts/check_dependabot.py` | 0 | schema valid |
+| SQLite required run | 0 | collected 435, **431 passed, 4 deselected, 0 skipped**, 6 warnings in 64.27s |
+| PostgreSQL required run | 0 | collected 435, **435 passed, 0 deselected, 0 skipped**, 6 warnings in 96.17s |
+| `tests/verify_required_runs.py` | 0 | `"ok": true` |
+
+435 ≥ 402 at `3a87c73`. The four SQLite deselections are the same committed PostgreSQL-only ids and passed on PostgreSQL. No new skip or xfail. Counts match the MOSS-032 run already on `main` (435 collected).
+
+`python3 scripts/check_changelog.py` exits 1 on this branch and on `main` at `d9db93d` for the same pre-existing reason: `d9db93d18128033ae326e159b2171b6cee4adc82` is not cited. This branch's guide commit `7c3914c37003a94015f13fb0cce3bae5ed9b5d91` is cited from pull request 31. The changelog commit and this evidence commit touch only `CHANGELOG.md` or `reviews/`, which that script does not treat as user-visible. Log: [changelog.txt](96997ed/changelog.txt).
+
+Logs: [pytest-sqlite.txt](96997ed/pytest-sqlite.txt), [pytest-postgres.txt](96997ed/pytest-postgres.txt), [verify.txt](96997ed/verify.txt), [ruff-check.txt](96997ed/ruff-check.txt), [ruff-format.txt](96997ed/ruff-format.txt), [ruff-scripts.txt](96997ed/ruff-scripts.txt), [ruff-scripts-format.txt](96997ed/ruff-scripts-format.txt), [ruff-telemetry.txt](96997ed/ruff-telemetry.txt), [ruff-telemetry-format.txt](96997ed/ruff-telemetry-format.txt), [mypy.txt](96997ed/mypy.txt), [dependabot.txt](96997ed/dependabot.txt).
