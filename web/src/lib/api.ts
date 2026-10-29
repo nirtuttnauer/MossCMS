@@ -158,7 +158,6 @@ export const entryFields = 'id typeKey slug title data status version updatedAt 
 export const typeFields = 'id key name fields version entryCount';
 export const saveContentTypeMutation = `mutation($key:String!,$name:String!,$fields:JSON!,$version:Int,$migration:JSON){saveContentType(key:$key,name:$name,fields:$fields,version:$version,migration:$migration){${typeFields}}}`;
 export const saveEntryMutation = `mutation Save($typeKey:String!,$slug:String!,$data:JSON!,$status:String!,$id:ID,$version:Int,$scheduledAt:String,$requestKey:String){saveEntry(typeKey:$typeKey,slug:$slug,data:$data,status:$status,id:$id,version:$version,scheduledAt:$scheduledAt,requestKey:$requestKey){${entryFields}}}`;
-export function slugify(value: string) { return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 export function message(error: unknown) { return error instanceof ApiError && (error.requestId || error.code !== 'REQUEST_FAILED') ? `${error.message} (${error.code}${error.requestId ? ` · request ${error.requestId}` : ''})` : error instanceof Error ? error.message : 'Something went wrong.'; }
 export const entryByIdQuery = `query($id:ID!){entry(id:$id){${entryFields}}}`;
 export const deleteEntryMutation = 'mutation($id:ID!,$version:Int!){deleteEntry(id:$id,version:$version)}';

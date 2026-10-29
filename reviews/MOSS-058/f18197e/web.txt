@@ -1,0 +1,61 @@
+SHA f18197ee03616891b8860474d9ef4bae247faaf9
+DATE 2026-10-29T05:40:09Z
+=== web ===
+
+> mosscms-admin@0.1.0 check
+> tsc -b
+
+CHECK:0
+
+> mosscms-admin@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /workspace/web
+
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+
+ Test Files  36 passed (36)
+      Tests  356 passed (356)
+   Start at  05:40:13
+   Duration  15.52s (transform 1.43s, setup 0ms, import 7.62s, tests 20.51s, environment 13.52s)
+
+TEST:0
+
+> mosscms-admin@0.1.0 build
+> tsc -b && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 1848 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                      0.40 kB │ gzip:   0.28 kB
+dist/assets/index-DOXHVdFt.css      63.56 kB │ gzip:  13.81 kB
+dist/assets/Migration-CR20st6L.js   15.44 kB │ gzip:   5.27 kB
+dist/assets/index-Ch9QJoIr.js      558.53 kB │ gzip: 177.27 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 6.89s
+BUILD:0
+found 0 vulnerabilities
+AUDIT_HIGH:0
+found 0 vulnerabilities
+AUDIT:0
