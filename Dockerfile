@@ -1,4 +1,4 @@
-FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS web-build
+FROM node:26-alpine@sha256:c6ad9e9c1d80f6eb607c26b4b0a132ff7a2344fad1c78ea3baa2a7d4c8de6d94 AS web-build
 WORKDIR /web
 COPY shared/ /shared/
 COPY web/package.json web/package-lock.json ./
@@ -8,14 +8,14 @@ ARG VITE_GRAPHQL_URL=/graphql
 ENV VITE_GRAPHQL_URL=${VITE_GRAPHQL_URL}
 RUN npm run check && npm run build
 
-FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d AS api-deps
+FROM python:3.15-slim@sha256:94d3426f1def7db4a106a232ac121bfd975393e5dfd40a619b955fae45fe7913 AS api-deps
 WORKDIR /api
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/app/.venv
 RUN pip install --no-cache-dir uv==0.12.23
 COPY api/pyproject.toml api/uv.lock ./
 RUN uv sync --locked --no-dev --no-install-project
 
-FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d AS runtime
+FROM python:3.15-slim@sha256:94d3426f1def7db4a106a232ac121bfd975393e5dfd40a619b955fae45fe7913 AS runtime
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PATH="/app/.venv/bin:$PATH" PORT=8001 MOSS_STORAGE_DIR=/data
 WORKDIR /app
 RUN useradd --create-home --uid 10001 appuser && mkdir /data && chown appuser:appuser /data
