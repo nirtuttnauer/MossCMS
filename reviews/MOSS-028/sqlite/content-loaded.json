@@ -1,0 +1,63 @@
+{
+  "asset": {
+    "height": 400,
+    "id": "9c698321-663c-4250-939a-7a126a905231",
+    "mime": "image/png",
+    "png_bytes": 1572,
+    "png_sha256": "1edeee3063250dc049dee1dcfe821008d99f5ada82e53d0e1dcc8103d87cfcde",
+    "size": 1572,
+    "width": 800
+  },
+  "content_type": {
+    "id": "19ccf4a7-95cc-4aa4-a8bd-20109fba3980",
+    "key": "note",
+    "version": 1
+  },
+  "draft": {
+    "data": {
+      "body": "Draft kept across the upgrade.",
+      "secret": "moss-028-private-marker",
+      "title": "Upgrade rehearsal draft"
+    },
+    "id": "56ad98de-90c9-4a87-8ba7-c32c0a64a333",
+    "slug": "upgrade-rehearsal-draft",
+    "status": "draft",
+    "version": 1
+  },
+  "entries": [
+    {
+      "data": {
+        "body": "Loaded before the upgrade. Asset 9c698321-663c-4250-939a-7a126a905231.",
+        "secret": "moss-028-private-marker",
+        "title": "Upgrade rehearsal note"
+      },
+      "id": "04a01435-0cb5-48d6-9271-a07fd59c2ddc",
+      "slug": "upgrade-rehearsal-note",
+      "status": "published",
+      "version": 1
+    },
+    {
+      "data": {
+        "body": "Draft kept across the upgrade.",
+        "secret": "moss-028-private-marker",
+        "title": "Upgrade rehearsal draft"
+      },
+      "id": "56ad98de-90c9-4a87-8ba7-c32c0a64a333",
+      "slug": "upgrade-rehearsal-draft",
+      "status": "draft",
+      "version": 1
+    }
+  ],
+  "published": {
+    "data": {
+      "body": "Loaded before the upgrade. Asset 9c698321-663c-4250-939a-7a126a905231.",
+      "secret": "moss-028-private-marker",
+      "title": "Upgrade rehearsal note"
+    },
+    "id": "04a01435-0cb5-48d6-9271-a07fd59c2ddc",
+    "slug": "upgrade-rehearsal-note",
+    "status": "published",
+    "version": 1
+  },
+  "workspace_id": "7d88552a-8c51-475b-9cff-f633b72737f3"
+}

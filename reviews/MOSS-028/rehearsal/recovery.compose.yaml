@@ -1,0 +1,8 @@
+services:
+  app:
+    image: mosscms:backup-20261111T183312Z
+    pull_policy: never
+    volumes: !override
+      - recovered_assets:/data
+volumes:
+  recovered_assets:

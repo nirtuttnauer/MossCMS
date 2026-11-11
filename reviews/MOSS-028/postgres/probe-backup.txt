@@ -1,0 +1,10 @@
+label: local
+date: 2026-11-11T18:33:12Z
+phase: postgres
+command:
+python3 scripts/backup.py --directory /tmp/moss028/probe-postgres
+exit_code: 0
+---- output ----
+/tmp/moss028/probe-postgres/20261111T183312Z.dump
+/tmp/moss028/probe-postgres/20261111T183312Z.media.tar.gz
+time="2026-11-11T18:33:12Z" level=warning msg="Docker Compose is configured to build using Bake, but buildx isn't installed"

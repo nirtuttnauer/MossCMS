@@ -1,0 +1,18 @@
+{
+  "dump": {
+    "bytes": 42651,
+    "gzip": false,
+    "head": "PGDMP\u0001\u0010\u0000\u0004\b\u0001\u0001\u0000\f\u0000\u0000\u0000\u0000!\u0000\u0000\u0000\u0000\u0012\u0000\u0000\u0000\u0000\u000b\u0000\u0000\u0000\u0000\n\u0000\u0000\u0000\u0000~\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0007\u0000\u0000\u0000mosscms\u0000\u0005\u0000\u0000\u000017.11\u0000\u0005\u0000\u0000\u000017.11\u0000o\u0000\u0000\u0000\u00006\u000e\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u00000\u0000\u0001\u0000\u0000\u00000\u0000\b\u0000\u0000\u0000ENCODING\u0000\b\u0000\u0000\u0000ENCODING\u0000\u0002\u0000\u0000\u0000\u0000\u001e\u0000\u0000\u0000SET client_encoding = 'UTF8';\n\u0001\u0001\u0000\u0000\u0000\u0001\u0001\u0000",
+    "path": "/tmp/moss028/backup-postgres/20261111T183312Z.dump",
+    "sha256": "dea974ef19727c8dba72e3abd504471d1db2882ba1efbbc748402e033b4dea30"
+  },
+  "dump_restore_list_exit": 0,
+  "gzip_media_exit": 0,
+  "image_id": "sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344",
+  "media": {
+    "bytes": 732,
+    "gzip": true,
+    "path": "/tmp/moss028/backup-postgres/20261111T183312Z.media.tar.gz",
+    "sha256": "10c972bbbf394db69b952c094649880fb8514a5e73f3ddce73bc636a4c5082af"
+  }
+}

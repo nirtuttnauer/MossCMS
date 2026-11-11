@@ -1,0 +1,24 @@
+[
+  {
+    "data": {
+      "body": "Loaded before the upgrade. Asset de7be2b7-e5d1-4508-9c6c-4da0930a02c9.",
+      "secret": "moss-028-private-marker",
+      "title": "Upgrade rehearsal note"
+    },
+    "id": "9718195e-ef9b-4871-b8cb-d1497fc4fbd9",
+    "slug": "upgrade-rehearsal-note",
+    "status": "published",
+    "version": 1
+  },
+  {
+    "data": {
+      "body": "Draft kept across the upgrade.",
+      "secret": "moss-028-private-marker",
+      "title": "Upgrade rehearsal draft"
+    },
+    "id": "be83b471-c54a-41d1-94ac-ec18813f2104",
+    "slug": "upgrade-rehearsal-draft",
+    "status": "draft",
+    "version": 1
+  }
+]

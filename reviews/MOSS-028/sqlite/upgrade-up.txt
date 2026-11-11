@@ -1,0 +1,17 @@
+label: local
+date: 2026-11-11T18:33:49Z
+phase: sqlite
+command:
+docker compose up -d --no-build --force-recreate
+exit_code: 0
+---- output ----
+ Container moss028-db-1  Recreate
+ Container moss028-db-1  Recreated
+ Container moss028-app-1  Recreate
+ Container moss028-app-1  Recreated
+ Container moss028-db-1  Starting
+ Container moss028-db-1  Started
+ Container moss028-db-1  Waiting
+ Container moss028-db-1  Exited
+ Container moss028-app-1  Starting
+ Container moss028-app-1  Started

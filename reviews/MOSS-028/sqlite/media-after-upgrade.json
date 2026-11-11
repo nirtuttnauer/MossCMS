@@ -1,0 +1,25 @@
+{
+  "files": [
+    {
+      "bytes": 1572,
+      "path": "7d88552a-8c51-475b-9cff-f633b72737f3/9c698321-663c-4250-939a-7a126a905231",
+      "sha256": "1edeee3063250dc049dee1dcfe821008d99f5ada82e53d0e1dcc8103d87cfcde"
+    },
+    {
+      "bytes": 178,
+      "path": "7d88552a-8c51-475b-9cff-f633b72737f3/9c698321-663c-4250-939a-7a126a905231.320.webp",
+      "sha256": "1a61b275de0b016b18df2b5bb46087610c9c17b6786829d3df473977965fc2fd"
+    },
+    {
+      "bytes": 450,
+      "path": "7d88552a-8c51-475b-9cff-f633b72737f3/9c698321-663c-4250-939a-7a126a905231.640.webp",
+      "sha256": "d9aa898bbd7d1664a22fe4b243a495001698ce2599dda1e06647b80723b13f57"
+    },
+    {
+      "bytes": 656,
+      "path": "7d88552a-8c51-475b-9cff-f633b72737f3/9c698321-663c-4250-939a-7a126a905231.800.webp",
+      "sha256": "e51ad8d25ac3f37343bdba9c50744d496e25780255abb6e5bd59dcc6cb8a366a"
+    }
+  ],
+  "manifest_sha256": "fb8df9d3caec3229a986116a7da103585752281fefceb4eb8597fbe004400a72"
+}

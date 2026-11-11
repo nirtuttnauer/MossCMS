@@ -1,0 +1,14 @@
+label: local
+date: 2026-11-11T18:33:52Z
+phase: sqlite
+command:
+docker compose logs --no-color --tail 400 app
+exit_code: 0
+---- output ----
+app-1  | /app/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5: AuthlibDeprecationWarning: The httpx module is deprecated; please use httpx2 instead.
+app-1  |   from ._compat import httpx2
+app-1  | INFO:     Started server process [1]
+app-1  | INFO:     Waiting for application startup.
+app-1  | INFO:     Application startup complete.
+app-1  | INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+app-1  | INFO:     172.18.0.1:50730 - "GET /ready HTTP/1.1" 200 OK

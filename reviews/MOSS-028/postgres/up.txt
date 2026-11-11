@@ -1,0 +1,23 @@
+label: local
+date: 2026-11-11T18:33:08Z
+phase: postgres
+command:
+docker compose up -d --no-build
+exit_code: 0
+---- output ----
+ Network moss028_default  Creating
+ Network moss028_default  Created
+ Volume moss028_moss_assets  Creating
+ Volume moss028_moss_assets  Created
+ Volume moss028_moss_data  Creating
+ Volume moss028_moss_data  Created
+ Container moss028-db-1  Creating
+ Container moss028-db-1  Created
+ Container moss028-app-1  Creating
+ Container moss028-app-1  Created
+ Container moss028-db-1  Starting
+ Container moss028-db-1  Started
+ Container moss028-db-1  Waiting
+ Container moss028-db-1  Healthy
+ Container moss028-app-1  Starting
+ Container moss028-app-1  Started

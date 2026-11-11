@@ -1,0 +1,10 @@
+{
+  "MOSS_ENV": "production",
+  "MOSS_SKIP_AUTH": "false",
+  "MOSS_USE_SQLITE": "true",
+  "MOSS_PUBLIC_URL": "https://cms.moss.test:8443",
+  "MOSS_ORIGINS": "https://cms.moss.test:8443",
+  "MOSS_PORT": "8001",
+  "POSTGRES_DB": "mosscms_recovery",
+  "POSTGRES_USER": "mosscms"
+}

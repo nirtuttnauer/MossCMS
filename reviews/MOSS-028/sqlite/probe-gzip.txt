@@ -1,0 +1,9 @@
+label: local
+date: 2026-11-11T18:33:47Z
+phase: sqlite
+command:
+gzip -t /tmp/moss028/probe-sqlite/20261111T183347Z.sqlite-data.tar.gz
+exit_code: 1
+---- output ----
+
+gzip: /tmp/moss028/probe-sqlite/20261111T183347Z.sqlite-data.tar.gz: not in gzip format

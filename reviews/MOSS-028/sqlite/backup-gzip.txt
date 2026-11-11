@@ -1,0 +1,7 @@
+label: local
+date: 2026-11-11T18:33:48Z
+phase: sqlite
+command:
+gzip -t /tmp/moss028/backup-sqlite/20261111T183347Z.sqlite-data.tar.gz
+exit_code: 0
+---- output ----

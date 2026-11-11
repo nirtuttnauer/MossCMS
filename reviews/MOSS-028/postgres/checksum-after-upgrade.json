@@ -1,0 +1,81 @@
+{
+  "alembic_version": "0014",
+  "tables": {
+    "alembic_version": {
+      "rows": 1,
+      "sha256_standin": "9d148222401cc8908f134ad8cba89757"
+    },
+    "assets": {
+      "rows": 1,
+      "sha256_standin": "42f3a82fdac839ca8f3c4cfaa451d29b"
+    },
+    "audit": {
+      "rows": 5,
+      "sha256_standin": "a8ba41c2a6eb8e270fb2273cd6c131ea"
+    },
+    "content_types": {
+      "rows": 1,
+      "sha256_standin": "d86745864838e1b694f1b5d98d4f4475"
+    },
+    "draft_receipts": {
+      "rows": 0,
+      "sha256_standin": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "entries": {
+      "rows": 2,
+      "sha256_standin": "8a67f0040e2d98138967d9980cfa2b93"
+    },
+    "entry_field_indexes": {
+      "rows": 9,
+      "sha256_standin": "2cfafda3122473e8ab5878b53337384e"
+    },
+    "memberships": {
+      "rows": 1,
+      "sha256_standin": "1d4b661667ce91f7ecda542b65a37d35"
+    },
+    "oauth_identities": {
+      "rows": 0,
+      "sha256_standin": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "preview_grants": {
+      "rows": 0,
+      "sha256_standin": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "projects": {
+      "rows": 1,
+      "sha256_standin": "f8a3078f7cb83f32f83cafb346d21b9b"
+    },
+    "publication_events": {
+      "rows": 1,
+      "sha256_standin": "ce6884b189a17db5f182892b5abd0cfa"
+    },
+    "revisions": {
+      "rows": 2,
+      "sha256_standin": "a7a0effffb321e44d4f543c5fcccea89"
+    },
+    "schema_revisions": {
+      "rows": 1,
+      "sha256_standin": "9351b3d50769e5c7089dfc98385a91b9"
+    },
+    "tokens": {
+      "rows": 1,
+      "sha256_standin": "29f0950dc4b8a3523d7c6c284ff5a78c"
+    },
+    "users": {
+      "rows": 1,
+      "sha256_standin": "e422853a91746a06bb92d5f2398293d0"
+    },
+    "webhook_deliveries": {
+      "rows": 0,
+      "sha256_standin": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "webhooks": {
+      "rows": 0,
+      "sha256_standin": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "website_paths": {
+      "rows": 0,
+      "sha256_standin": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+label: local
+date: 2026-11-11T18:34:05Z
+phase: sqlite
+command:
+docker network inspect moss028_default --format {{.Id}}
+exit_code: 0
+---- output ----
+031b609a468e4a9c82b268279ba7552b810d29f23f738ef5b23190e4f32ebe7e
