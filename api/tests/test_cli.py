@@ -97,7 +97,14 @@ def test_serve_failure_disposes_and_preserves_failure(operator, monkeypatch):
     assert raised.value is failure
     assert calls.mock_calls == [
         call.migrate(operator.engine),
-        call.serve("app.main:app", host="0.0.0.0", port=8123, log_level="info", timeout_graceful_shutdown=20),
+        call.serve(
+            "app.main:app",
+            host="0.0.0.0",
+            port=8123,
+            log_level="info",
+            timeout_graceful_shutdown=20,
+            proxy_headers=False,
+        ),
         call.dispose(),
     ]
 

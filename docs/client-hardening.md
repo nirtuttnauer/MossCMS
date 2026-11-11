@@ -108,6 +108,104 @@ The production admin is one same-origin document. Its scripts and styles are `/a
 
 `connect-src 'self'` allows the admin's calls to `/auth`, `/api`, and `/graphql` on the proxy origin. It does not allow a browser call to another host.
 
+## Private admin and public delivery
+
+The server block above terminates TLS for the admin. Its `location /` forwards every path. That listener stays on the private network. Do not publish it to the public internet. Two deployments follow. Variant B is the recommended default when the website renders on its own server. Variant A is for a browser that calls delivery on the CMS origin.
+
+The route table is generated from the FastAPI router by `api/scripts/classify_routes.py`. A route with no class fails the test. A class whose route is no longer on the router fails the test. Public rows are an allowlist. A new path stays off that list until a public rule names it.
+
+<!-- moss-route-classification:start -->
+| Method | Path | Exposure |
+| --- | --- | --- |
+| DELETE | `/api/team/invitations/{token_id}` | private |
+| DELETE | `/api/team/{user_id}` | private |
+| DELETE | `/api/tokens/{token_id}` | private |
+| DELETE | `/api/webhooks/{id}` | private |
+| GET | `/` | private |
+| GET | `/api/migration/limits` | private |
+| GET | `/api/team` | private |
+| GET | `/api/tokens` | private |
+| GET | `/api/webhooks` | private |
+| GET | `/auth/me` | private |
+| GET | `/auth/oauth/{provider}/callback` | private |
+| GET | `/auth/oauth/{provider}/start` | private |
+| GET | `/auth/status` | private |
+| GET | `/delivery/entries` | public |
+| GET | `/delivery/entries/{id}` | public |
+| GET | `/delivery/entries/{id}/resolved-assets` | public |
+| GET | `/delivery/types` | public |
+| GET | `/delivery/types/{typeKey}` | public |
+| GET | `/delivery/website/redirects` | public |
+| GET | `/delivery/website/reserved-paths` | public |
+| GET | `/docs` | private |
+| GET | `/docs/oauth2-redirect` | private |
+| GET | `/graphql` | private |
+| GET | `/health` | public |
+| GET | `/media/{id}` | public |
+| GET | `/media/{id}/variant/{width}` | public |
+| GET | `/metrics` | private |
+| GET | `/openapi.json` | private |
+| GET | `/ready` | private |
+| GET | `/redoc` | private |
+| HEAD | `/` | private |
+| HEAD | `/delivery/entries` | public |
+| HEAD | `/delivery/entries/{id}` | public |
+| HEAD | `/delivery/entries/{id}/resolved-assets` | public |
+| HEAD | `/delivery/types` | public |
+| HEAD | `/delivery/types/{typeKey}` | public |
+| HEAD | `/delivery/website/redirects` | public |
+| HEAD | `/delivery/website/reserved-paths` | public |
+| HEAD | `/docs` | private |
+| HEAD | `/docs/oauth2-redirect` | private |
+| HEAD | `/openapi.json` | private |
+| HEAD | `/redoc` | private |
+| PATCH | `/api/project` | private |
+| PATCH | `/api/project/locales` | private |
+| PATCH | `/api/project/preview` | private |
+| PATCH | `/api/projects/{project_id}` | private |
+| PATCH | `/api/team/{user_id}` | private |
+| POST | `/api/assets` | private |
+| POST | `/api/migration/export` | private |
+| POST | `/api/migration/import` | private |
+| POST | `/api/preview/redeem` | private |
+| POST | `/api/projects` | private |
+| POST | `/api/team/invitations` | private |
+| POST | `/api/tokens` | private |
+| POST | `/api/webhooks` | private |
+| POST | `/auth/accept` | private |
+| POST | `/auth/login` | private |
+| POST | `/auth/logout` | private |
+| POST | `/auth/oauth/{provider}/link` | private |
+| POST | `/auth/setup` | private |
+| POST | `/delivery/graphql` | public |
+| POST | `/graphql` | private |
+<!-- moss-route-classification:end -->
+
+`POST /api/preview/redeem` is private in this table. The website server redeems a preview on the private network, together with the delivery token. Add that path to the allowlist when editors redeem previews from outside the private network. The configs in this section leave it private.
+
+`/openapi.json`, `/docs`, and `/redoc` are private in both variants. `GET /health` is the public liveness body `{"status":"ok"}`. It has no version, configuration, or database detail. `/ready` checks the database and stays on the private listener.
+
+### Variant A — public allowlist proxy
+
+Run the private admin listener on a private address and publish a second proxy for the public internet. The checked config is [reviews/MOSS-059/nginx-allowlist.conf](../reviews/MOSS-059/nginx-allowlist.conf). It forwards a request when both the raw target and the method are on the public list:
+
+- `GET /health`
+- `GET` and `HEAD` under `/delivery/`
+- `POST /delivery/graphql`
+- `GET /media/{id}` and `GET /media/{id}/variant/{width}` for a signed media id
+
+Every other target is `404` and is not forwarded. That includes a new route added later, a private prefix, and these path shapes: `/delivery/../api/…`, `%2e%2e`, `%2F`, `//api`, `/DELIVERY`, `/delivery;/…`, and a trailing dot. A request that carries `X-HTTP-Method-Override`, `X-Original-URL`, or `X-Rewrite-URL` is `404` as well and does not reach the app.
+
+The app records the TCP peer as the client for rate limits, the login, setup, and invitation audit rows, and the request log. It does not read `X-Forwarded-For` or `Forwarded`. `python -m app.cli serve` starts Uvicorn with proxy headers disabled, so a value supplied by the public client does not replace the proxy's address. The checked compose file is [reviews/MOSS-059/variant-a.compose.yaml](../reviews/MOSS-059/variant-a.compose.yaml).
+
+### Variant B — no public CMS listener
+
+Use this when the website server calls `/delivery/*` on the private network. The CMS service has no published host port. The website container uses `http://app:8001`. Outbound webhooks use `MOSS_WEBHOOK_ORIGINS` for that private website origin. They do not need a public CMS port. Signed media links are fetched on that same network. The checked compose file is [reviews/MOSS-059/variant-b.compose.yaml](../reviews/MOSS-059/variant-b.compose.yaml). `docker compose config` shows no `ports` entry for the CMS service, and a connection from the host to the CMS port fails.
+
+### Editors on the private network
+
+Editors open the admin on the private listener. A phone or a laptop that is off that network cannot reach the admin until it joins the network, for example through a VPN the operator already runs. This guide does not require a paid service and does not name a product to buy. Putting the admin on the public internet removes the boundary these variants draw.
+
 ## Check the headers with curl
 
 From the rehearsal host, or from a client machine that trusts the proxy certificate:
