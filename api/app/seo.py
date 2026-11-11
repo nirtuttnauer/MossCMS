@@ -20,7 +20,9 @@ PAGES = {"sitePage", "sitePost", "siteProject"}
 SUPPORTING = {"siteProfile", "siteSlide"}
 SEVERITIES = {"critical": 0, "warning": 1, "info": 2}
 NOT_CHECKED = [
-    "Website HTML",
+    "Website HTML. The example site starter flags common accessibility problems before you publish: "
+    "empty buttons (button-name), unlabeled fields (label), html lang (html-has-lang, html-lang-valid), "
+    "image alt (image-alt), and link names (link-name).",
     "Canonical tags",
     "Robots",
     "Sitemaps",
@@ -29,6 +31,8 @@ NOT_CHECKED = [
     "Indexing",
     "Captured schedules",
 ]
+# A public field with one of these names is the entry's content language.
+LANGUAGE_PATHS = ("language", "locale", "contentLanguage", "lang")
 # Ignore HTML tokens, matching ReactMarkdown's skipHtml. Never render audit input.
 MARKDOWN = MarkdownIt("commonmark", {"breaks": True})
 
@@ -158,6 +162,140 @@ def walk_value(field, value, locales, path, locale):
 
 def text(value):
     return value.strip() if isinstance(value, str) else ""
+
+
+def inline_has_empty_link(children) -> bool:
+    """True when a Markdown link has no text and no image description."""
+    index = 0
+    while index < len(children):
+        token = children[index]
+        if token.type != "link_open":
+            index += 1
+            continue
+        index += 1
+        depth = 1
+        words: list[str] = []
+        descriptions: list[str] = []
+        while index < len(children) and depth:
+            child = children[index]
+            if child.type == "link_open":
+                depth += 1
+            elif child.type == "link_close":
+                depth -= 1
+                if depth == 0:
+                    break
+            elif child.type in {"text", "code_inline"} and isinstance(child.content, str):
+                words.append(child.content)
+            elif child.type == "image" and isinstance(child.content, str):
+                descriptions.append(child.content)
+            index += 1
+        if not text("".join(words)) and not any(text(item) for item in descriptions):
+            return True
+        index += 1
+    return False
+
+
+def markdown_has_empty_link(tokens) -> bool:
+    return any(inline_has_empty_link(token.children or []) for token in tokens)
+
+
+def language_field(fields):
+    """Return a top-level public text or enum field and its name, or (None, None)."""
+    for name in LANGUAGE_PATHS:
+        field = next((item for item in fields if item.get("name") == name and not item.get("private")), None)
+        if field and field.get("type") in {"text", "enum"}:
+            return field, name
+    return None, None
+
+
+def present_locales(fields, data, path="data"):
+    """Yield (locale key, field path) for locale keys actually stored on public fields."""
+    if not isinstance(data, dict):
+        return
+    for field in fields:
+        if field.get("private"):
+            continue
+        name = field.get("name")
+        value = data.get(name) if isinstance(name, str) else None
+        current = f"{path}.{name}" if isinstance(name, str) else path
+        yield from present_in_field(field, value, current)
+
+
+def present_in_field(field, value, path):
+    if field.get("private") or value is None:
+        return
+    if field.get("localized"):
+        if isinstance(value, dict):
+            for key, translated in value.items():
+                if isinstance(key, str):
+                    yield key, f"{path}.{key}"
+                yield from present_in_field({**field, "localized": False}, translated, f"{path}.{key}")
+        return
+    if field.get("type") == "object" and isinstance(value, dict):
+        yield from present_locales(field.get("fields") or [], value, path)
+    elif field.get("type") == "list" and isinstance(value, list):
+        item = field.get("item") or {}
+        for index, child in enumerate(value):
+            yield from present_in_field(item, child, f"{path}[{index}]")
+
+
+def check_content_language(record, definition, data, locales, emit):
+    """Warn when a content language is missing or outside the workspace locales."""
+    field, name = language_field(definition.fields)
+    if field is not None:
+        raw = data.get(name) if isinstance(data, dict) else None
+        path = "data." + name
+        if field.get("localized"):
+            translations = raw if isinstance(raw, dict) else {}
+            if not translations:
+                emit(
+                    record,
+                    "invalid_content_language",
+                    "warning",
+                    path,
+                    None,
+                    "This entry has no content language.",
+                    "Choose a content language from the workspace locales.",
+                )
+            for key, translated in translations.items():
+                if isinstance(key, str):
+                    report_language_value(record, text(translated), path + "." + key, key, locales, emit)
+        else:
+            report_language_value(record, text(raw), path, None, locales, emit)
+    for locale_key, locale_path in present_locales(definition.fields, data):
+        if locale_key not in locales:
+            emit(
+                record,
+                "invalid_content_language",
+                "warning",
+                locale_path,
+                locale_key,
+                f"The content language {locale_key} is not a workspace locale.",
+                "Choose a content language from the workspace locales.",
+            )
+
+
+def report_language_value(record, candidate, path, language, locales, emit):
+    if not candidate:
+        emit(
+            record,
+            "invalid_content_language",
+            "warning",
+            path,
+            language,
+            "This entry has no content language.",
+            "Choose a content language from the workspace locales.",
+        )
+    elif candidate not in locales:
+        emit(
+            record,
+            "invalid_content_language",
+            "warning",
+            path,
+            language,
+            f"The content language {candidate} is not a workspace locale.",
+            "Choose a content language from the workspace locales.",
+        )
 
 
 def normalized(value):
@@ -430,6 +568,18 @@ def audit_records(
                         source = child.attrGet("src") or ""
                         if isinstance(source, str) and source.startswith("asset:"):
                             check_asset(record, source[6:], path, language, markdown=True)
+                if markdown_has_empty_link(tokens):
+                    emit(
+                        record,
+                        "empty_link",
+                        "critical",
+                        path,
+                        language,
+                        "A link has no text and no image description.",
+                        "Add link text, or describe the image inside the link. "
+                        "This flags common accessibility problems before you publish.",
+                    )
+        check_content_language(record, definition, data, locales, emit)
 
     for (label, language, _), group in duplicates.items():
         if len(group) > 1:

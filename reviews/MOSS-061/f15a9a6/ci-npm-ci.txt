@@ -1,0 +1,13 @@
+label: local
+date: 2026-11-11T18:29:34Z
+sha: f15a9a654e2712bd4609e82573fde315ff57eca5
+note: continued after scripts/verify.sh stopped on pip-audit; same command as the script
+workdir: ci
+command:
+npm ci
+---- output ----
+
+added 3 packages, and audited 4 packages in 384ms
+
+found 0 vulnerabilities
+exit_code: 0

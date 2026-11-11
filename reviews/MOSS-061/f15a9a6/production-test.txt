@@ -1,0 +1,91 @@
+label: local
+date: 2026-11-11T18:31:56Z
+sha: f15a9a654e2712bd4609e82573fde315ff57eca5
+note: continued after scripts/verify.sh stopped on pip-audit; same command as the script
+workdir: ci
+command:
+npm test
+---- output ----
+
+> test
+> playwright test
+
+
+Running 2 tests using 1 worker
+
+(node:19596) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 production.spec.mjs:7:1 › production readiness and packaged branding assets (37ms)
+(node:19608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 production.spec.mjs:21:1 › production setup, login and branding on desktop and mobile (144ms)
+
+
+  1) production.spec.mjs:7:1 › production readiness and packaged branding assets ───────────────────
+
+    Error: apiRequestContext.get: read ECONNRESET
+    Call log:
+      - → GET http://localhost:18081/ready
+        - user-agent: Playwright/1.64.0 (x64; ubuntu 24.04) node/22.23
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+       6 |
+       7 | test('production readiness and packaged branding assets', async ({ request }) => {
+    >  8 |   expect((await request.get('/ready')).status()).toBe(200);
+         |                         ^
+       9 |   for (const [file, mime] of [['moss-symbol-v2.png', 'image/png'], ['moss-arch-v2.webp', 'image/webp']]) {
+      10 |     const response = await request.get(`/brand/${file}`);
+      11 |     expect(response.status()).toBe(200);
+        at /agent/repos/MossCMS/ci/production.spec.mjs:8:25
+
+    Error Context: test-results/production-production-readiness-and-packaged-branding-assets/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/production-production-readiness-and-packaged-branding-assets/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/production-production-readiness-and-packaged-branding-assets/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) production.spec.mjs:21:1 › production setup, login and branding on desktop and mobile ─────────
+
+    Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:18081/
+    Call log:
+      - navigating to "http://localhost:18081/", waiting until "domcontentloaded"
+
+
+      68 |   };
+      69 |
+    > 70 |   await page.goto('/', { waitUntil: 'domcontentloaded' });
+         |              ^
+      71 |   await expect(page.getByRole('heading', { name: 'Create your workspace' })).toBeVisible();
+      72 |   await loginLayout('setup-desktop', true);
+      73 |   await page.getByLabel('Your name', { exact: true }).fill('Docker Smoke Test');
+        at /agent/repos/MossCMS/ci/production.spec.mjs:70:14
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/production-production-setu-13448-nding-on-desktop-and-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/production-production-setu-13448-nding-on-desktop-and-mobile/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/production-production-setu-13448-nding-on-desktop-and-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/production-production-setu-13448-nding-on-desktop-and-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    production.spec.mjs:7:1 › production readiness and packaged branding assets ────────────────────
+    production.spec.mjs:21:1 › production setup, login and branding on desktop and mobile ──────────
+
+To open last HTML report run:
+
+  npx playwright show-report
+
+exit_code: 1
