@@ -1,0 +1,6 @@
+label: local
+sha: c0ca88b2ce3918db02d616bdfda02a91edf5cf77
+short_sha: c0ca88b
+started: 2026-11-11T18:22:12Z
+git status --porcelain: empty
+verify.sh: pip-audit failed with exit 1
