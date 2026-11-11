@@ -1,0 +1,5 @@
+COMMAND: uv export --frozen --all-groups --no-emit-project -o /tmp/moss-requirements.txt && uv run --with pip-audit==2.10.1 pip-audit --progress-spinner off -r /tmp/moss-requirements.txt
+export:0
+pip-audit 2.10.1
+No known vulnerabilities found
+pip_audit:0

@@ -1,0 +1,11 @@
+LABEL: local positive control
+DATE: 2026-10-29T04:58:24Z
+BRANCH: cursor/moss-055-positive-control
+SHA: 721b00a2a54d836278ed156343dfad9db65ba003
+BASE: dfe7eda8d9269b056b3420300d58aabc6dd2501e
+STATUS:
+DIFFSTAT:
+ planted-test-secret.txt |  1 +
+ web/package-lock.json   | 14 +++++++-------
+ web/package.json        |  2 +-
+ 3 files changed, 9 insertions(+), 8 deletions(-)

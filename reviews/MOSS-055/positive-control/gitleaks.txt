@@ -1,0 +1,23 @@
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+4:58AM INF Unknown SCM platform. Use --platform to include links in findings. host=
+Finding:     REDACTED
+Secret:      REDACTED
+RuleID:      slack-bot-token
+Entropy:     4.945486
+File:        planted-test-secret.txt
+Line:        1
+Commit:      721b00a2a54d836278ed156343dfad9db65ba003
+Author:      Cursor Agent
+Email:       cursoragent@cursor.com
+Date:        2026-10-29T04:58:24Z
+Fingerprint: 721b00a2a54d836278ed156343dfad9db65ba003:planted-test-secret.txt:slack-bot-token:1
+
+4:58AM INF 88 commits scanned.
+4:58AM INF scanned ~6573053 bytes (6.57 MB) in 357ms
+4:58AM WRN leaks found: 1

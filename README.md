@@ -466,7 +466,6 @@ cd web
 npm run check
 npm test
 npm run build
-npm audit --audit-level=high
 ```
 
 ```sh
@@ -474,7 +473,12 @@ cd example-site
 npm run check
 npm test
 npm run build
-npm audit --audit-level=high
+```
+
+Audits are `scripts/verify.sh` from MOSS-054, so the local gate and CI stay the same script. From the repository root, CI runs:
+
+```sh
+scripts/verify.sh hosted
 ```
 
 CI runs the same checks. Tests cover authorization and workspace boundaries, token scopes/drafts/private fields, team roles, recovery, schema changes, revisions, scheduling, assets, generated GraphQL types, legacy migration, and core frontend interactions. External OAuth and S3 services require your credentials; unit coverage does not establish that a particular provider or bucket is configured correctly.
