@@ -1,0 +1,8 @@
+label: local
+date: 2026-11-11T19:07:47Z
+phase: postgres
+command:
+docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+exit_code: 0
+---- output ----
+0 d41d8cd98f00b204e9800998ecf8427e

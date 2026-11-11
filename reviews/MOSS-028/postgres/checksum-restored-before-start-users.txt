@@ -1,0 +1,8 @@
+label: local
+date: 2026-11-11T19:08:07Z
+phase: postgres
+command:
+docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+exit_code: 0
+---- output ----
+1 092b0f42f9076b65ba46cd59312b9920

@@ -1,0 +1,8 @@
+label: local
+date: 2026-11-11T19:08:04Z
+phase: postgres
+command:
+python3 scripts/restore.py /tmp/moss028/backup-postgres/20261111T190745Z.dump --target mosscms_recovery --confirm-target mosscms_recovery
+exit_code: 0
+---- output ----
+Restored into mosscms_recovery

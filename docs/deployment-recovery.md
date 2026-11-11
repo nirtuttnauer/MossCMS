@@ -77,8 +77,10 @@ Stop the app to pause editors, scheduler and outbox. Stop the website too if use
 
 ```sh
 docker compose stop app
-python3 scripts/backup.py
+MOSS_PULL_POLICY=never python3 scripts/backup.py
 ```
+
+`scripts/backup.py` stores the stdout of `docker compose run`. The app service defaults to `pull_policy: build`, and `docker compose run` has no `--no-build` flag. With that default the run builds the checkout, writes the build log to stdout, and moves the Compose image tag onto the new build. The saved `.media.tar.gz` is then the build log rather than a gzip archive. `MOSS_PULL_POLICY=never` uses the image already present. Keep the retained image tag recorded above on a different name; do not point `MOSS_IMAGE` at that retained tag while a build policy is still active.
 
 The backup tool uses a temporary container for the media archive and bypasses application startup, so the app may remain stopped. It creates restrictive timestamped `.dump` and `.media.tar.gz` files under `backups/`. Restart with `docker compose up -d --no-build` when backup completes; recreate/start the website if it was stopped. `--database-only` omits media and is appropriate only when you have a separate matching media backup. Copy backups off-host and validate recovery regularly. S3 objects require their own backup/versioning procedure.
 
@@ -101,11 +103,14 @@ Use a separate empty database and a **new** media volume. Keep the original data
    services:
      app:
        image: mosscms:backup-TIMESTAMP
+       pull_policy: never
        volumes: !override
          - recovered_assets:/data
    volumes:
      recovered_assets:
    ```
+
+   `pull_policy: never` keeps the retained tag in place. `scripts/restore_media.py` restores through `docker compose run`, which has no `--no-build` flag. Leaving the default `build` policy rebuilds `mosscms:backup-TIMESTAMP` from the current checkout, and the following `up --no-build` starts that new build.
 
    If the website is used, also set its matching retained `example-site.image` in this override. Keep PostgreSQL at the original major version.
 
@@ -130,9 +135,11 @@ Stop the app and optional website before archiving `/data`; this captures the SQ
 docker compose stop app
 umask 077
 mkdir -p backups
-docker compose run --rm --no-deps -T --entrypoint tar app -C /data -czf - . > "backups/$(date -u +%Y%m%dT%H%M%SZ).sqlite-data.tar.gz"
+MOSS_PULL_POLICY=never docker compose run --rm --no-deps -T --entrypoint tar app -C /data -czf - . > "backups/$(date -u +%Y%m%dT%H%M%SZ).sqlite-data.tar.gz"
 docker compose up -d --no-build
 ```
+
+Set `MOSS_PULL_POLICY=never` for the archive command for the same reason as the PostgreSQL backup. Without it, the redirected stdout is the image build log and the file is not gzip. Use the recovery override above, including `pull_policy: never`, when restoring the archive.
 
 Check that the archive command succeeds before retaining the backup; discard an incomplete archive. To recover, stop writers and select the retained image plus a **new empty** assets volume using the recovery override above. Restore the archive with `python3 scripts/restore_media.py backups/TIMESTAMP.sqlite-data.tar.gz --confirm-empty-volume`; this restores the SQLite file and media together without starting the app. Keep `MOSS_USE_SQLITE=true` and the matching secrets, then start with `docker compose up -d --no-build`. Verify readiness, sign-in, content and media before reopening access. Keep the original volume until recovery is confirmed.
 
