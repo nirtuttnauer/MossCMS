@@ -1,5 +1,5 @@
 label: local
-date: 2026-11-11T18:33:35Z
+date: 2026-11-11T19:08:08Z
 phase: postgres
 command:
 sudo iptables-legacy -S DOCKER-FORWARD
@@ -15,3 +15,5 @@ exit_code: 0
 -A DOCKER-FORWARD -i br-c2c0b43b9b6a -j ACCEPT
 -A DOCKER-FORWARD -i br-61ed50c84bc4 -j ACCEPT
 -A DOCKER-FORWARD -i br-8da2310d02f1 -j ACCEPT
+-A DOCKER-FORWARD -i br-031b609a468e -j ACCEPT
+-A DOCKER-FORWARD -i br-a22742f5e5fe -j ACCEPT

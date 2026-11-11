@@ -1,6 +1,6 @@
 services:
   app:
-    image: mosscms:backup-sqlite-20261111T183347Z
+    image: mosscms:backup-sqlite-20261111T190821Z
     pull_policy: never
     volumes: !override
       - sqlite_recovered_assets:/data

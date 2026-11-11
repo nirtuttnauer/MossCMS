@@ -1,8 +1,8 @@
 label: local
-date: 2026-11-11T18:33:35Z
+date: 2026-11-11T19:08:08Z
 phase: postgres
 command:
 docker network inspect moss028_default --format {{.Id}}
 exit_code: 0
 ---- output ----
-8da2310d02f1a89c1ff6ac761ff1838a5e065ee3a3b5062707a1adf325dedc17
+a22742f5e5febc58335a3dd4ea993b0083ca7c7939f349ff03ca6b3e947fe671

@@ -1,8 +1,8 @@
 label: local
-date: 2026-11-11T18:33:37Z
+date: 2026-11-11T19:08:10Z
 phase: postgres
 command:
-docker inspect --format {{.Image}} 818a094795930b151b195fb7ae4223c427e5c4d795df5bf57613bd27207e86b3
+docker inspect --format {{.Image}} 827a2615fddd04a0e90315c8844e5b3bf05312faf41fbd393a6767c20874c6f9
 exit_code: 0
 ---- output ----
 sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344

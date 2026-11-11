@@ -371,7 +371,7 @@ def load_content() -> dict:
     fields = [
         {"name": "title", "type": "text", "required": True},
         {"name": "body", "type": "richText"},
-        {"name": "secret", "type": "text", "private": True},
+        {"name": "marker", "type": "text", "private": True},
     ]
     content_type = cms.gql(
         "mutation($key:String!,$fields:JSON!){saveContentType(key:$key,name:$key,fields:$fields){id key version}}",
@@ -411,7 +411,7 @@ def load_content() -> dict:
             "data": {
                 "title": "Upgrade rehearsal note",
                 "body": f"Loaded before the upgrade. Asset {asset['id']}.",
-                "secret": "moss-028-private-marker",
+                "marker": "upgrade-rehearsal-marker",
             },
         },
     )["saveEntry"]
@@ -424,7 +424,7 @@ def load_content() -> dict:
             "data": {
                 "title": "Upgrade rehearsal draft",
                 "body": "Draft kept across the upgrade.",
-                "secret": "moss-028-private-marker",
+                "marker": "upgrade-rehearsal-marker",
             },
         },
     )["saveEntry"]

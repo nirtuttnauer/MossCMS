@@ -1,5 +1,5 @@
 label: local
-date: 2026-11-11T18:33:01Z
+date: 2026-11-11T19:07:34Z
 command:
 docker build --tag mosscms:moss028-1d6d0ef /tmp/moss028-old
 docker build --tag mosscms:moss028-58a0f15 /agent/repos/MossCMS

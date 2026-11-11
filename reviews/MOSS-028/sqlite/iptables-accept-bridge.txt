@@ -1,7 +1,7 @@
 label: local
-date: 2026-11-11T18:33:44Z
+date: 2026-11-11T19:08:17Z
 phase: sqlite
 command:
-sudo iptables-legacy -A DOCKER-FORWARD -i br-031b609a468e -j ACCEPT
+sudo iptables-legacy -A DOCKER-FORWARD -i br-670485be4e0d -j ACCEPT
 exit_code: 0
 ---- output ----

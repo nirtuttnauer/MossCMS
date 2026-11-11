@@ -1,4 +1,4 @@
-interface: br-8da2310d02f1
+interface: br-a22742f5e5fe
 policy:
 -P FORWARD DROP
 -A FORWARD -j DOCKER-USER
@@ -15,5 +15,7 @@ DOCKER-FORWARD:
 -A DOCKER-FORWARD -i br-c2c0b43b9b6a -j ACCEPT
 -A DOCKER-FORWARD -i br-61ed50c84bc4 -j ACCEPT
 -A DOCKER-FORWARD -i br-8da2310d02f1 -j ACCEPT
+-A DOCKER-FORWARD -i br-031b609a468e -j ACCEPT
+-A DOCKER-FORWARD -i br-a22742f5e5fe -j ACCEPT
 
 bridge accept already present: True

@@ -172,3 +172,177 @@ print(json.dumps({'manifest_sha256': manifest, 'files': files}, sort_keys=True))
 2026-11-11T18:33:42Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
 2026-11-11T18:33:42Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
 2026-11-11T18:33:43Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:07:34Z exit=0 python3 scripts/configure.py --production --public-url https://cms.moss.test:8443
+2026-11-11T19:07:40Z exit=0 docker compose up -d --no-build
+2026-11-11T19:07:40Z exit=0 docker network inspect moss028_default --format {{.Id}}
+2026-11-11T19:07:40Z exit=0 sudo iptables-legacy -S FORWARD
+2026-11-11T19:07:40Z exit=0 sudo iptables-legacy -S DOCKER-FORWARD
+2026-11-11T19:07:40Z exit=0 sudo iptables-legacy -A DOCKER-FORWARD -i br-a22742f5e5fe -j ACCEPT
+2026-11-11T19:07:43Z exit=0 docker compose stop app
+2026-11-11T19:07:43Z exit=0 docker image tag sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344 mosscms:moss028-probe
+2026-11-11T19:07:45Z exit=0 python3 scripts/backup.py --directory /tmp/moss028/probe-postgres
+2026-11-11T19:07:45Z exit=1 gzip -t /tmp/moss028/probe-postgres/20261111T190743Z.media.tar.gz
+2026-11-11T19:07:45Z exit=0 python3 scripts/backup.py --directory /tmp/moss028/backup-postgres
+2026-11-11T19:07:45Z exit=0 gzip -t /tmp/moss028/backup-postgres/20261111T190745Z.media.tar.gz
+2026-11-11T19:07:46Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:46Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:46Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:46Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:46Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:46Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:46Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:46Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:47Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:47Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:47Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:47Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:47Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:47Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:47Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:47Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:48Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:48Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:48Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:48Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:48Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib, sys
+root = pathlib.Path('/data')
+skip = set(sys.argv[1:])
+files = []
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    rel = str(path.relative_to(root))
+    if rel in skip:
+        continue
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    files.append({'path': rel, 'sha256': digest, 'bytes': path.stat().st_size})
+manifest = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+print(json.dumps({'manifest_sha256': manifest, 'files': files}, sort_keys=True))
+
+2026-11-11T19:07:48Z exit=0 docker image tag sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344 mosscms:backup-20261111T190745Z
+2026-11-11T19:07:49Z exit=0 docker compose up -d --no-build --no-deps --force-recreate app
+2026-11-11T19:07:49Z exit=0 docker network inspect moss028_default --format {{.Id}}
+2026-11-11T19:07:49Z exit=0 sudo iptables-legacy -S FORWARD
+2026-11-11T19:07:49Z exit=0 sudo iptables-legacy -S DOCKER-FORWARD
+2026-11-11T19:07:51Z exit=0 docker compose logs --no-color --tail 400 app
+2026-11-11T19:07:51Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:51Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:51Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:51Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:51Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:51Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:51Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:52Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:52Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:52Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:52Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:52Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:52Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:52Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:52Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:53Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:53Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:53Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:53Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:53Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:53Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+2026-11-11T19:07:54Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib, sys
+root = pathlib.Path('/data')
+skip = set(sys.argv[1:])
+files = []
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    rel = str(path.relative_to(root))
+    if rel in skip:
+        continue
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    files.append({'path': rel, 'sha256': digest, 'bytes': path.stat().st_size})
+manifest = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+print(json.dumps({'manifest_sha256': manifest, 'files': files}, sort_keys=True))
+
+2026-11-11T19:08:04Z exit=0 docker compose stop app
+2026-11-11T19:08:04Z exit=0 docker compose exec -T db sh -c createdb -U "$POSTGRES_USER" mosscms_recovery
+2026-11-11T19:08:04Z exit=0 python3 scripts/restore.py /tmp/moss028/backup-postgres/20261111T190745Z.dump --target mosscms_recovery --confirm-target mosscms_recovery
+2026-11-11T19:08:05Z exit=0 python3 scripts/restore_media.py /tmp/moss028/backup-postgres/20261111T190745Z.media.tar.gz --confirm-empty-volume
+2026-11-11T19:08:05Z exit=1 python3 scripts/restore_media.py /tmp/moss028/backup-postgres/20261111T190745Z.media.tar.gz --confirm-empty-volume
+2026-11-11T19:08:06Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:06Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:06Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:06Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:06Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:06Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:06Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:06Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:06Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:07Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:07Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:07Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:07Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:07Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:07Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:07Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:07Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:07Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:08Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:08Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:08Z exit=0 docker compose up -d --no-build --no-deps app
+2026-11-11T19:08:08Z exit=0 docker network inspect moss028_default --format {{.Id}}
+2026-11-11T19:08:08Z exit=0 sudo iptables-legacy -S FORWARD
+2026-11-11T19:08:08Z exit=0 sudo iptables-legacy -S DOCKER-FORWARD
+2026-11-11T19:08:10Z exit=0 docker compose ps -q app
+2026-11-11T19:08:10Z exit=0 docker inspect --format {{.Image}} 827a2615fddd04a0e90315c8844e5b3bf05312faf41fbd393a6767c20874c6f9
+2026-11-11T19:08:10Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:10Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:10Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:10Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:11Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:11Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:11Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:11Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:11Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:11Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:11Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:11Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:11Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:12Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:12Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:12Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:12Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:12Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:12Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:12Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms_recovery
+2026-11-11T19:08:13Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib, sys
+root = pathlib.Path('/data')
+skip = set(sys.argv[1:])
+files = []
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    rel = str(path.relative_to(root))
+    if rel in skip:
+        continue
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    files.append({'path': rel, 'sha256': digest, 'bytes': path.stat().st_size})
+manifest = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+print(json.dumps({'manifest_sha256': manifest, 'files': files}, sort_keys=True))
+
+2026-11-11T19:08:13Z exit=0 docker compose stop app
+2026-11-11T19:08:13Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:14Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:14Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:14Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:14Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:14Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:14Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:14Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:14Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:14Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:15Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:15Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:15Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:15Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:15Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:15Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:15Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:15Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:16Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:16Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+2026-11-11T19:08:16Z exit=0 docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms

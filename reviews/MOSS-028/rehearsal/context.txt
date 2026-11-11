@@ -1,11 +1,11 @@
 label: local
-date: 2026-11-11T18:33:01Z
-head: 58a0f15fa5e75e446b210911d727340dc4ca67dd
+date: 2026-11-11T19:07:34Z
+head: 701be8d0ede51cfcf960188e39f536f5caec3010
 old_sha: 1d6d0ef5bcc2b2c8d7dd628098c89b680b060a9a
 old_image: mosscms:moss028-1d6d0ef
 new_image: mosscms:moss028-58a0f15
 git status --porcelain:
-?? reviews/MOSS-028/
+ M reviews/MOSS-028/rehearsal/drill.py
 
 ---- versions ----
 29.1.3

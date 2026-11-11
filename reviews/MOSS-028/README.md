@@ -19,7 +19,7 @@ Build log: [image-build.txt](rehearsal/image-build.txt). Migration files inside 
 
 ## rehearsal (Linux VM)
 
-Recorded 11 November 2026 (UTC), `2026-11-11T18:33:01Z` through `2026-11-11T18:34:08Z`, after the images had been built at `2026-11-11T18:18:19Z`. Linux kernel `6.12.113+`. Docker 29.1.3, Compose 2.40.3, nginx 1.24.0. Checkout at the start: `58a0f15fa5e75e446b210911d727340dc4ca67dd`. `git status --porcelain` showed only untracked `reviews/MOSS-028/`. Context: [context.txt](rehearsal/context.txt).
+Recorded 11 November 2026 (UTC), `2026-11-11T19:07:34Z` through `2026-11-11T19:08:41Z`, after the images had been built at `2026-11-11T18:18:19Z`. Linux kernel `6.12.113+`. Docker 29.1.3, Compose 2.40.3, nginx 1.24.0. Checkout at the start: `701be8d0ede51cfcf960188e39f536f5caec3010`. `git status --porcelain` showed `reviews/MOSS-028/rehearsal/drill.py` modified. Context: [context.txt](rehearsal/context.txt).
 
 | | |
 | --- | --- |
@@ -32,7 +32,7 @@ Recorded 11 November 2026 (UTC), `2026-11-11T18:33:01Z` through `2026-11-11T18:3
 
 Legacy `FORWARD` policy on this VM is `DROP`, and Docker's bridge rules are in iptables-legacy. After each Compose network came up, the drill added `iptables-legacy -A DOCKER-FORWARD -i br-… -j ACCEPT` for that bridge. That is a VM firewall adjustment. It is not a repository change.
 
-Each engine loaded an administrator, a `note` type, a published entry `upgrade-rehearsal-note`, a draft `upgrade-rehearsal-draft`, and one 800×400 PNG with `.320.webp`, `.640.webp`, and `.800.webp` variants. Checksums were taken with writers stopped, before the verification sign-in that would add a session row.
+Each engine loaded an administrator, a `note` type, a published entry `upgrade-rehearsal-note`, a draft `upgrade-rehearsal-draft`, and one 800×400 PNG with `.320.webp`, `.640.webp`, and `.800.webp` variants. The private text field is named `marker`. A credential-shaped field name made `gitleaks` report the rehearsal JSON, so the recorded run uses `marker` and adds no allowlist. Checksums were taken with writers stopped, before the verification sign-in that would add a session row.
 
 Editorial checksums cover every public table except `alembic_version`, `entry_field_indexes`, `publication_events`, `audit`, `tokens`, and `webhook_deliveries`. Those excluded tables are schema bookkeeping, the derived search projection, or worker and session state. Media checksums are SHA-256 of the sorted file list. SQLite media checksums omit `mosscms.db` and its wal/shm files; the database is checksummed as rows.
 
@@ -51,17 +51,17 @@ Logs: [probe-backup.json](postgres/probe-backup.json), [probe-tar.json](sqlite/p
 
 ### PostgreSQL
 
-Revision `0009` to `0014` on the same database volume. `entry_field_indexes` appeared with 9 rows. Entries, revisions, assets, and the other editorial tables kept their row checksums. Media manifest `74155ed9a497f2ffd7511dad50804ef6e30970281d88e073b29a6e3156a03e6a` was unchanged (4 files).
+Revision `0009` to `0014` on the same database volume. `entry_field_indexes` appeared with 9 rows. Entries, revisions, assets, and the other editorial tables kept their row checksums. Media manifest `6f5b6e5a03655b19cce064c19fbf3780eac63cfe6808dbe4d9349128f7924d63` was unchanged (4 files).
 
 The publication-event row changed from its stored state to `processed` when the new process ran. That is the outbox worker, not the entry body. The pre-upgrade dump, restored into empty `mosscms_recovery` before the old image started, matched the pre-upgrade database on every public table, including that event. After the retained image became ready, the worker marked the same event processed again. Editorial tables and media still matched. The upgraded database `mosscms` was still at revision `0014` after rollback.
 
 | | |
 | --- | --- |
-| Retained tag | `mosscms:backup-20261111T183312Z` |
-| Dump | 42651 bytes, `dea974ef19727c8dba72e3abd504471d1db2882ba1efbbc748402e033b4dea30` |
-| Media archive | 732 bytes, gzip, `10c972bbbf394db69b952c094649880fb8514a5e73f3ddce73bc636a4c5082af` |
-| Published entry | `9718195e-ef9b-4871-b8cb-d1497fc4fbd9`, revision 1 |
-| Draft | `be83b471-c54a-41d1-94ac-ec18813f2104`, revision 1 |
+| Retained tag | `mosscms:backup-20261111T190745Z` |
+| Dump | 42628 bytes, `f25b87496726ee12775280533432695fe13578d4cccd0831f3d10a1fa4deba31` |
+| Media archive | 733 bytes, gzip, `efdd3b44b1f8c36e99e0baccb2aa243006c8495a2c6e4bb687b8b630ae2f8d1b` |
+| Published entry | `b9a986d8-2191-42dc-a9f0-7109320dba1d`, revision 1 |
+| Draft | `a337ab6d-e29e-416b-a677-608dd039ee05`, revision 1 |
 | Rollback container image | the retained image id above |
 | Second media restore | exit 1, populated volume refused |
 
@@ -69,14 +69,14 @@ Override: [recovery.compose.yaml](rehearsal/recovery.compose.yaml). Result: [res
 
 ### SQLite
 
-Same content shape on a new SQLite volume. Revision `0009` to `0014`, with `entry_field_indexes` added. Editorial row checksums matched after the upgrade. The archive restore, read before the old image started, matched the pre-upgrade database on every table. After the retained image became ready, the full row checksum, including the publication event, still matched, and the media manifest `fb8df9d3caec3229a986116a7da103585752281fefceb4eb8597fbe004400a72` matched (4 files).
+Same content shape on a new SQLite volume. Revision `0009` to `0014`, with `entry_field_indexes` added. Editorial row checksums matched after the upgrade. The archive restore, read before the old image started, matched the pre-upgrade database on every table. After the retained image became ready, the full row checksum, including the publication event, still matched, and the media manifest `7aa19fe64946f30679a6f048eef487d9ada880c026db70cd298679543167f5fb` matched (4 files).
 
 | | |
 | --- | --- |
-| Retained tag | `mosscms:backup-sqlite-20261111T183347Z` |
-| Archive | 7350 bytes, gzip, `565a68cd11ce6c3ae162f134ae81203206f40988a5fe7b1c59d7fd843e22e8c1` |
-| Published entry | `04a01435-0cb5-48d6-9271-a07fd59c2ddc`, revision 1 |
-| Draft | `56ad98de-90c9-4a87-8ba7-c32c0a64a333`, revision 1 |
+| Retained tag | `mosscms:backup-sqlite-20261111T190821Z` |
+| Archive | 7424 bytes, gzip, `22363c8cd2e0b0d2cea8bbfad208863ebf316c0ea8c0a1731b86436cee0ea33e` |
+| Published entry | `892c2064-5b9e-4f5e-b83e-d633e712df2a`, revision 1 |
+| Draft | `130e73bb-8bd4-43a2-8ad6-e1819a573a54`, revision 1 |
 | Second restore | exit 1, populated volume refused |
 
 Override: [sqlite-recovery.compose.yaml](rehearsal/sqlite-recovery.compose.yaml). Result: [result.json](sqlite/result.json).

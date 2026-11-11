@@ -1,7 +1,7 @@
 {
   "asset": {
     "height": 400,
-    "id": "9c698321-663c-4250-939a-7a126a905231",
+    "id": "456a4dab-3994-457e-9c19-0ecadd84415c",
     "mime": "image/png",
     "png_bytes": 1572,
     "png_sha256": "1edeee3063250dc049dee1dcfe821008d99f5ada82e53d0e1dcc8103d87cfcde",
@@ -9,17 +9,17 @@
     "width": 800
   },
   "content_type": {
-    "id": "19ccf4a7-95cc-4aa4-a8bd-20109fba3980",
+    "id": "61cf4e40-26fa-41d5-a43b-ba75b8267827",
     "key": "note",
     "version": 1
   },
   "draft": {
     "data": {
       "body": "Draft kept across the upgrade.",
-      "secret": "moss-028-private-marker",
+      "marker": "upgrade-rehearsal-marker",
       "title": "Upgrade rehearsal draft"
     },
-    "id": "56ad98de-90c9-4a87-8ba7-c32c0a64a333",
+    "id": "130e73bb-8bd4-43a2-8ad6-e1819a573a54",
     "slug": "upgrade-rehearsal-draft",
     "status": "draft",
     "version": 1
@@ -27,37 +27,37 @@
   "entries": [
     {
       "data": {
-        "body": "Loaded before the upgrade. Asset 9c698321-663c-4250-939a-7a126a905231.",
-        "secret": "moss-028-private-marker",
-        "title": "Upgrade rehearsal note"
+        "body": "Draft kept across the upgrade.",
+        "marker": "upgrade-rehearsal-marker",
+        "title": "Upgrade rehearsal draft"
       },
-      "id": "04a01435-0cb5-48d6-9271-a07fd59c2ddc",
-      "slug": "upgrade-rehearsal-note",
-      "status": "published",
+      "id": "130e73bb-8bd4-43a2-8ad6-e1819a573a54",
+      "slug": "upgrade-rehearsal-draft",
+      "status": "draft",
       "version": 1
     },
     {
       "data": {
-        "body": "Draft kept across the upgrade.",
-        "secret": "moss-028-private-marker",
-        "title": "Upgrade rehearsal draft"
+        "body": "Loaded before the upgrade. Asset 456a4dab-3994-457e-9c19-0ecadd84415c.",
+        "marker": "upgrade-rehearsal-marker",
+        "title": "Upgrade rehearsal note"
       },
-      "id": "56ad98de-90c9-4a87-8ba7-c32c0a64a333",
-      "slug": "upgrade-rehearsal-draft",
-      "status": "draft",
+      "id": "892c2064-5b9e-4f5e-b83e-d633e712df2a",
+      "slug": "upgrade-rehearsal-note",
+      "status": "published",
       "version": 1
     }
   ],
   "published": {
     "data": {
-      "body": "Loaded before the upgrade. Asset 9c698321-663c-4250-939a-7a126a905231.",
-      "secret": "moss-028-private-marker",
+      "body": "Loaded before the upgrade. Asset 456a4dab-3994-457e-9c19-0ecadd84415c.",
+      "marker": "upgrade-rehearsal-marker",
       "title": "Upgrade rehearsal note"
     },
-    "id": "04a01435-0cb5-48d6-9271-a07fd59c2ddc",
+    "id": "892c2064-5b9e-4f5e-b83e-d633e712df2a",
     "slug": "upgrade-rehearsal-note",
     "status": "published",
     "version": 1
   },
-  "workspace_id": "7d88552a-8c51-475b-9cff-f633b72737f3"
+  "workspace_id": "72e30477-d9cc-4e7d-ad25-a1153116c13d"
 }

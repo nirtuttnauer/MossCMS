@@ -1,7 +1,7 @@
 label: local
-date: 2026-11-11T18:33:48Z
+date: 2026-11-11T19:08:21Z
 phase: sqlite
 command:
-docker compose run --rm --no-deps -T --entrypoint tar app -C /data -czf - . > /tmp/moss028/backup-sqlite/20261111T183347Z.sqlite-data.tar.gz
+docker compose run --rm --no-deps -T --entrypoint tar app -C /data -czf - . > /tmp/moss028/backup-sqlite/20261111T190821Z.sqlite-data.tar.gz
 exit_code: 0
 ---- output ----

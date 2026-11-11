@@ -1,23 +1,23 @@
 {
   "backup": {
     "dump": {
-      "bytes": 42651,
+      "bytes": 42628,
       "gzip": false,
-      "head": "PGDMP\u0001\u0010\u0000\u0004\b\u0001\u0001\u0000\f\u0000\u0000\u0000\u0000!\u0000\u0000\u0000\u0000\u0012\u0000\u0000\u0000\u0000\u000b\u0000\u0000\u0000\u0000\n\u0000\u0000\u0000\u0000~\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0007\u0000\u0000\u0000mosscms\u0000\u0005\u0000\u0000\u000017.11\u0000\u0005\u0000\u0000\u000017.11\u0000o\u0000\u0000\u0000\u00006\u000e\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u00000\u0000\u0001\u0000\u0000\u00000\u0000\b\u0000\u0000\u0000ENCODING\u0000\b\u0000\u0000\u0000ENCODING\u0000\u0002\u0000\u0000\u0000\u0000\u001e\u0000\u0000\u0000SET client_encoding = 'UTF8';\n\u0001\u0001\u0000\u0000\u0000\u0001\u0001\u0000",
-      "path": "/tmp/moss028/backup-postgres/20261111T183312Z.dump",
-      "sha256": "dea974ef19727c8dba72e3abd504471d1db2882ba1efbbc748402e033b4dea30"
+      "head": "PGDMP\u0001\u0010\u0000\u0004\b\u0001\u0001\u0000-\u0000\u0000\u0000\u0000\u0007\u0000\u0000\u0000\u0000\u0013\u0000\u0000\u0000\u0000\u000b\u0000\u0000\u0000\u0000\n\u0000\u0000\u0000\u0000~\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0007\u0000\u0000\u0000mosscms\u0000\u0005\u0000\u0000\u000017.11\u0000\u0005\u0000\u0000\u000017.11\u0000o\u0000\u0000\u0000\u00006\u000e\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u00000\u0000\u0001\u0000\u0000\u00000\u0000\b\u0000\u0000\u0000ENCODING\u0000\b\u0000\u0000\u0000ENCODING\u0000\u0002\u0000\u0000\u0000\u0000\u001e\u0000\u0000\u0000SET client_encoding = 'UTF8';\n\u0001\u0001\u0000\u0000\u0000\u0001\u0001\u0000",
+      "path": "/tmp/moss028/backup-postgres/20261111T190745Z.dump",
+      "sha256": "f25b87496726ee12775280533432695fe13578d4cccd0831f3d10a1fa4deba31"
     },
     "dump_restore_list_exit": 0,
     "gzip_media_exit": 0,
     "image_id": "sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344",
     "media": {
-      "bytes": 732,
+      "bytes": 733,
       "gzip": true,
-      "path": "/tmp/moss028/backup-postgres/20261111T183312Z.media.tar.gz",
-      "sha256": "10c972bbbf394db69b952c094649880fb8514a5e73f3ddce73bc636a4c5082af"
+      "path": "/tmp/moss028/backup-postgres/20261111T190745Z.media.tar.gz",
+      "sha256": "efdd3b44b1f8c36e99e0baccb2aa243006c8495a2c6e4bb687b8b630ae2f8d1b"
     }
   },
-  "backup_image": "mosscms:backup-20261111T183312Z",
+  "backup_image": "mosscms:backup-20261111T190745Z",
   "backup_image_id": "sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344",
   "content_checksum_equal_after_rollback": true,
   "engine": "postgresql",

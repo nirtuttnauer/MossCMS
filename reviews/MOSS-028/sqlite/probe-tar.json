@@ -1,16 +1,16 @@
 {
   "archive": {
-    "bytes": 10430,
+    "bytes": 10494,
     "gzip": false,
     "head": "#0 building with \"default\" instance using docker driver\n\n#1 [app internal] load build definition from Dockerfile\n#1 transferring dockerfile: 1.44kB done\n#1 DONE 0.0s\n\n#2 [app inter",
-    "path": "/tmp/moss028/probe-sqlite/20261111T183347Z.sqlite-data.tar.gz",
-    "sha256": "99e76da717d84239f3d4cba5b9582438fa7e6901ab6b26e0bdcac65f0fbceaa3"
+    "path": "/tmp/moss028/probe-sqlite/20261111T190820Z.sqlite-data.tar.gz",
+    "sha256": "8779957175c4f435c474d8b93b9a2660584a4c3870de2e6d5a63dc91fcc77684"
   },
   "gzip_exit": 1,
   "media_is_gzip": false,
   "old_image_after": "sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344",
   "old_image_preserved": true,
-  "probe_image_after": "sha256:c0122ccf56372fa491782175100db4d6dca24a96d3e2fecbd3e83222a5dc6c9f",
+  "probe_image_after": "sha256:0a68ac66694a57c6d9d92a8d534d761522edd61caec77126753b5766ca4bc4dd",
   "probe_image_before": "sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344",
   "probe_image_rebuilt": true
 }
