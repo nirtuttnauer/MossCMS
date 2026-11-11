@@ -1,0 +1,31 @@
+{
+  "label": "local",
+  "sha": "58a0f15fa5e75e446b210911d727340dc4ca67dd",
+  "date": "2026-11-11",
+  "sqlite": {
+    "passed": 488,
+    "deselected": 4,
+    "failed": 0,
+    "skipped": 0
+  },
+  "postgres": {
+    "passed": 492,
+    "failed": 0,
+    "skipped": 0
+  },
+  "web": {
+    "passed": 356,
+    "skipped": 0,
+    "files_passed": 36
+  },
+  "example_site": {
+    "passed": 47,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "pip_audit": {
+    "exit_code": 1,
+    "packages": ["graphql-core 3.3.0 CVE-2026-119286", "joserfc 1.7.5 CVE-2026-119284"]
+  }
+}

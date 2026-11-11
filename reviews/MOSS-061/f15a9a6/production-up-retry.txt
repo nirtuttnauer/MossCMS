@@ -1,0 +1,17 @@
+label: local
+date: 2026-11-11T18:36:19Z
+sha: f15a9a654e2712bd4609e82573fde315ff57eca5
+workdir: .
+note: same command as scripts/verify.sh production-up, after the host legacy iptables FORWARD policy was set to ACCEPT. The earlier production-up.txt is the attempt that exited 1 while that policy was DROP and dropped packets on the compose bridge.
+command:
+docker compose -f ci/compose.yaml -p mosscms-smoke up --no-build -d --wait --wait-timeout 180
+---- output ----
+ Container mosscms-smoke-db-1  Running
+ Container mosscms-smoke-app-1  Running
+ Container mosscms-smoke-db-1  Waiting
+ Container mosscms-smoke-db-1  Healthy
+ Container mosscms-smoke-db-1  Waiting
+ Container mosscms-smoke-app-1  Waiting
+ Container mosscms-smoke-app-1  Healthy
+ Container mosscms-smoke-db-1  Healthy
+exit_code: 0

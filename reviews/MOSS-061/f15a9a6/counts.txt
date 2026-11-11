@@ -1,0 +1,38 @@
+{
+  "label": "local",
+  "verified_sha": "f15a9a654e2712bd4609e82573fde315ff57eca5",
+  "sqlite": {
+    "collected": 494,
+    "passed": 490,
+    "deselected": 4,
+    "failed": 0,
+    "skipped": 0
+  },
+  "postgres": {
+    "collected": 494,
+    "passed": 494,
+    "deselected": 0,
+    "failed": 0,
+    "skipped": 0
+  },
+  "web": {
+    "passed": 356,
+    "skipped": 0,
+    "files_passed": 36
+  },
+  "example_site": {
+    "passed": 50,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "production_before_host_forward_accept": {
+    "failed": 2,
+    "log": "production-test.txt"
+  },
+  "production_retry": {
+    "passed": 2,
+    "skipped": 0,
+    "log": "production-test-retry.txt"
+  }
+}
