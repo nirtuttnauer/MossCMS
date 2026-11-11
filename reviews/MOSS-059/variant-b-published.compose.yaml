@@ -1,0 +1,5 @@
+# Positive control for variant B. Publishing this port must succeed, then variant B removes it again.
+services:
+  app:
+    ports: !override
+      - "127.0.0.1:18058:8001"
