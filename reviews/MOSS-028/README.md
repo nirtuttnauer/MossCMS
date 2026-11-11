@@ -82,3 +82,52 @@ Same content shape on a new SQLite volume. Revision `0009` to `0014`, with `entr
 Override: [sqlite-recovery.compose.yaml](rehearsal/sqlite-recovery.compose.yaml). Result: [result.json](sqlite/result.json).
 
 Backup archives stayed in `/tmp/moss028` and are not in git. The machine-readable pair of results is [summary.json](summary.json).
+
+## QA G0, local
+
+`scripts/verify.sh MOSS-028` on a clean tree at `28fec97d050934117bfb9a6f00b9584060d2fccc`, started `2026-11-11T19:09:53Z`, labeled `local`. `git status --porcelain` was empty. Record: [28fec97](28fec97/).
+
+The script exited 1 at `pip-audit`. `pip-audit` 2.10.1 read the frozen lock and printed:
+
+| Package | Version | Advisory | Fixed in |
+| --- | --- | --- | --- |
+| `graphql-core` | 3.3.0 | CVE-2026-119286 | 3.3.1 |
+| `joserfc` | 1.7.5 | CVE-2026-119284 | 1.7.6 |
+
+No `--ignore-vuln`, allowlist, or override was added. `api/uv.lock` is the same file as main `58a0f15`. MOSS-054's audit of that lock reported no known vulnerabilities. These two advisories were published on 30 October 2026, after that record. `graphql-core` 3.3.0 keeps aborted validation frames alive ([GHSA-mpqx-q82w-9x46](https://github.com/advisories/GHSA-mpqx-q82w-9x46)). `joserfc` before 1.7.6 splits a compact token before the size check. This rehearsal does not change the lock.
+
+`scripts/verify.sh` stops when a step exits non-zero, so the commands that follow `pip-audit` in that script were run on this same checkout and written into the same directory. Each log names the command.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `uv sync --locked --group dev` | 0 | locked dependencies installed |
+| ruff check and format for `app tests migrations` | 0 | all checks passed |
+| ruff check and format for scripts and the telemetry smoke | 0 | all checks passed |
+| `mypy app` | 0 | no issues |
+| SQLite required run, `pytest -m "not postgres"` | 0 | 488 passed, 4 deselected, 0 skipped, 6 warnings in 74.35s |
+| PostgreSQL required run in `moss-verify-pg` | 0 | 492 passed, 0 deselected, 0 skipped, 6 warnings in 141.64s |
+| `tests/verify_required_runs.py` | 0 | union 492, `ok: true` |
+| OTLP collector smoke | 0 | completed, container removed |
+| web `npm ci`, check, test, build, `npm audit --audit-level=high` | 0 | 36 files, 356 passed, 0 vulnerabilities |
+| example-site `npm ci`, check, test, build, `npm audit --audit-level=high` | 0 | 47 passed, 0 failed, 0 skipped, 0 vulnerabilities |
+| `pip-audit` 2.10.1 | 1 | the two advisories above |
+| `npm audit` in `web`, `example-site`, and `ci` | 0 | found 0 vulnerabilities in each |
+| `gitleaks` 8.30.1 on `git archive HEAD` | 0 | no leaks found |
+| production image build | 0 | tag `mosscms:smoke` |
+| `docker compose -f ci/compose.yaml -p mosscms-smoke up --no-build -d --wait --wait-timeout 180` | 1 | app container unhealthy: database connection timed out |
+| same compose up after the VM firewall adjustment | 0 | db healthy, app became ready |
+| `cd ci && npm test` | 0 | 2 passed, 0 skipped |
+| compose down `--volumes` | 0 | stack removed |
+
+`git diff 58a0f15 28fec97` outside `reviews/` is only `docs/deployment-recovery.md`. The suite sources match main. Counts match the MOSS-054 record on that main: PostgreSQL 492 passed, SQLite 488 passed and 4 deselected, web 356, example-site 47, production Playwright 2. The four deselected ids are the committed PostgreSQL-marked tests, and they passed in the PostgreSQL run:
+
+- `tests/test_concurrency.py::test_postgres_workers_skip_locked_rows_and_claim_once`
+- `tests/test_indexing.py::test_common_string_count_avoids_per_match_probes_in_generic_postgres_plan`
+- `tests/test_postgres_product_migration.py::test_postgres_0009_preserves_localized_live_scheduled_and_revision_data`
+- `tests/test_search.py::test_generic_postgres_substring_plan_uses_trigrams_and_rechecks_matches`
+
+No new skip or xfail. `tests/verify_report.py scan` accepted the production log.
+
+`iptables-legacy` `FORWARD` policy on this VM is `DROP`. Docker wrote the smoke bridge accept rule into nftables only. The app then timed out connecting to PostgreSQL. `sudo iptables-legacy -A DOCKER-FORWARD -i br-+ -j ACCEPT` is the same class of VM adjustment as the drill. It is not a repository change. Log: [iptables-legacy.txt](28fec97/iptables-legacy.txt), [production-up.txt](28fec97/production-up.txt), [production-up-retry.txt](28fec97/production-up-retry.txt).
+
+`python3.12-venv` was installed on this machine so `pip-audit` could create its temporary environment. An earlier `pip-audit` attempt also hit a read timeout from `files.pythonhosted.org`. The record above is the completed run, and it reports the two advisories rather than the timeout.

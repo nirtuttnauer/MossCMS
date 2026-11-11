@@ -1,0 +1,19 @@
+label: local
+date: 2026-11-11T19:20:46Z
+sha: 28fec97d050934117bfb9a6f00b9584060d2fccc
+workdir: .
+note: same command as scripts/verify.sh production-down
+command:
+docker compose -f ci/compose.yaml -p mosscms-smoke down --volumes
+---- output ----
+ Container mosscms-smoke-app-1  Stopping
+ Container mosscms-smoke-app-1  Stopped
+ Container mosscms-smoke-app-1  Removing
+ Container mosscms-smoke-app-1  Removed
+ Container mosscms-smoke-db-1  Stopping
+ Container mosscms-smoke-db-1  Stopped
+ Container mosscms-smoke-db-1  Removing
+ Container mosscms-smoke-db-1  Removed
+ Network mosscms-smoke_default  Removing
+ Network mosscms-smoke_default  Removed
+exit_code: 0
