@@ -1,0 +1,19 @@
+label: local
+sha: 59e34ac27bf842f2bc8a67c4923aa3284dbaa354
+short_sha: 59e34ac
+started: 2026-11-12T15:02:07Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continuation: scripts/verify.sh stopped at pytest-sqlite; remaining commands from that script follow
+continuation_started: 2026-11-12T15:07:35Z
+continue: pytest-postgres failed with exit 1
+continuation: scripts/verify.sh stopped at pytest-sqlite; remaining commands from that script follow
+continuation_started: 2026-11-12T15:14:39Z
+continue: verify-required-runs failed with exit 1
+continue: verify-required-runs reported another test
+tests/verify_required_runs.py
+continuation: scripts/verify.sh stopped at pytest-sqlite; remaining commands from that script follow
+continuation_started: 2026-11-12T15:14:59Z
+continue: verify-required-runs failed with exit 1
+continuation_finished: 2026-11-12T15:17:47Z
+continuation_result: recorded

@@ -19,6 +19,8 @@ if any(root.iterdir()):
     sys.exit('The assets volume must be empty; existing files are never overwritten.')
 with tarfile.open(fileobj=sys.stdin.buffer, mode='r|gz') as archive:
     for member in archive:
+        if any(part == '.env' or part.startswith('.env.') for part in pathlib.PurePosixPath(member.name).parts):
+            continue
         destination = (root / member.name).resolve()
         if not destination.is_relative_to(root) or member.issym() or member.islnk() or not (member.isfile() or member.isdir()):
             sys.exit('Invalid archive member.')
