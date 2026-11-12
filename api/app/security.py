@@ -68,11 +68,11 @@ def client_address(request):
     return host or "unknown"
 
 
-# Stored token ids are SHA-256 hex. A raw token is url-safe and is not that digest.
 DRAFTS_TOKEN_KIND = "drafts"
 _REDACTED = "[redacted]"
-_RAW_TOKEN = re.compile(r"^[A-Za-z0-9_-]{32,}$")
-_DIGEST = re.compile(r"^[0-9a-f]{64}$")
+# Every raw secret this app issues is ``secrets.token_urlsafe(32)``: exactly 43 url-safe characters.
+# Entity ids (uuid4, 36 characters) and stored token ids (SHA-256 hex, 64 characters) do not match.
+_RAW_TOKEN = re.compile(r"^[A-Za-z0-9_-]{43}$")
 _BEARER = re.compile(r"Bearer\s+[A-Za-z0-9_-]{20,}")
 _IDENTIFIER_KEYS = {"tokenid", "invitationid"}
 
@@ -91,7 +91,7 @@ def _sensitive_key(key):
 
 
 def _looks_like_raw_token(value):
-    return isinstance(value, str) and _RAW_TOKEN.fullmatch(value) is not None and _DIGEST.fullmatch(value) is None
+    return isinstance(value, str) and _RAW_TOKEN.fullmatch(value) is not None
 
 
 def _scrub_string(value):

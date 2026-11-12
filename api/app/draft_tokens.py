@@ -3,13 +3,14 @@
 A drafts token reads the current draft of one entry in its own project.
 It is not a session and not a delivery token. An expired token, a missing
 entry, and an entry in another project are rejected. The token cannot
-authorize a write.
+authorize a write. Reads apply the project's field rules for the reader role.
 """
 
 from copy import deepcopy
 
 from .content import get_entry
 from .models import ContentType, Project, Token
+from .permissions import field_visible, redact, rule_paths
 from .security import DRAFTS_TOKEN_KIND, CmsError, audit, identify, issue_token, require
 
 
@@ -55,12 +56,15 @@ def read_draft_snapshot(request, session, entry_id):
     definition = session.get(ContentType, record.type_id)
     if definition is None:
         raise CmsError("Entry not found.", "NOT_FOUND")
+    allowed = rule_paths(identity, definition.key, "read")
     data = deepcopy(record.data) if isinstance(record.data, dict) else {}
+    data = redact(data, definition.fields, "", allowed)
+    title = record.title if field_visible(identity, definition, "title") else record.slug
     return {
         "id": record.id,
         "typeKey": definition.key,
         "slug": record.slug,
-        "title": record.title,
+        "title": title,
         "data": data,
         "status": record.status,
         "version": record.version,

@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 from datetime import timedelta
 
 import pytest
@@ -283,3 +284,73 @@ def test_skip_auth_does_not_turn_into_a_drafts_token(tmp_path):
             snapshot = read_draft_snapshot(as_request(local, {}, bearer=raw), session, saved["id"])
         assert snapshot["data"]["body"] == HEBREW
         assert raw not in snapshot["title"]
+
+
+def test_draft_snapshot_applies_project_field_rules(app, client, admin):
+    define(client, admin)
+    saved = entry(client, admin, slug="ruled", data={"title": HEBREW, "body": "visible", "secret": "hidden"})["data"][
+        "saveEntry"
+    ]
+    request = as_request(app, admin, cookie=client.cookies.get("moss_session"))
+    with app.state.db.begin() as session:
+        raw = issue_draft_token(session, context(request, session), name="Draft reader")
+    bearer = as_request(app, {}, bearer=raw)
+    with app.state.db() as session:
+        unruled = read_draft_snapshot(bearer, session, saved["id"])
+    assert unruled["data"] == {"title": HEBREW, "body": "visible", "secret": "hidden"}
+
+    rules = {"article": {"reader": {"read": ["title", "body"], "write": ["title", "body"]}}}
+    response = client.patch("/api/project/permissions", headers=admin, json={"enabled": True, "fieldRules": rules})
+    assert response.status_code == 200, response.text
+    with app.state.db() as session:
+        ruled = read_draft_snapshot(bearer, session, saved["id"])
+    assert ruled["data"] == {"title": HEBREW, "body": "visible"}
+    assert "secret" not in ruled["data"]
+    assert ruled["title"] == HEBREW
+
+    rules = {"article": {"reader": {"read": ["body"], "write": ["body"]}}}
+    response = client.patch("/api/project/permissions", headers=admin, json={"enabled": True, "fieldRules": rules})
+    assert response.status_code == 200, response.text
+    with app.state.db() as session:
+        untitled = read_draft_snapshot(bearer, session, saved["id"])
+    assert untitled["data"] == {"body": "visible"}
+    assert untitled["title"] == "ruled"
+
+
+def test_audit_keeps_entity_ids_and_redacts_issued_tokens(app, client, admin):
+    define(client, admin)
+    saved = entry(client, admin, data={"title": HEBREW, "body": HEBREW})["data"]["saveEntry"]
+    request = as_request(app, admin, cookie=client.cookies.get("moss_session"))
+    ids = {
+        "entryId": saved["id"],
+        "userId": str(uuid.uuid4()),
+        "releaseId": str(uuid.uuid4()),
+        "webhookId": str(uuid.uuid4()),
+        "assetId": str(uuid.uuid4()),
+    }
+    with app.state.db.begin() as session:
+        raw = issue_draft_token(session, context(request, session), name="Draft reader")
+        audit(
+            session,
+            admin["x-moss-project"],
+            "admin@example.com",
+            "draft_token.ids",
+            **ids,
+            nested={"entryId": saved["id"], "note": raw},
+            listed=[saved["id"], raw],
+            note=raw,
+            tokenId=digest(raw),
+        )
+    with app.state.db() as session:
+        row = session.scalar(select(Audit).where(Audit.action == "draft_token.ids"))
+        saves = session.scalars(select(Audit).where(Audit.action == "entry.save")).all()
+    assert len(saved["id"]) == 36
+    for key, value in ids.items():
+        assert row.details[key] == value
+    assert row.details["nested"] == {"entryId": saved["id"], "note": "[redacted]"}
+    assert row.details["listed"] == [saved["id"], "[redacted]"]
+    assert row.details["note"] == "[redacted]"
+    assert row.details["tokenId"] == digest(raw)
+    assert row.actor == "admin@example.com"
+    assert raw not in json.dumps(row.details)
+    assert [save.details["entryId"] for save in saves] == [saved["id"]]
