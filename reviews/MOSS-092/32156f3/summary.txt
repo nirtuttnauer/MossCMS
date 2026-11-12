@@ -1,0 +1,9 @@
+label: local
+sha: 32156f3e515bfd7ce1b82bb57950af5fb3a0a684
+short_sha: 32156f3
+started: 2026-11-12T15:51:12Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continuation: later verify.sh steps were run after the known dependabot failure
+finished: 2026-11-12T16:08:30Z
+result: sqlite, postgres, and web recorded; dependabot failure remains
