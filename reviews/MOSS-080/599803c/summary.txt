@@ -1,0 +1,12 @@
+label: local
+sha: 599803c210e3e4e177bf4b9987bbd2f035fd3fc5
+short_sha: 599803c
+started: 2026-11-12T14:50:53Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continuation: local
+reason: scripts/verify.sh MOSS-080 exited 1 at pytest-sqlite
+started: 2026-11-12T14:55:01Z
+sha: 599803c210e3e4e177bf4b9987bbd2f035fd3fc5
+continuation finished: 2026-11-12T15:01:17Z
+pip-audit and gitleaks logs were recorded again at 2026-11-12T15:01:47Z after the continuation shell missed the exported evidence path and the gitleaks directory on PATH. Those reruns exited 0. The exit-codes file records those reruns.

@@ -1,0 +1,15 @@
+label: local
+sha: 63fe58dabba377c142847f5fbc435400ed24ec46
+short_sha: 63fe58d
+started: 2026-11-12T14:44:07Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continue: pytest-postgres failed with exit 1
+continue: verify-required-runs failed with exit 1
+continue: pip-audit failed with exit 1
+finished: 2026-11-12T14:56:30Z
+result: continuation-finished
+isolated-postgres: 2026-11-12T15:03:47Z 1 failed, 532 passed, 0 skipped
+isolated-postgres-failure: tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+pip-audit-rerun: 0
+label: local

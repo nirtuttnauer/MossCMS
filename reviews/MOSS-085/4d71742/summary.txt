@@ -1,0 +1,19 @@
+label: local
+sha: 4d717424ae5ac14fc26a3ae5e42b0532b118687f
+short_sha: 4d71742
+started: 2026-11-12T14:51:08Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continued: 2026-11-12T14:59:54Z
+reason: scripts/verify.sh stopped at pytest-sqlite. The only failure is tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests, which also fails on main b6c6687. Remaining commands from scripts/verify.sh follow. label: local
+verify.sh: pytest-postgres failed with exit 1
+continued: 2026-11-12T15:06:03Z
+reason: scripts/verify.sh stopped at pytest-sqlite. The only failure is tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests, which also fails on main b6c6687. Remaining commands from scripts/verify.sh follow. label: local
+verify.sh: pytest-postgres exit 1 is the Dependabot failure already present on main b6c6687
+verify.sh: verify-required-runs exit 1 is the Dependabot failure already present on main b6c6687
+verify.sh: pip-audit failed with exit 1
+continued: 2026-11-12T15:09:34Z
+reason: scripts/verify.sh stopped at pytest-sqlite. The only failure is tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests, which also fails on main b6c6687. Remaining commands from scripts/verify.sh follow. label: local
+pip-audit retry after installing python3-venv. The earlier attempt exited 1 because ensurepip was unavailable. label: local
+finished: 2026-11-12T15:11:09Z
+result: continued-after-preexisting-dependabot-failure
