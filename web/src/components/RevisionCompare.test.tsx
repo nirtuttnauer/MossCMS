@@ -509,6 +509,7 @@ const revisionMarkdown = [
   '<a href="javascript:alert(1)">html-link</a>',
   '<iframe src="javascript:alert(2)"></iframe>',
   '<svg onload="alert(3)"></svg>',
+  'Inline <span onclick="alert(14)">span-text</span> html',
   '[js](javascript:alert(1))',
   '[encoded](javascript:alert%281%29)',
   '[spaced](java\nscript:alert(3))',
@@ -519,17 +520,18 @@ const revisionMarkdown = [
   '[nul](java\u0000script:alert(11))',
   '[bs](javascript\\:alert(12))',
   '[\\]](javascript:alert(13))',
+  '[data-link](data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==)',
+  '![data-pic](data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9ImFsZXJ0KDEpIi8+)',
   '[safe](https://example.com/docs)',
   '![Cover](asset:asset-1)',
   '![pic](javascript:alert(6))',
   '[ref][bad]',
-  '',
   '[bad]: javascript:alert(5)',
-  '```',
-  '<script>alert(7)</script>',
-  '```',
+  '```\n<script>alert(7)</script>\n```',
   '`<script>`',
-].join('\n')
+  '~~~\nif (a < b && c > d) return <T>\n~~~',
+  'See <https://example.com/auto> and <mailto:help@example.com>.',
+].join('\n\n')
 
 function renderSavedRevisionPair() {
   const revisions: Revision[] = [
@@ -605,33 +607,38 @@ it('shows a Hebrew niqqud change on the compare view', () => {
   expect(document.querySelector('.diff-markdown strong')?.textContent).toBe(pointedHebrew)
 })
 
-it('keeps revision Markdown HTML and javascript links from running or becoming hrefs', () => {
+it('keeps revision Markdown HTML and javascript and data URLs from running or becoming hrefs', () => {
   renderSavedRevisionPair()
   const markdownBlocks = document.querySelectorAll('.diff-markdown')
   expect(markdownBlocks.length).toBeGreaterThan(0)
   for (const block of markdownBlocks) {
-    expect(block.querySelector('script, iframe, object, embed, svg')).toBeNull()
+    expect(block.querySelector('script, iframe, object, embed, svg, span[onclick]')).toBeNull()
     expect(block.querySelector('[onerror], [onload], [onclick]')).toBeNull()
   }
-  expect(document.body.textContent).toContain('html-link')
-  expect(document.body.textContent).toContain('javascript:alert(1)')
-  expect(document.body.textContent).toContain('javascript:alert(5)')
-  expect(document.body.textContent).toContain('<script>alert(7)</script>')
+  expect(document.body.textContent).not.toContain('alert(1)</script>')
+  expect(document.body.textContent).toContain('span-text')
   const codeText = [...document.querySelectorAll('code')].map(node => node.textContent).join('\n')
   expect(codeText).toContain('<script>alert(7)</script>')
   expect(codeText).toContain('<script>')
-  for (const name of ['js', 'encoded', 'entity', 'angle', 'mixed', 'padded', 'nul', 'bs', 'html-link', 'ref', 'pic']) {
-    expect(screen.queryByRole('link', { name })).toBeNull()
+  expect(screen.queryByRole('link', { name: 'html-link' })).toBeNull()
+  for (const name of ['js', 'encoded', 'entity', 'angle', 'mixed', 'padded', 'bs', ']', 'ref', 'data-link']) {
+    const link = screen.getByText(name, { selector: 'a' })
+    expect(link.getAttribute('href')).toBe('')
   }
   expect(screen.getByRole('link', { name: 'safe' }).getAttribute('href')).toBe('https://example.com/docs')
   for (const element of document.querySelectorAll('[href]')) {
-    expect(hrefUsesJavascript(element.getAttribute('href') || '')).toBe(false)
+    const href = element.getAttribute('href') || ''
+    expect(hrefUsesJavascript(href)).toBe(false)
+    expect(href.trim().toLowerCase().startsWith('data:')).toBe(false)
   }
   const cover = screen.getByAltText('Cover')
   expect(cover.getAttribute('src')).toBe('/media/banner.png')
   expect(screen.queryByAltText('pic')).toBeNull()
+  expect(screen.queryByAltText('data-pic')).toBeNull()
   for (const image of document.querySelectorAll('img')) {
-    expect((image.getAttribute('src') || '').toLowerCase().includes('javascript')).toBe(false)
+    const src = (image.getAttribute('src') || '').toLowerCase()
+    expect(src.includes('javascript')).toBe(false)
+    expect(src.startsWith('data:')).toBe(false)
   }
   fireEvent.click(screen.getByRole('button', { name: 'Raw JSON' }))
   const raw = document.querySelector('.compare-raw-view')
@@ -640,4 +647,18 @@ it('keeps revision Markdown HTML and javascript links from running or becoming h
   expect(raw?.textContent).toContain('\u05B8')
   expect(raw?.querySelector('script, iframe, object, embed, svg')).toBeNull()
   expect(document.querySelector('.revision-compare-modal [href]')).toBeNull()
+})
+
+it('keeps comparison operators in a tilde fence as literal code', () => {
+  renderSavedRevisionPair()
+  const fenced = [...document.querySelectorAll('.diff-markdown pre code')].map(node => node.textContent)
+  expect(fenced).toContain('if (a < b && c > d) return <T>\n')
+  expect(document.body.textContent).not.toContain('&lt;')
+  expect(document.body.textContent).not.toContain('&amp;')
+})
+
+it('renders angle-bracket autolinks in revision Markdown as links', () => {
+  renderSavedRevisionPair()
+  expect(screen.getByRole('link', { name: 'https://example.com/auto' }).getAttribute('href')).toBe('https://example.com/auto')
+  expect(screen.getByRole('link', { name: 'mailto:help@example.com' }).getAttribute('href')).toBe('mailto:help@example.com')
 })

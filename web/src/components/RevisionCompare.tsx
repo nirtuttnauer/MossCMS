@@ -46,129 +46,6 @@ function resolveReferenceLabel(refId: unknown, references: Entry[]): string {
   return `${found.title} (/${found.slug}) [${found.typeKey}]`
 }
 
-function bareLinkDestination(raw: string): string {
-  let value = raw.trim().replace(/\s+(?:"[^"]*"|'[^']*')\s*$/, '').trim()
-  if (value.startsWith('<') && value.endsWith('>')) value = value.slice(1, -1).trim()
-  return value
-}
-
-function decodeLinkEntities(value: string): string {
-  const fromCode = (code: number, match: string) => (
-    code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match
-  )
-  return value
-    .replace(/&#x([0-9a-f]+);?/gi, (match, hex: string) => fromCode(Number.parseInt(hex, 16), match))
-    .replace(/&#(\d+);?/g, (match, digits: string) => fromCode(Number.parseInt(digits, 10), match))
-    .replace(/&colon;/gi, ':')
-    .replace(/&tab;/gi, '\t')
-    .replace(/&newline;/gi, '\n')
-}
-
-function isJavascriptDestination(raw: string): boolean {
-  let value = bareLinkDestination(raw)
-  for (let pass = 0; pass < 3; pass += 1) {
-    const entities = decodeLinkEntities(value)
-    let decoded = entities
-    try {
-      decoded = decodeURIComponent(entities)
-    } catch {
-      decoded = entities
-    }
-    if (decoded === value) break
-    value = decoded
-  }
-  const compact = value.replace(/[\u0000-\u0020\u007f\\]+/g, '').replace(/\s+/g, '').toLowerCase()
-  return compact.startsWith('javascript:')
-}
-
-function oddEscape(input: string, position: number): boolean {
-  let slashes = 0
-  for (let slash = position - 1; slash >= 0 && input[slash] === '\\'; slash -= 1) slashes += 1
-  return slashes % 2 === 1
-}
-
-function findLabelStart(input: string, bracket: number): number | null {
-  for (let cursor = bracket - 1; cursor >= 0; cursor -= 1) {
-    if (input[cursor] === '[' && !oddEscape(input, cursor)) return cursor
-  }
-  return null
-}
-
-function maskMarkdownCode(source: string): { text: string; token: string; blocks: string[] } {
-  let token = '\uE000MOSSREV'
-  while (source.includes(token)) token += 'X'
-  const blocks: string[] = []
-  const stash = (block: string) => {
-    const mark = `${token}${blocks.length}\uE001`
-    blocks.push(block)
-    return mark
-  }
-  let text = source.replace(/```[^\n]*\n?[\s\S]*?(?:```|$)/g, stash)
-  text = text.replace(/(^|\n)((?:(?: {4}|\t).*(?:\n|$))+)/g, (_match, lead: string, block: string) => `${lead}${stash(block)}`)
-  text = text.replace(/`[^`\n]*`/g, stash)
-  return { text, token, blocks }
-}
-
-function rewriteJavascriptLinks(input: string): string {
-  let result = ''
-  let index = 0
-  while (index < input.length) {
-    const marker = input.indexOf('](', index)
-    if (marker < 0) {
-      result += input.slice(index)
-      break
-    }
-    if (oddEscape(input, marker)) {
-      result += input.slice(index, marker + 2)
-      index = marker + 2
-      continue
-    }
-    let depth = 1
-    let cursor = marker + 2
-    while (cursor < input.length && depth > 0) {
-      const char = input[cursor]
-      if (char === '(' && !oddEscape(input, cursor)) depth += 1
-      else if (char === ')' && !oddEscape(input, cursor)) depth -= 1
-      if (depth > 0) cursor += 1
-    }
-    if (depth !== 0) {
-      result += input.slice(index, marker + 2)
-      index = marker + 2
-      continue
-    }
-    const destination = input.slice(marker + 2, cursor)
-    if (!isJavascriptDestination(destination)) {
-      result += input.slice(index, cursor + 1)
-      index = cursor + 1
-      continue
-    }
-    const labelStart = findLabelStart(input, marker)
-    const bare = bareLinkDestination(destination)
-    if (labelStart === null || labelStart < index) {
-      result += `${input.slice(index, marker)} ${bare}`
-      index = cursor + 1
-      continue
-    }
-    const image = labelStart > 0 && input[labelStart - 1] === '!'
-    const start = image && labelStart - 1 >= index ? labelStart - 1 : labelStart
-    const label = input.slice(labelStart + 1, marker)
-    result += `${input.slice(index, start)}${[label, bare].filter(Boolean).join(' ')}`
-    index = cursor + 1
-  }
-  return result
-}
-
-function revisionCompareMarkdown(source: string): string {
-  const masked = maskMarkdownCode(source)
-  let text = masked.text.replace(/^[ ]{0,3}\[([^\]]+)\]:[ \t]*(\S+)[^\n]*$/gm, (line, id: string, destination: string) => (
-    isJavascriptDestination(destination) ? `${id}: ${bareLinkDestination(destination)}` : line
-  ))
-  text = rewriteJavascriptLinks(text)
-  text = text.replace(/</g, '&lt;')
-  const pattern = new RegExp(`${masked.token.replace(/[\\^$*+?.()|[\]{}]/g, '\\$&')}(\\d+)\uE001`, 'g')
-  return text.replace(pattern, (mark, number: string) => masked.blocks[Number(number)] ?? mark)
-}
-
 export function RevisionCompare({
   entry,
   definition,
@@ -327,7 +204,7 @@ export function RevisionCompare({
     if (['richText', 'markdown'].includes(type) && typeof val === 'string') {
       return (
         <div className="diff-markdown" dir="auto" tabIndex={0}>
-          <Markdown text={revisionCompareMarkdown(val)} assets={[...assets, ...resolvedAssets]} />
+          <Markdown text={val} assets={[...assets, ...resolvedAssets]} />
         </div>
       )
     }
