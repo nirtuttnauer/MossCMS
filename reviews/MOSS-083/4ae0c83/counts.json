@@ -9,8 +9,8 @@
     "collected": 509
   },
   "postgres": {
-    "passed": 507,
-    "failed": 2,
+    "passed": 508,
+    "failed": 1,
     "skipped": 0,
     "deselected": 0,
     "xfailed": 0,
