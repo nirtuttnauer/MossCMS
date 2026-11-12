@@ -1,0 +1,10 @@
+label: local
+date: 2026-11-12T14:43:43Z
+sha: 5ea1d037bb85e47c2efc1d97f72998d130130878
+workdir: web
+command: npm test
+exit_code: 0
+---- output ----
+Test Files  36 passed (36)
+Tests  356 passed (356)
+Duration  14.09s

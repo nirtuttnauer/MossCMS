@@ -4,7 +4,7 @@ import { MarkdownInput } from './MarkdownInput'
 import { ReferencePicker } from './ReferencePicker'
 import { Button } from './ui/button'
 import { initialValue } from '../lib/fields'
-import { LOCALE_PATTERN } from '../lib/locales'
+import { LOCALE_PATTERN, localeValueProps } from '../lib/locales'
 import type { Asset, Entry, Field } from '../lib/api'
 
 type Props = {
@@ -17,6 +17,7 @@ type Props = {
   editable?: boolean
   defaultLocale?: string
   locales?: string[]
+  contentLocale?: string
   path?: string
   errors?: Record<string, string>
   onClearError?: (path: string, descendants?: boolean) => void
@@ -24,7 +25,7 @@ type Props = {
 
 export const fieldInputId = (path: string) => `field-${encodeURIComponent(path)}`
 
-export function FieldInput({ field, value, onChange, references, assets, path, errors, onClearError, projectId, editable = false, defaultLocale = 'en', locales = ['en'] }: Props) {
+export function FieldInput({ field, value, onChange, references, assets, path, errors, onClearError, projectId, editable = false, defaultLocale = 'en', locales = ['en'], contentLocale }: Props) {
   const [newLocale, setNewLocale] = useState('')
   const [localeError, setLocaleError] = useState('')
   const label = field.label || field.name || 'Item'
@@ -34,7 +35,8 @@ export function FieldInput({ field, value, onChange, references, assets, path, e
   const object = (value && typeof value === 'object' && !Array.isArray(value) ? value : {}) as Record<string, unknown>
 
   const errorId = `error-${inputId}`
-  const childProps = { projectId, editable, defaultLocale, locales, errors, onClearError }
+  const writing = localeValueProps(contentLocale)
+  const childProps = { projectId, editable, defaultLocale, locales, errors, onClearError, contentLocale }
   const clear = (descendants = false) => onClearError?.(currentPath, descendants)
 
   if (field.localized) {
@@ -58,6 +60,7 @@ export function FieldInput({ field, value, onChange, references, assets, path, e
                 assets={assets}
                 path={locPath}
                 {...childProps}
+                contentLocale={locale}
               />
               <button
                 type="button"
@@ -78,7 +81,7 @@ export function FieldInput({ field, value, onChange, references, assets, path, e
         <p className="field-help">Suggested locales present: {locales.filter(locale => locale in object).join(', ') || 'none'}. Missing: {locales.filter(locale => !(locale in object)).join(', ') || 'none'}.</p>
         <div className="inline-form">
           <label htmlFor={`${inputId}-suggested-locale`}>Suggested locale</label>
-          <select id={`${inputId}-suggested-locale`} aria-label={`Suggested locale for ${label}`} value={locales.includes(newLocale) && !(newLocale in object) ? newLocale : ''} onChange={event => { setNewLocale(event.target.value); setLocaleError('') }}>
+          <select id={`${inputId}-suggested-locale`} aria-label={`Suggested locale for ${label}`} dir="ltr" value={locales.includes(newLocale) && !(newLocale in object) ? newLocale : ''} onChange={event => { setNewLocale(event.target.value); setLocaleError('') }}>
             <option value="">Choose locale…</option>
             {locales.filter(locale => !(locale in object)).map(locale => <option key={locale} value={locale}>{locale}</option>)}
           </select>
@@ -249,6 +252,7 @@ export function FieldInput({ field, value, onChange, references, assets, path, e
             onChange(val)
           }}
           assets={assets}
+          locale={contentLocale}
         />
         {fieldError && <span id={errorId} className="field-error" role="alert">{fieldError}</span>}
       </div>
@@ -335,7 +339,8 @@ export function FieldInput({ field, value, onChange, references, assets, path, e
         max={field.name === 'focalX' || field.name === 'focalY' ? 100 : undefined}
         step={field.type === 'number' ? 'any' : undefined}
         required={field.required}
-        dir={field.type === 'text' ? 'auto' : 'ltr'}
+        dir={field.type === 'text' ? writing.dir : 'ltr'}
+        lang={field.type === 'text' ? writing.lang : undefined}
         value={String(value ?? '')}
         aria-invalid={Boolean(fieldError)}
         aria-describedby={fieldError ? `error-${inputId}` : undefined}

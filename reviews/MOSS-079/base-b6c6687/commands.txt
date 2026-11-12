@@ -1,0 +1,7 @@
+label: local
+sha: b6c66870b98af990ee91766e5a965e823bf2b03d
+date: 2026-11-12T14:54:51Z
+workdir: /tmp/moss-main/api
+command:
+MOSS_USE_SQLITE=false uv run pytest tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests -q --tb=short
+uv run pytest --collect-only -q

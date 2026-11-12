@@ -1,0 +1,10 @@
+label: local
+sha: 9c42545b9c0d94c5363ec0770fbd2639d0c9a6a8
+short_sha: 9c42545
+started: 2026-11-12T14:44:15Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+verify-rest: pytest-postgres failed with exit 1
+verify-rest: verify-required-runs failed with exit 1
+finished: 2026-11-12T14:57:14Z
+result: continued after the dependabot failure that is also on main

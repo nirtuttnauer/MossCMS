@@ -1,0 +1,9 @@
+label: local
+date: 2026-11-12T15:07:22Z
+sha: 09b7dc9b995ad5f40461aa455b2fe28e60a6ff2d
+workdir: web
+command:
+npm audit
+---- output ----
+found 0 vulnerabilities
+exit_code: 0

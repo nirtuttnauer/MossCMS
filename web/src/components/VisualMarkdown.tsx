@@ -6,6 +6,10 @@ type Props = {
   label: string
   value: string
   onChange: (value: string) => void
+  /** Writing direction for prose blocks; code blocks keep automatic direction. */
+  dir?: 'ltr' | 'rtl' | 'auto'
+  /** Language of the edited value, set on the editor group. */
+  lang?: string
 }
 
 function domFor(inline: Inline) {
@@ -55,7 +59,7 @@ function inlinesFrom(node: HTMLElement): Inline[] | null {
   return inlines.length ? inlines : [{ type: 'text', text: '' }]
 }
 
-function Editable({ id, inlines, onInlines }: { id?: string; inlines: Inline[]; onInlines: (inlines: Inline[]) => void }) {
+function Editable({ id, dir, inlines, onInlines }: { id?: string; dir: 'ltr' | 'rtl' | 'auto'; inlines: Inline[]; onInlines: (inlines: Inline[]) => void }) {
   const ref = useRef<HTMLDivElement>(null)
   const latest = useRef(inlines)
   latest.current = inlines
@@ -72,7 +76,7 @@ function Editable({ id, inlines, onInlines }: { id?: string; inlines: Inline[]; 
       contentEditable
       role="textbox"
       aria-multiline="true"
-      dir="auto"
+      dir={dir}
       suppressContentEditableWarning
       onPaste={event => {
         event.preventDefault()
@@ -97,7 +101,7 @@ function Editable({ id, inlines, onInlines }: { id?: string; inlines: Inline[]; 
   )
 }
 
-export function VisualMarkdown({ id, label, value, onChange }: Props) {
+export function VisualMarkdown({ id, label, value, onChange, dir = 'auto', lang }: Props) {
   const documentModel = parseRichText(value)
   if (!documentModel) return null
   function commit(blocks: Block[]) {
@@ -106,7 +110,7 @@ export function VisualMarkdown({ id, label, value, onChange }: Props) {
   }
   const blocks = documentModel.blocks.length ? documentModel.blocks : [{ type: 'paragraph', inlines: [{ type: 'text', text: '' }] } as Block]
   return (
-    <div className="visual-markdown" role="group" aria-label={`${label} visual editor`}>
+    <div className="visual-markdown" role="group" aria-label={`${label} visual editor`} dir={dir} lang={lang}>
       {blocks.map((block, index) => {
         if (block.type === 'code') {
           return (
@@ -121,7 +125,7 @@ export function VisualMarkdown({ id, label, value, onChange }: Props) {
           )
         }
         if (block.type === 'image') {
-          return <p key={index} className="visual-image" dir="auto">Image: {block.alt} <code>asset:{block.assetId}</code></p>
+          return <p key={index} className="visual-image" dir={dir}>Image: {block.alt} <code>asset:{block.assetId}</code></p>
         }
         if (block.type === 'bullet' || block.type === 'ordered') {
           return (
@@ -129,6 +133,7 @@ export function VisualMarkdown({ id, label, value, onChange }: Props) {
               {block.items.map((item, itemIndex) => (
                 <Editable
                   key={itemIndex}
+                  dir={dir}
                   inlines={item}
                   onInlines={next => commit(blocks.map((candidate, candidateIndex) => candidateIndex === index && (candidate.type === 'bullet' || candidate.type === 'ordered')
                     ? { ...candidate, items: candidate.items.map((current, currentIndex) => currentIndex === itemIndex ? next : current) }
@@ -142,6 +147,7 @@ export function VisualMarkdown({ id, label, value, onChange }: Props) {
           <div key={index} className={block.type === 'heading' ? `visual-heading visual-h${block.level}` : 'visual-paragraph'}>
             <Editable
               id={index === 0 ? id : undefined}
+              dir={dir}
               inlines={block.inlines}
               onInlines={next => commit(blocks.map((candidate, candidateIndex) => candidateIndex === index && (candidate.type === 'paragraph' || candidate.type === 'heading')
                 ? { ...candidate, inlines: next }
