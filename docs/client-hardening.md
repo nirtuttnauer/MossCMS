@@ -161,6 +161,7 @@ The route table is generated from the FastAPI router by `api/scripts/classify_ro
 | HEAD | `/redoc` | private |
 | PATCH | `/api/project` | private |
 | PATCH | `/api/project/locales` | private |
+| PATCH | `/api/project/permissions` | private |
 | PATCH | `/api/project/preview` | private |
 | PATCH | `/api/projects/{project_id}` | private |
 | PATCH | `/api/team/{user_id}` | private |
