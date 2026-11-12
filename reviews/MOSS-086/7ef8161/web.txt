@@ -1,0 +1,61 @@
+label: local
+date: 2026-11-12T15:02:04Z
+sha: 7ef81619fa9d40e0cd1b48e63c3caef6d50b421a
+workdir: web
+command:
+npm run check && npm test && npm run build && npm audit --audit-level=high
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+
+> mosscms-admin@0.1.0 check
+> tsc -b
+
+
+> mosscms-admin@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /agent/repos/MossCMS/web
+
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+
+ Test Files  36 passed (36)
+      Tests  358 passed (358)
+   Start at  15:02:07
+   Duration  14.05s (transform 1.64s, setup 0ms, import 6.98s, tests 19.03s, environment 11.86s)
+
+
+> mosscms-admin@0.1.0 build
+> tsc -b && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 1848 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                      0.40 kB │ gzip:   0.28 kB
+dist/assets/index-DOXHVdFt.css      63.56 kB │ gzip:  13.81 kB
+dist/assets/Migration-C7MJZ4VE.js   15.44 kB │ gzip:   5.27 kB
+dist/assets/index-DSwpG69v.js      560.63 kB │ gzip: 178.30 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 6.75s
+found 0 vulnerabilities
+exit_code: 0

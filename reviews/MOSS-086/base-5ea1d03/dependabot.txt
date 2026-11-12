@@ -1,0 +1,11 @@
+label: local
+date: 2026-11-12T14:52:56Z
+sha: 5ea1d037bb85e47c2efc1d97f72998d130130878
+workdir: api
+command:
+pytest tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+---- output ----
+FAILED tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+AssertionError: assert ['starters/nextjs/package.json (npm /starters/nextjs) is not covered by .github/dependabot.yml'] == []
+1 failed
+exit_code: 1
