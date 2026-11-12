@@ -1,0 +1,22 @@
+label: local
+date: 2026-11-12T15:04:31Z
+sha: c641c10b02dbdd316bb61b10c50ac0e142fef041
+workdir: web
+note: scripts/verify.sh MOSS-082 exited at pytest-sqlite. This is that script's next command, on the same commit.
+command:
+npm ci
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+
+added 284 packages, and audited 285 packages in 3s
+
+106 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
+exit_code: 0

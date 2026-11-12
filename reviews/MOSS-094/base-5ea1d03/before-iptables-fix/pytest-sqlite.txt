@@ -1,0 +1,56 @@
+........................................................................ [ 14%]
+.....................................F.................................. [ 28%]
+........................................................................ [ 43%]
+...............................................F........................ [ 57%]
+........................................................................ [ 72%]
+........................................................................ [ 86%]
+..................................................................       [100%]
+=================================== FAILURES ===================================
+E   AssertionError: assert ['starters/ne...pendabot.yml'] == []
+      
+      Left contains one more item: 'starters/nextjs/package.json (npm /starters/nextjs) is not covered by .github/dependabot.yml'
+      Use -v to get more diff
+/tmp/mosscms-main/api/tests/test_dependabot.py:22: AssertionError: assert ['starters/ne...pendabot.yml'] == []
+E   AssertionError: (RouteKey(method='GET', path='/delivery/entries'), 'curl: (28) Operation timed out after 15002 milliseconds with 0 bytes received
+      ')
+    assert 28 == 0
+----------------------------- Captured stderr call -----------------------------
+ Container moss059-public-proxy-1  Stopping
+ Container moss059-public-proxy-1  Stopped
+ Container moss059-public-proxy-1  Removing
+ Container moss059-public-proxy-1  Removed
+ Container moss059-app-1  Stopping
+ Container moss059-app-1  Stopped
+ Container moss059-app-1  Removing
+ Container moss059-app-1  Removed
+ Container moss059-db-1  Stopping
+ Container moss059-db-1  Stopped
+ Container moss059-db-1  Removing
+ Container moss059-db-1  Removed
+ Volume moss059_moss_assets  Removing
+ Network moss059_default  Removing
+ Volume moss059_moss_assets  Removed
+ Network moss059_default  Removed
+/tmp/mosscms-main/api/tests/test_private_admin_compose.py:339: AssertionError: (RouteKey(method='GET', path='/delivery/entries'), 'curl: (28) Operation timed out after 15002 milliseconds with 0 bytes received
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /tmp/mosscms-main/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5
+  /tmp/mosscms-main/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5: AuthlibDeprecationWarning: The httpx module is deprecated; please use httpx2 instead.
+    from ._compat import httpx2
+
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+  /tmp/mosscms-main/api/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1192: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
+    cursor.execute(statement, parameters)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+FAILED tests/test_private_admin_compose.py::test_variant_a_proxy_and_variant_b_private_listener
+2 failed, 496 passed, 4 deselected, 6 warnings in 138.03s (0:02:18)
+EXIT:1

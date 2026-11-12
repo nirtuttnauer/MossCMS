@@ -1,0 +1,10 @@
+label: local
+sha: 16c7a250c25d763a2e176c39a09aaa7efd3ce782
+image: postgres:17-alpine
+command: docker run --rm -d --name moss-verify-pg -e POSTGRES_USER=pg -e POSTGRES_PASSWORD=pgtestpw -e POSTGRES_DB=postgres -p 127.0.0.1:5432:5432 postgres:17-alpine
+continued: after scripts/verify.sh MOSS-094 exited 1 at pytest-sqlite
+---- output ----
+1a36bed50792ddb740b58373ff226a900180adc532753c66bfe15988ce9dfd07
+/var/run/postgresql:5432 - no response
+/var/run/postgresql:5432 - accepting connections
+postgres (PostgreSQL) 17.11

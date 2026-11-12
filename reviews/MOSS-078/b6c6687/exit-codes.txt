@@ -1,0 +1,3 @@
+web-test 0
+pytest-sqlite 1
+pytest-postgres 1

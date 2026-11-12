@@ -1,0 +1,102 @@
+label: local
+date: 2026-11-12T16:13:20Z
+sha: 16c7a250c25d763a2e176c39a09aaa7efd3ce782
+workdir: api
+rerun: after iptables-legacy FORWARD policy ACCEPT
+command:
+uv run pytest
+MOSS_USE_SQLITE=false
+MOSS_REQUIRED_RUN=postgres
+MOSS_TEST_DATABASE_URL=postgresql+psycopg://pg:pgtestpw@localhost:5432/postgres
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /agent/repos/MossCMS/api
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1
+collected 504 items
+
+tests/test_a11y_copy.py .                                                [  0%]
+tests/test_autosave.py ....                                              [  0%]
+tests/test_benchmark.py ...........                                      [  3%]
+tests/test_cli.py ................                                       [  6%]
+tests/test_cms.py .......................                                [ 10%]
+tests/test_compose.py ........                                           [ 12%]
+tests/test_concurrency.py .                                              [ 12%]
+tests/test_config.py ..............................                      [ 18%]
+tests/test_delivery_authorization.py ....                                [ 19%]
+tests/test_delivery_exposure.py .                                        [ 19%]
+tests/test_delivery_rest.py .........                                    [ 21%]
+tests/test_delivery_rest_parity.py ..                                    [ 21%]
+tests/test_dependabot.py F.................                              [ 25%]
+tests/test_development_bypass.py ..                                      [ 25%]
+tests/test_forwarded_peer.py ..                                          [ 26%]
+tests/test_images.py ................                                    [ 29%]
+tests/test_indexing.py ................                                  [ 32%]
+tests/test_media_links.py ......                                         [ 33%]
+tests/test_migrate.py ......                                             [ 34%]
+tests/test_openapi.py ...                                                [ 35%]
+tests/test_operator_scripts.py .........................                 [ 40%]
+tests/test_ordering.py .......................                           [ 45%]
+tests/test_outbox.py ...........                                         [ 47%]
+tests/test_portability.py ........................                       [ 51%]
+tests/test_postgres_product_migration.py .                               [ 52%]
+tests/test_preview.py .....                                              [ 53%]
+tests/test_private_admin_compose.py .                                    [ 53%]
+tests/test_product_improvements.py ............                          [ 55%]
+tests/test_publication.py .......                                        [ 57%]
+tests/test_query_limits.py ..................                            [ 60%]
+tests/test_rate_limit.py .......                                         [ 62%]
+tests/test_release_scripts.py .....................                      [ 66%]
+tests/test_required_runs.py .                                            [ 66%]
+tests/test_resolved_assets.py ....                                       [ 67%]
+tests/test_route_classification.py ....                                  [ 68%]
+tests/test_schema.py .....                                               [ 69%]
+tests/test_schema_cache.py ......                                        [ 70%]
+tests/test_search.py ............                                        [ 72%]
+tests/test_seo.py ....................                                   [ 76%]
+tests/test_slugs.py ...............................................      [ 85%]
+tests/test_snapshot_migration.py .                                       [ 86%]
+tests/test_static.py .                                                   [ 86%]
+tests/test_storage.py ...................                                [ 90%]
+tests/test_telemetry.py .................                                [ 93%]
+tests/test_transforms.py ..........                                      [ 95%]
+tests/test_webhooks.py .........                                         [ 97%]
+tests/test_website_setup.py .......                                      [ 98%]
+tests/test_workflows.py .                                                [ 98%]
+tests/test_workspace_migration.py ......                                 [100%]
+
+=================================== FAILURES ===================================
+__________ test_dependabot_config_matches_schema_and_covers_manifests __________
+
+    def test_dependabot_config_matches_schema_and_covers_manifests():
+>       assert MODULE.check() == []
+E       AssertionError: assert ['starters/ne...pendabot.yml'] == []
+E         
+E         Left contains one more item: 'starters/nextjs/package.json (npm /starters/nextjs) is not covered by .github/dependabot.yml'
+E         Use -v to get more diff
+
+tests/test_dependabot.py:22: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /agent/repos/MossCMS/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5
+  /agent/repos/MossCMS/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5: AuthlibDeprecationWarning: The httpx module is deprecated; please use httpx2 instead.
+    from ._compat import httpx2
+
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+  /agent/repos/MossCMS/api/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1192: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
+    cursor.execute(statement, parameters)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+============ 1 failed, 503 passed, 6 warnings in 261.90s (0:04:21) =============
+exit_code: 1
