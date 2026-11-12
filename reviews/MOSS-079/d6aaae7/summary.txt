@@ -1,0 +1,17 @@
+label: local
+sha: d6aaae74a118426cd93f33434791c414a1e2099d
+short_sha: d6aaae7
+started: 2026-11-12T14:51:03Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continuation started: 2026-11-12T14:55:15Z
+reason: scripts/verify.sh exited 1 at pytest-sqlite
+continue: pytest-postgres exit 1; same dependabot failure as base b6c6687
+continue: verify-required-runs exit 1; recorded and continuing
+continue: pip-audit failed with exit 1
+continuation 2 started: 2026-11-12T15:01:54Z
+reason: pip-audit rerun with EVIDENCE set
+continue2: pip-audit failed with exit 1
+continuation 2 started: 2026-11-12T15:02:31Z
+reason: pip-audit rerun with EVIDENCE set
+continuation 2 finished: 2026-11-12T15:04:03Z
