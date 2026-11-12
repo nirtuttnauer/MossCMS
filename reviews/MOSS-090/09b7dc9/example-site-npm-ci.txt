@@ -1,0 +1,15 @@
+label: local
+date: 2026-11-12T15:07:05Z
+sha: 09b7dc9b995ad5f40461aa455b2fe28e60a6ff2d
+workdir: example-site
+command:
+npm ci
+---- output ----
+
+added 193 packages, and audited 194 packages in 2s
+
+85 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+exit_code: 0
