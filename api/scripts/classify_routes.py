@@ -136,17 +136,15 @@ def documented_table(text=None):
 def load_app():
     storage = Path(os.environ.get("MOSS_CLASSIFY_STORAGE", "/tmp/moss-route-classify"))
     storage.mkdir(parents=True, exist_ok=True)
-    os.environ.setdefault("MOSS_SECRET_KEY", "s" * 40)
-    os.environ.setdefault("MOSS_SETUP_TOKEN", "t" * 30)
-    os.environ.setdefault("MOSS_USE_SQLITE", "true")
-    os.environ["MOSS_STORAGE_DIR"] = str(storage)
     from app.config import Settings
     from app.main import create_app
 
+    # Settings carries every value, so the caller's environment is left unchanged.
+    # Setting MOSS_USE_SQLITE here would switch later Settings() in the same process to SQLite.
     return create_app(
         Settings(
-            secret=os.environ["MOSS_SECRET_KEY"],
-            setup_token=os.environ["MOSS_SETUP_TOKEN"],
+            secret=os.environ.get("MOSS_SECRET_KEY") or "s" * 40,
+            setup_token=os.environ.get("MOSS_SETUP_TOKEN") or "t" * 30,
             storage_dir=storage,
             use_sqlite=True,
         )
