@@ -1,0 +1,15 @@
+label: local
+sha: 673cdb1e3a18206de39e9b1ce468247c57528661
+short_sha: 673cdb1
+started: 2026-11-12T15:59:46Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continuation_started: 2026-11-12T16:06:19Z
+reason: scripts/verify.sh exited 1 at pytest-sqlite
+continue: pytest-postgres failed with exit 1
+postgres_only_failure: tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+resume_started: 2026-11-12T16:13:26Z
+continue: verify-required-runs failed with exit 1
+continue: verify-required-runs exited 1; expected while the dependabot test is failed
+finished: 2026-11-12T16:16:00Z
+result: continuation finished

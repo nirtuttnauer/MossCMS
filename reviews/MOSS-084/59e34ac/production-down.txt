@@ -1,0 +1,19 @@
+label: local
+date: 2026-11-12T15:17:46Z
+sha: 59e34ac27bf842f2bc8a67c4923aa3284dbaa354
+workdir: .
+command:
+docker compose -f ci/compose.yaml -p mosscms-smoke down --volumes
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+ Container mosscms-smoke-app-1  Stopping
+ Container mosscms-smoke-app-1  Stopped
+ Container mosscms-smoke-app-1  Removing
+ Container mosscms-smoke-app-1  Removed
+ Container mosscms-smoke-db-1  Stopping
+ Container mosscms-smoke-db-1  Stopped
+ Container mosscms-smoke-db-1  Removing
+ Container mosscms-smoke-db-1  Removed
+ Network mosscms-smoke_default  Removing
+ Network mosscms-smoke_default  Removed
+exit_code: 0
