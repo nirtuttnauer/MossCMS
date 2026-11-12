@@ -125,6 +125,36 @@ test('replaces selected text with a durable image ID and sanitized alt text', ()
   expect(insert.disabled).toBe(true)
 })
 
+test.each([
+  ['he', 'rtl'],
+  ['ar', 'rtl'],
+  ['he-IL', 'rtl'],
+  ['ar-EG', 'rtl'],
+  ['en', 'ltr'],
+  ['pt-BR', 'ltr'],
+  ['fr-CA', 'ltr'],
+] as const)('locale %s locks the editor, preview, and alt text to %s with that lang', (locale, dir) => {
+  const view = render(<Editor initialValue={dir === 'rtl' ? 'שלום' : 'Hello'} assets={[]} locale={locale} />)
+  const input = screen.getByLabelText<HTMLTextAreaElement>('Body')
+  const alt = screen.getByLabelText('Image alt text')
+  expect(input.dir).toBe(dir)
+  expect(input.lang).toBe(locale)
+  expect(alt.getAttribute('dir')).toBe(dir)
+  expect(alt.getAttribute('lang')).toBe(locale)
+
+  fireEvent.click(screen.getByRole('button', { name: 'Preview Markdown' }))
+  const preview = document.querySelector('.markdown-preview')
+  expect(preview?.getAttribute('dir')).toBe(dir)
+  expect(preview?.getAttribute('lang')).toBe(locale)
+
+  view.rerender(<Editor initialValue={dir === 'rtl' ? 'שלום' : 'Hello'} assets={[]} locale={locale === 'he' ? 'en' : 'he'} />)
+  const next = locale === 'he' ? 'en' : 'he'
+  expect(input.dir).toBe(next === 'he' ? 'rtl' : 'ltr')
+  expect(input.lang).toBe(next)
+  expect(document.querySelector('.markdown-preview')?.getAttribute('dir')).toBe(next === 'he' ? 'rtl' : 'ltr')
+  expect(document.querySelector('.markdown-preview')?.getAttribute('lang')).toBe(next)
+})
+
 test('validation errors return to the editor and preserve its accessible field props', () => {
   const view = render(<Editor initialValue="Saved content" assets={[]} required id="body" />)
   const input = screen.getByLabelText<HTMLTextAreaElement>('Body *')

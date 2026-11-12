@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Button } from './ui/button'
 import { AssetPicker } from './AssetPicker'
 import { Markdown } from './Markdown'
+import { localeValueProps } from '../lib/locales'
 import type { Asset } from '../lib/api'
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
   projectId?: string
   id?: string
   error?: string
+  locale?: string
 }
 
 export function MarkdownInput({
@@ -26,7 +28,9 @@ export function MarkdownInput({
   projectId,
   id,
   error,
+  locale,
 }: Props) {
+  const writing = localeValueProps(locale)
   const generatedId = useId()
   const controlId = id || generatedId
   const input = useRef<HTMLTextAreaElement>(null)
@@ -97,14 +101,15 @@ export function MarkdownInput({
         rows={8}
         value={value}
         required={required}
-        dir="auto"
+        dir={writing.dir}
+        lang={writing.lang}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `error-${controlId}` : undefined}
         onChange={event => onChange(event.target.value)}
         hidden={preview}
       />
       {preview && (
-        <div className="markdown-preview" dir="auto">
+        <div className="markdown-preview" dir={writing.dir} lang={writing.lang}>
           <Markdown text={value} assets={[...assets, ...uploaded]} />
         </div>
       )}
@@ -120,7 +125,7 @@ export function MarkdownInput({
         />
         <label>
           Image alt text
-          <input value={alt} dir="auto" onChange={event => setAlt(event.target.value)} />
+          <input value={alt} dir={writing.dir} lang={writing.lang} onChange={event => setAlt(event.target.value)} />
         </label>
         <Button
           type="button"
