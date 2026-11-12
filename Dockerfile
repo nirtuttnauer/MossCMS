@@ -23,6 +23,7 @@ COPY --from=api-deps /app/.venv /app/.venv
 COPY api/app ./app
 COPY api/migrations ./migrations
 COPY api/alembic.ini ./alembic.ini
+COPY shared/ /shared/
 COPY --from=web-build /web/dist ./static
 USER appuser
 EXPOSE 8001

@@ -1,0 +1,9 @@
+dependabot.yml matches the Dependabot schema and covers:
+  github-actions /  .github/workflows/checks.yml
+  github-actions /  .github/workflows/docker.yml
+  docker /  Dockerfile
+  uv /api  api/pyproject.toml
+  npm /ci  ci/package.json
+  docker /example-site  example-site/Dockerfile
+  npm /example-site  example-site/package.json
+  npm /web  web/package.json

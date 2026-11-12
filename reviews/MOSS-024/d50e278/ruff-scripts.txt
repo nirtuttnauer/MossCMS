@@ -1,0 +1,10 @@
+LABEL: local
+SHA: d50e2788485e4ef0c65598c4c2f2bd7536e1ed96
+COMMAND: bash -lc uv run ruff check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py && uv run ruff format --check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py && uv run ruff check --config pyproject.toml ../ci/telemetry_smoke.py && uv run ruff format --check --config pyproject.toml ../ci/telemetry_smoke.py
+START: 2026-10-29T04:33:19Z
+[1;32mAll checks passed![0m
+14 files already formatted
+[1;32mAll checks passed![0m
+1 file already formatted
+EXIT: 0
+END: 2026-10-29T04:33:19Z

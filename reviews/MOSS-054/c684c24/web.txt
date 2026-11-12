@@ -1,0 +1,61 @@
+label: local
+date: 2026-10-29T06:37:26Z
+sha: c684c24a8128bdfb32e8e06279a9481e613fbbe7
+workdir: web
+command:
+npm run check && npm test && npm run build && npm audit --audit-level=high
+GITHUB_WORKSPACE=/workspace
+---- output ----
+
+> mosscms-admin@0.1.0 check
+> tsc -b
+
+
+> mosscms-admin@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /workspace/web
+
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+
+ Test Files  36 passed (36)
+      Tests  356 passed (356)
+   Start at  06:37:29
+   Duration  13.48s (transform 1.45s, setup 0ms, import 6.41s, tests 18.29s, environment 11.38s)
+
+
+> mosscms-admin@0.1.0 build
+> tsc -b && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 1848 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                      0.40 kB │ gzip:   0.28 kB
+dist/assets/index-DOXHVdFt.css      63.56 kB │ gzip:  13.81 kB
+dist/assets/Migration-CR20st6L.js   15.44 kB │ gzip:   5.27 kB
+dist/assets/index-Ch9QJoIr.js      558.53 kB │ gzip: 177.27 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 6.48s
+found 0 vulnerabilities
+exit_code: 0

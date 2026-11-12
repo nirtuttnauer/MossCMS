@@ -1,0 +1,8 @@
+$ python3 scripts/backup.py --directory /tmp/moss-027/backups
+cwd: /workspace
+started: 2026-10-29T05:51:52Z
+exit: 0
+seconds: 0.75
+--- output ---
+/tmp/moss-027/backups/20261029T055151Z.dump
+/tmp/moss-027/backups/20261029T055151Z.media.tar.gz

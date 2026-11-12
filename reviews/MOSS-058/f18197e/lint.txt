@@ -1,0 +1,19 @@
+=== ruff check ===
+All checks passed!
+RUFF_CHECK:0
+=== ruff format ===
+88 files already formatted
+RUFF_FORMAT:0
+=== ruff scripts ===
+All checks passed!
+RUFF_SCRIPTS_CHECK:0
+16 files already formatted
+RUFF_SCRIPTS_FORMAT:0
+=== ruff telemetry ===
+All checks passed!
+RUFF_TEL_CHECK:0
+1 file already formatted
+RUFF_TEL_FORMAT:0
+=== mypy ===
+Success: no issues found in 29 source files
+MYPY:0

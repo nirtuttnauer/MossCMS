@@ -59,6 +59,13 @@ def issue_token(session, kind, days=7, **values):
     return raw, csrf
 
 
+def client_address(request):
+    """TCP peer. X-Forwarded-For and Forwarded are not read."""
+    client = getattr(request, "client", None)
+    host = getattr(client, "host", None) if client else None
+    return host or "unknown"
+
+
 def audit(session, project_id, actor, action, **details):
     session.add(Audit(project_id=project_id, actor=actor, action=action, details=details))
 

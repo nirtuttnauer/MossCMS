@@ -1,0 +1,8 @@
+label: local
+date: 2026-11-11T19:07:34Z
+phase: postgres
+command:
+python3 scripts/configure.py --production --public-url https://cms.moss.test:8443
+exit_code: 0
+---- output ----
+Configuration saved to .env. Use MOSS_SETUP_TOKEN from that file for the first administrator setup.

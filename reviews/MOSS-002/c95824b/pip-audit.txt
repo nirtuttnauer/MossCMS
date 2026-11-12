@@ -1,0 +1,12 @@
+label: local
+date: 2026-10-29T04:11:50Z
+sha: c95824b2e5d60179c4e9ca963d71606cf8247e4c
+git status --porcelain:
+(end git status)
+command: uv export --frozen --all-groups --no-emit-project -o /tmp/moss-002-requirements.txt && uv run --with pip-audit pip-audit --progress-spinner off -r /tmp/moss-002-requirements.txt
+ignores: none
+---- output ----
+uv export wrote /tmp/moss-002-requirements.txt and also printed that file on stdout (omitted here; it is the locked requirements, not the audit).
+export_exit: 0
+No known vulnerabilities found
+exit_code: 0

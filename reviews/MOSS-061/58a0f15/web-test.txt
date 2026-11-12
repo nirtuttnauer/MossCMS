@@ -1,0 +1,35 @@
+label: local
+date: 2026-11-11T18:41:14Z
+sha: 58a0f15fa5e75e446b210911d727340dc4ca67dd
+command: npm test
+workdir: web
+---- output ----
+
+> mosscms-admin@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /tmp/moss-main/web
+
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+
+ Test Files  36 passed (36)
+      Tests  356 passed (356)
+   Start at  18:41:14
+   Duration  14.02s (transform 1.54s, setup 0ms, import 6.88s, tests 18.95s, environment 12.50s)
+
+exit_code: 0

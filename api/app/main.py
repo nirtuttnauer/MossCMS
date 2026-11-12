@@ -1,7 +1,6 @@
 """MossCMS HTTP service. Editorial and delivery GraphQL have distinct permissions."""
 
 import asyncio
-import hashlib
 import json
 import logging
 import mimetypes
@@ -25,6 +24,8 @@ from starlette.middleware.sessions import SessionMiddleware
 from .accounts import context, router as account_router
 from .config import Settings
 from .content import publish_due, scoped, website_path_conflict
+from .delivery_rest import delivery_representation, register_delivery_routes
+from .openapi_schema import OPENAPI_DESCRIPTION, OPENAPI_SUMMARY, build_openapi
 from .development import initialize_development
 from .graphql import generated_schema
 from .migrate import migrate
@@ -32,7 +33,7 @@ from .models import ContentType, database
 from .oauth import configure_oauth, router as oauth_router
 from .preview import router as preview_router
 from .query_limits import bounded_query
-from .security import CmsError, identify, require
+from .security import CmsError, client_address, identify, require
 from .storage import router as storage_router
 from .telemetry import Telemetry, TelemetryMiddleware
 from .workspace_migration import MAX_ARCHIVE_UPLOAD, router as migration_router
@@ -97,7 +98,20 @@ def create_app(settings=None):
             engine.dispose()
             await asyncio.to_thread(telemetry.shutdown)
 
-    app = FastAPI(title="MossCMS", version="0.2.0", lifespan=lifespan)
+    app = FastAPI(
+        title="MossCMS",
+        version="0.2.0",
+        summary=OPENAPI_SUMMARY,
+        description=OPENAPI_DESCRIPTION,
+        license_info={"name": "MIT", "identifier": "MIT"},
+        openapi_tags=[
+            {
+                "name": "Delivery",
+                "description": "Read-only published content. Send Authorization: Bearer with a delivery token.",
+            }
+        ],
+        lifespan=lifespan,
+    )
     app.include_router(webhooks_router)
     app.include_router(migration_router)
     app.state.settings, app.state.engine, app.state.db = settings, engine, factory
@@ -166,6 +180,7 @@ def create_app(settings=None):
                     "status": response.status_code,
                     "seconds": round(duration, 4),
                     **telemetry.log_fields(),
+                    "client": client_address(request),
                 }
             )
         )
@@ -307,18 +322,9 @@ def create_app(settings=None):
             )
         for error in response_errors:
             error.setdefault("extensions", {})["requestId"] = request.state.request_id
-        headers = {
-            "Cache-Control": "private, no-cache" if delivery and not payload.get("errors") else "no-store",
-            "Vary": "Authorization, Origin",
-        }
-        if delivery and not payload.get("errors"):
-            etag = '"' + hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest() + '"'
-            headers["ETag"] = etag
-            if request.headers.get("if-none-match") == etag:
-                from fastapi import Response
+        return delivery_representation(request, payload, cacheable=bool(delivery and not payload.get("errors")))
 
-                return Response(status_code=304, headers=headers)
-        return JSONResponse(payload, headers=headers)
+    register_delivery_routes(app, factory, settings)
 
     static = Path(__file__).resolve().parents[1] / "static"
     # Slim runtimes may not have a system WebP MIME mapping.
@@ -335,7 +341,24 @@ def create_app(settings=None):
         return {"service": "MossCMS", "admin": "Run the Vite dev server on port 5173."}
 
     app.add_middleware(TelemetryMiddleware, telemetry=telemetry)
+    _install_openapi(app)
     return app
+
+
+def _install_openapi(app):
+    """Serve the generated schema with the delivery ETag helper. /docs keeps FastAPI's page."""
+    app.router.routes[:] = [route for route in app.router.routes if getattr(route, "path", None) != app.openapi_url]
+
+    def generated_openapi():
+        if app.openapi_schema is None:
+            app.openapi_schema = build_openapi(app)
+        return app.openapi_schema
+
+    app.openapi = generated_openapi
+
+    @app.api_route("/openapi.json", methods=["GET", "HEAD"], include_in_schema=False)
+    def openapi_document(request: Request):
+        return delivery_representation(request, app.openapi(), cacheable=True)
 
 
 app = create_app()

@@ -1,0 +1,11 @@
+label: local
+date: 2026-11-11T18:22:43Z
+sha: f15a9a654e2712bd4609e82573fde315ff57eca5
+workdir: api
+command:
+uv run ruff check app tests migrations && uv run ruff format --check app tests migrations
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+[1;32mAll checks passed![0m
+92 files already formatted
+exit_code: 0

@@ -1,0 +1,16 @@
+HTTP/1.1 405 Method Not Allowed
+Server: nginx/1.24.0 (Ubuntu)
+Date: Thu, 29 Oct 2026 05:36:44 GMT
+Content-Type: application/json
+Content-Length: 31
+Connection: keep-alive
+allow: GET
+vary: Origin
+x-request-id: ff68824b-9731-4166-9a4c-7b8e926d02aa
+server-timing: app;dur=0.4
+x-content-type-options: nosniff
+referrer-policy: same-origin
+x-frame-options: DENY
+Strict-Transport-Security: max-age=300
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests
+

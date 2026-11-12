@@ -1,0 +1,30 @@
+# Variant A: public allowlist proxy, private CMS listener on loopback.
+services:
+  app:
+    ports: !override
+      - "127.0.0.1:18058:8001"
+    environment:
+      MOSS_ENV: development
+      MOSS_PUBLIC_URL: http://127.0.0.1:18059
+      MOSS_ORIGINS: http://127.0.0.1:18059,http://127.0.0.1:18058,http://127.0.0.1:18057
+      MOSS_WEBHOOK_ORIGINS: http://example-site:5174
+      FORWARDED_ALLOW_IPS: "*"
+      PYTHONUNBUFFERED: "1"
+  example-site:
+    ports: !override
+      - "127.0.0.1:18057:5174"
+    environment:
+      MOSS_API_URL: http://app:8001
+      SITE_PUBLIC_URL: http://127.0.0.1:18057
+      MOSS_DELIVERY_TOKEN: ${MOSS_DELIVERY_TOKEN:-unset}
+      MOSS_WEBHOOK_SECRET: ${MOSS_WEBHOOK_SECRET:-unset}
+      SITE_MOSS_WORKSPACE_ID: ${SITE_MOSS_WORKSPACE_ID:-unset}
+  public-proxy:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./reviews/MOSS-059/nginx-allowlist.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "127.0.0.1:18059:8080"
+    depends_on:
+      app:
+        condition: service_healthy

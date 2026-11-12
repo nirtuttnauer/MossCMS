@@ -1,0 +1,3 @@
+COMPOSE_PROGRESS=quiet
+Compose 2.40.3 writes image-build progress to the stdout of `docker compose run`.
+scripts/backup.py and the SQLite tar capture that stdout. Quiet progress keeps the archive gzip.

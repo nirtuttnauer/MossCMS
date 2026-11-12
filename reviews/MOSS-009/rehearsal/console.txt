@@ -1,0 +1,37 @@
+Admin UI with the proxy Content-Security-Policy enabled.
+Recorded 2026-10-29T05:35:26Z through 2026-10-29T05:35:29Z.
+Chromium 141.0.7390.37 (Playwright 1.56.1), headless, on this Linux VM.
+The local rehearsal CA is not in the browser trust store; the context used ignoreHTTPSErrors.
+TLS still terminated at nginx. The policy on the document is the header in admin.headers.
+
+securitypolicyviolation events: 0
+Page errors: 0
+Console text containing "Content Security Policy" or "Refused to": none
+
+Pages and headings:
+
+- GET / before sign-in: "Welcome back" (admin-login.png). Brand images /brand/moss-arch-v2.webp and /brand/moss-symbol-v2.png returned 200.
+- After sign-in, #content: "Content" (admin-content.png).
+- #overview: "Overview"
+- #migration: "Import & export". The lazy chunk /assets/Migration-BMW6KVXu.js returned 200, then GET /api/migration/limits returned 200.
+- #explorer: "API explorer"
+- #settings: "Settings". GET /api/webhooks and GET /api/tokens returned 200.
+- #assets: "Assets"
+
+Computed body font-family after load: "DM Sans", system-ui, sans-serif
+
+Font responses (not served by the app; requested by the stylesheet @import):
+
+- 200 https://fonts.googleapis.com/css2
+- 200 https://fonts.gstatic.com/s/dmmono/v16/aFTR7PB1QTsUX8KYvumzEYOtbQ.woff2
+- 200 https://fonts.gstatic.com/s/dmsans/v17/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K4.woff2
+- 200 https://fonts.gstatic.com/s/manrope/v23/xn7gYHE41ni1AdIRggexSg.woff2
+- 200 https://fonts.gstatic.com/s/dmmono/v16/aFTU7PB1QTsUX8KYthqQBA.woff2
+
+Console messages:
+
+- error: Failed to load resource: the server responded with a status of 401 (Unauthorized)
+
+That 401 is GET /auth/me on the sign-in page, before a session cookie exists. The API log shows the same request, then POST /auth/login 200 and GET /auth/me 200. It is not a CSP message.
+
+No password, setup token, session cookie, or .env value is in this file.

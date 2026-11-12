@@ -1,0 +1,7 @@
+$ docker image inspect mosscms:local --format {{.Id}}
+cwd: /workspace
+started: 2026-10-29T05:51:52Z
+exit: 0
+seconds: 0.03
+--- output ---
+sha256:7f0c73b05fbd201a7cebc20cbd780d627f934981bf0fb74c4b47f5d89e099a47

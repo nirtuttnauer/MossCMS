@@ -1,0 +1,17 @@
+LABEL: local
+SHA: b9c336d397b37c9075bad0765fb375c0c513faaa
+CWD: /workspace
+COMMAND: docker compose -f /workspace/ci/compose.yaml -p mosscms-smoke down --volumes
+START: 2026-10-29T04:58:40Z
+ Container mosscms-smoke-app-1  Stopping
+ Container mosscms-smoke-app-1  Stopped
+ Container mosscms-smoke-app-1  Removing
+ Container mosscms-smoke-app-1  Removed
+ Container mosscms-smoke-db-1  Stopping
+ Container mosscms-smoke-db-1  Stopped
+ Container mosscms-smoke-db-1  Removing
+ Container mosscms-smoke-db-1  Removed
+ Network mosscms-smoke_default  Removing
+ Network mosscms-smoke_default  Removed
+EXIT: 0
+END: 2026-10-29T04:58:41Z

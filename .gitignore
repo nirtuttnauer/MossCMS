@@ -17,6 +17,7 @@
 backups/
 
 .mypy_cache/
+api/.required-run-results/
 /ProjectMemory/
 ci/test-results/
 ci/playwright-report/

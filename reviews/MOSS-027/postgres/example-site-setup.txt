@@ -1,0 +1,9 @@
+$ python3 example-site/scripts/setup_moss.py --cms-url https://cms.moss.test:8443 --email rehearsal-admin@example.com --website-url https://site.moss.test:8444 --name Client restore site --headline Restored from a MossCMS backup.
+cwd: /workspace
+started: 2026-10-29T05:51:18Z
+exit: 0
+seconds: 0.60
+--- output ---
+Example website workspace: 394fcc3f-11d5-4044-8190-be277015d21a
+Website schemas upgraded. Projects and blog posts have their own content types; IDs, content, schedules and history are retained.
+Server-only connection saved to /workspace/example-site/.env

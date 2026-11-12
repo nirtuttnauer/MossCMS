@@ -1,0 +1,6 @@
+$ docker compose --profile website up -d --no-build example-site
+cwd: /workspace
+started: 2026-10-29T05:52:09Z
+exit: 0
+seconds: 6.59
+--- output ---

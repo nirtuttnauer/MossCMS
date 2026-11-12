@@ -1,10 +1,13 @@
 import os
+import sys
 import uuid
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
+
+import required_runs
 
 os.environ.setdefault("MOSS_SKIP_AUTH", "false")
 os.environ.setdefault("MOSS_SECRET_KEY", "test-secret-" * 4)
@@ -129,3 +132,98 @@ def entry(client, headers, slug="hello", data=None, status="draft", key="article
         },
     )
     return result
+
+
+_DESELECTED = []
+
+
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers",
+        "postgres: PostgreSQL-only test; excluded from the SQLite required run with -m 'not postgres'",
+    )
+    config.addinivalue_line(
+        "markers",
+        "compose: Docker Compose test; included in both required runs and never skipped at runtime",
+    )
+    _DESELECTED.clear()
+
+
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
+def pytest_collection_modifyitems(config, items):
+    collected = list(items)
+    yield
+    config.stash[required_runs.COLLECTED] = collected
+
+
+def pytest_deselected(items):
+    _DESELECTED.extend(item.nodeid for item in items)
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
+    if report.outcome == "skipped" or hasattr(report, "wasxfail"):
+        required_runs.reject_runtime_skip(report)
+
+
+def _call_nodeids(reports):
+    return sorted(report.nodeid for report in reports if getattr(report, "when", None) == "call")
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_sessionfinish(session, exitstatus):
+    reporter = session.config.pluginmanager.get_plugin("terminalreporter")
+    stats = reporter.stats if reporter else {}
+    leftover = []
+    for key in ("skipped", "xfailed", "xpassed"):
+        leftover.extend(getattr(report, "nodeid", key) for report in stats.get(key, []))
+    if leftover:
+        message = "runtime skip is a failure; there is no allowed-skip list:\n  " + "\n  ".join(map(str, leftover))
+        print(message, file=sys.stderr)
+        if session.exitstatus == 0:
+            session.exitstatus = pytest.ExitCode.TESTS_FAILED
+
+    run = os.environ.get("MOSS_REQUIRED_RUN")
+    if not run or session.config.option.collectonly:
+        return
+    manifest = required_runs.load_manifest()
+    if run not in manifest["runs"]:
+        print(f"MOSS_REQUIRED_RUN={run!r} is not a required run", file=sys.stderr)
+        session.exitstatus = pytest.ExitCode.TESTS_FAILED
+        return
+    collected_items = session.config.stash.get(required_runs.COLLECTED, [])
+    collected = sorted(item.nodeid for item in collected_items)
+    deselected = sorted(set(_DESELECTED))
+    failed = sorted(
+        {report.nodeid for key in ("failed", "error") for report in stats.get(key, []) if hasattr(report, "nodeid")}
+    )
+    skipped = sorted(set(map(str, leftover)))
+    passed = _call_nodeids(stats.get("passed", []))
+    required_runs.write_result(
+        run,
+        {
+            "run": run,
+            "marker": manifest["runs"][run]["marker"],
+            "collected": collected,
+            "deselected": deselected,
+            "passed": passed,
+            "failed": failed,
+            "skipped": skipped,
+        },
+    )
+    expected = manifest["runs"][run]["deselected"]
+    problems = []
+    if deselected != expected:
+        problems.append(
+            f"{run} deselected ids do not match the committed list\n"
+            f"  missing from run: {sorted(set(expected) - set(deselected))}\n"
+            f"  extra in run: {sorted(set(deselected) - set(expected))}"
+        )
+    if not failed and not skipped and passed != sorted(set(collected) - set(expected)):
+        problems.append(f"{run} passed ids do not match the committed selection")
+    if problems:
+        print("\n".join(problems), file=sys.stderr)
+        if session.exitstatus == 0:
+            session.exitstatus = pytest.ExitCode.TESTS_FAILED

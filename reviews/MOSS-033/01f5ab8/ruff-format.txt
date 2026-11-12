@@ -1,0 +1,2 @@
+86 files already formatted
+RUFF_FORMAT:0

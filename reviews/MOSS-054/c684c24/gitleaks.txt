@@ -1,0 +1,14 @@
+label: local
+date: 2026-10-29T06:38:15Z
+sha: c684c24a8128bdfb32e8e06279a9481e613fbbe7
+workdir: .
+command:
+snapshot="$(mktemp -d)"
+trap 'rm -rf "$snapshot"' EXIT
+git archive HEAD | tar -x -C "$snapshot"
+gitleaks detect --no-git --source "$snapshot" --redact=100 --no-banner --exit-code 1
+GITHUB_WORKSPACE=/workspace
+---- output ----
+6:38AM INF scanned ~8111637 bytes (8.11 MB) in 390ms
+6:38AM INF no leaks found
+exit_code: 0

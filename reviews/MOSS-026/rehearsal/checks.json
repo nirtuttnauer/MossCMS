@@ -1,0 +1,77 @@
+{
+  "ready": {
+    "status": 200,
+    "body": {
+      "status": "ready"
+    }
+  },
+  "auth_status_before_setup": {
+    "initialized": false,
+    "providers": [],
+    "authSkipped": false
+  },
+  "setup": {
+    "status": 200,
+    "email": "rehearsal-admin@example.com",
+    "csrf_present": true
+  },
+  "logout": {
+    "status": 200
+  },
+  "me_after_logout": {
+    "status": 401
+  },
+  "sign_in": {
+    "status": 200,
+    "email": "rehearsal-admin@example.com",
+    "workspace": "Rehearsal workspace",
+    "role": "admin",
+    "project_id": "238c3975-172e-4e4e-876d-85c02a2da241"
+  },
+  "publish": {
+    "id": "1a889c0e-4bc6-4da0-ae55-989c750c3315",
+    "slug": "linux-vm-rehearsal",
+    "version": 1,
+    "publishedRevision": 1,
+    "isLive": true,
+    "status": "published"
+  },
+  "delivery_api": {
+    "status": 200,
+    "slugs": [
+      "linux-vm-rehearsal"
+    ]
+  },
+  "scheduled_publish": {
+    "due": "2026-10-29T05:00:56.773602+00:00",
+    "observed_at": "2026-10-29T05:00:59.934162+00:00",
+    "slug": "scheduled-rehearsal",
+    "title": "Scheduled rehearsal",
+    "isLive": true
+  },
+  "media": {
+    "status": 200,
+    "asset_id": "e8f62776-a234-439d-9f9e-c4f6a27314c1",
+    "mime": "image/png",
+    "width": 800,
+    "height": 400,
+    "variant_widths": [
+      320,
+      640,
+      800
+    ],
+    "variant_bytes": 172,
+    "variant_content_type": "image/webp",
+    "storage": "local"
+  },
+  "example_site_setup": {
+    "exit": 0,
+    "stdout": "Example website workspace: ce24f4c7-1fd0-4f74-96b0-1eb3afd867b8\nWebsite schemas upgraded. Projects and blog posts have their own content types; IDs, content, schedules and history are retained.\nServer-only connection saved to /workspace/example-site/.env\n",
+    "stderr": ""
+  },
+  "example_post": {
+    "id": "3d089c8c-2774-40e6-9a80-0e27f099c570",
+    "slug": "linux-vm-note",
+    "isLive": true
+  }
+}

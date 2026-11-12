@@ -1,0 +1,9 @@
+label: local
+date: 2026-11-11T19:07:45Z
+phase: postgres
+command:
+python3 scripts/backup.py --directory /tmp/moss028/backup-postgres
+exit_code: 0
+---- output ----
+/tmp/moss028/backup-postgres/20261111T190745Z.dump
+/tmp/moss028/backup-postgres/20261111T190745Z.media.tar.gz

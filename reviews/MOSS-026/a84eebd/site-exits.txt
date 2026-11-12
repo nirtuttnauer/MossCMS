@@ -1,0 +1,5 @@
+EXIT example-site-check 0
+EXIT example-site-test 0
+EXIT example-site-build 0
+EXIT example-site-audit-high 0
+EXIT example-site-audit 0

@@ -1,0 +1,31 @@
+{
+  "sqlite": {
+    "collected": 492,
+    "passed": 488,
+    "deselected": 4,
+    "failed": 0,
+    "skipped": 0
+  },
+  "postgres": {
+    "collected": 492,
+    "passed": 492,
+    "deselected": 0,
+    "failed": 0,
+    "skipped": 0
+  },
+  "web": {
+    "passed": 356,
+    "skipped": 0,
+    "files_passed": 36
+  },
+  "example_site": {
+    "passed": 47,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "production": {
+    "passed": 2,
+    "skipped": 0
+  }
+}

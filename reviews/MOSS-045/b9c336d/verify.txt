@@ -1,0 +1,26 @@
+LABEL: local
+SHA: b9c336d397b37c9075bad0765fb375c0c513faaa
+CWD: /workspace/api
+COMMAND: uv run python tests/verify_required_runs.py
+START: 2026-10-29T04:56:25Z
+{
+  "ok": true,
+  "runs": {
+    "sqlite": {
+      "collected": 403,
+      "passed": 399,
+      "deselected": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "postgres": {
+      "collected": 403,
+      "passed": 403,
+      "deselected": 0,
+      "failed": 0,
+      "skipped": 0
+    }
+  }
+}
+EXIT: 0
+END: 2026-10-29T04:56:25Z

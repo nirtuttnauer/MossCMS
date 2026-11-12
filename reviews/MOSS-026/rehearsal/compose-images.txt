@@ -1,0 +1,4 @@
+CONTAINER                  REPOSITORY               TAG                 PLATFORM            IMAGE ID            SIZE                CREATED
+workspace-app-1            mosscms                  local               linux/amd64         cb421c22afa7        110MB               12 minutes ago
+workspace-db-1             postgres                 17-alpine           linux/amd64         266d3c257594        117MB               18 minutes ago
+workspace-example-site-1   workspace-example-site   latest              linux/amd64         486e913b33b0        61MB                12 minutes ago

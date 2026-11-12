@@ -1,0 +1,10 @@
+$ docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'mosscms' AND pid <> pg_backend_pid();"
+cwd: /workspace
+started: 2026-10-29T05:53:12Z
+exit: 0
+seconds: 0.10
+--- output ---
+ pg_terminate_backend 
+----------------------
+(0 rows)
+

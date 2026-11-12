@@ -1,0 +1,31 @@
+LABEL: local
+SHA: d50e2788485e4ef0c65598c4c2f2bd7536e1ed96
+COMMAND: docker run --rm -d --name moss-otel-smoke -p 127.0.0.1:14318:4318 -p 127.0.0.1:19464:9464 -v /workspace/ops/otel-collector.yaml:/etc/otelcol/config.yaml:ro otel/opentelemetry-collector-contrib:0.156.0@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108 --config=/etc/otelcol/config.yaml && MOSS_USE_SQLITE=false PYTHONPATH=. uv run python ../ci/telemetry_smoke.py --endpoint http://127.0.0.1:14318 --metrics-url http://127.0.0.1:19464/metrics --output /tmp/moss-otel-evidence/collector-smoke.json
+CWD: /workspace/api
+START: 2026-10-29T04:38:57Z
+Unable to find image 'otel/opentelemetry-collector-contrib:0.156.0@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108' locally
+docker.io/otel/opentelemetry-collector-contrib@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108: Pulling from otel/opentelemetry-collector-contrib
+ae97a339ae88: Pulling fs layer
+4aade0010a3c: Pulling fs layer
+b5b237935aff: Pulling fs layer
+ae97a339ae88: Download complete
+4aade0010a3c: Download complete
+4aade0010a3c: Pull complete
+b5b237935aff: Download complete
+ae97a339ae88: Pull complete
+b5b237935aff: Pull complete
+Digest: sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108
+Status: Downloaded newer image for otel/opentelemetry-collector-contrib@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108
+592588cd087b4c0c75131ab438a0b070fbf17629ca03cc79d366c0c559c7cc05
+DOCKER_RUN_EXIT: 0
+METRICS_READY: 2
+/workspace/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+/workspace/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5: AuthlibDeprecationWarning: The httpx module is deprecated; please use httpx2 instead.
+  from ._compat import httpx2
+{"requestId": "8f8649d7-462b-451a-9c27-34f0aa34eed6", "graphqlErrorCodes": ["GRAPHQL_VALIDATION"]}
+Telemetry smoke evidence: /tmp/moss-otel-evidence/collector-smoke.json
+moss-otel-smoke
+SMOKE_EXIT: 0
+EXIT: 0
+END: 2026-10-29T04:39:06Z

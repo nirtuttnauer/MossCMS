@@ -1,0 +1,41 @@
+label: local
+date: 2026-11-11T18:20:12Z
+command: npm ci && npm run build
+---- output ----
+
+added 27 packages, and audited 28 packages in 3s
+
+8 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm_ci_exit:0
+
+> moss-nextjs-starter@0.1.0 build
+> next build
+
+▲ Next.js 16.4.6 (Turbopack)
+✓ Running next.config.mjs took 12ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1883ms
+  Running TypeScript ...
+  Finished TypeScript in 1ms ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/4) ...
+  Generating static pages using 3 workers (1/4) 
+  Generating static pages using 3 workers (2/4) 
+  Generating static pages using 3 workers (3/4) 
+✓ Generating static pages using 3 workers (4/4) in 181ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+└ ○ /icon.svg
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+npm_build_exit:0

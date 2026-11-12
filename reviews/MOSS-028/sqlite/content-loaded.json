@@ -1,0 +1,63 @@
+{
+  "asset": {
+    "height": 400,
+    "id": "456a4dab-3994-457e-9c19-0ecadd84415c",
+    "mime": "image/png",
+    "png_bytes": 1572,
+    "png_sha256": "1edeee3063250dc049dee1dcfe821008d99f5ada82e53d0e1dcc8103d87cfcde",
+    "size": 1572,
+    "width": 800
+  },
+  "content_type": {
+    "id": "61cf4e40-26fa-41d5-a43b-ba75b8267827",
+    "key": "note",
+    "version": 1
+  },
+  "draft": {
+    "data": {
+      "body": "Draft kept across the upgrade.",
+      "marker": "upgrade-rehearsal-marker",
+      "title": "Upgrade rehearsal draft"
+    },
+    "id": "130e73bb-8bd4-43a2-8ad6-e1819a573a54",
+    "slug": "upgrade-rehearsal-draft",
+    "status": "draft",
+    "version": 1
+  },
+  "entries": [
+    {
+      "data": {
+        "body": "Draft kept across the upgrade.",
+        "marker": "upgrade-rehearsal-marker",
+        "title": "Upgrade rehearsal draft"
+      },
+      "id": "130e73bb-8bd4-43a2-8ad6-e1819a573a54",
+      "slug": "upgrade-rehearsal-draft",
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "data": {
+        "body": "Loaded before the upgrade. Asset 456a4dab-3994-457e-9c19-0ecadd84415c.",
+        "marker": "upgrade-rehearsal-marker",
+        "title": "Upgrade rehearsal note"
+      },
+      "id": "892c2064-5b9e-4f5e-b83e-d633e712df2a",
+      "slug": "upgrade-rehearsal-note",
+      "status": "published",
+      "version": 1
+    }
+  ],
+  "published": {
+    "data": {
+      "body": "Loaded before the upgrade. Asset 456a4dab-3994-457e-9c19-0ecadd84415c.",
+      "marker": "upgrade-rehearsal-marker",
+      "title": "Upgrade rehearsal note"
+    },
+    "id": "892c2064-5b9e-4f5e-b83e-d633e712df2a",
+    "slug": "upgrade-rehearsal-note",
+    "status": "published",
+    "version": 1
+  },
+  "workspace_id": "72e30477-d9cc-4e7d-ad25-a1153116c13d"
+}

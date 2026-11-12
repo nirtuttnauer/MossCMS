@@ -1,0 +1,41 @@
+LABEL: local
+SHA: b9c336d397b37c9075bad0765fb375c0c513faaa
+CWD: /workspace/api
+COMMAND: bash -lc 
+set -e
+docker rm -f moss-otel-smoke >/dev/null 2>&1 || true
+docker run --rm -d --name moss-otel-smoke \
+  -p 127.0.0.1:14318:4318 -p 127.0.0.1:19464:9464 \
+  -v "/workspace/ops/otel-collector.yaml:/etc/otelcol/config.yaml:ro" \
+  otel/opentelemetry-collector-contrib:0.156.0@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108 \
+  --config=/etc/otelcol/config.yaml
+trap "docker rm -f moss-otel-smoke >/dev/null 2>&1 || true" EXIT
+cd /workspace/api
+export PATH="$HOME/.local/bin:$PATH"
+MOSS_USE_SQLITE=false PYTHONPATH=. uv run python ../ci/telemetry_smoke.py \
+  --endpoint http://127.0.0.1:14318 --metrics-url http://127.0.0.1:19464/metrics \
+  --output /tmp/moss-otel-evidence/collector-smoke.json
+
+START: 2026-10-29T04:57:05Z
+Unable to find image 'otel/opentelemetry-collector-contrib:0.156.0@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108' locally
+docker.io/otel/opentelemetry-collector-contrib@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108: Pulling from otel/opentelemetry-collector-contrib
+ae97a339ae88: Pulling fs layer
+4aade0010a3c: Pulling fs layer
+b5b237935aff: Pulling fs layer
+ae97a339ae88: Download complete
+4aade0010a3c: Download complete
+4aade0010a3c: Pull complete
+b5b237935aff: Download complete
+ae97a339ae88: Pull complete
+b5b237935aff: Pull complete
+Digest: sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108
+Status: Downloaded newer image for otel/opentelemetry-collector-contrib@sha256:125bdbeb7590cc1952c5b3430ecf14063568980c2c93d5b38676cc0446ed8108
+1389749c1eaeee92135db24879167742b277a7d22fd96bd2824d20434fdb30aa
+/workspace/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+/workspace/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5: AuthlibDeprecationWarning: The httpx module is deprecated; please use httpx2 instead.
+  from ._compat import httpx2
+{"requestId": "d5597531-1c37-4867-aba6-a056c328a192", "graphqlErrorCodes": ["GRAPHQL_VALIDATION"]}
+Telemetry smoke evidence: /tmp/moss-otel-evidence/collector-smoke.json
+EXIT: 0
+END: 2026-10-29T04:57:14Z

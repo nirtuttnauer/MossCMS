@@ -1,0 +1,16 @@
+label: local
+date: 2026-10-29T06:33:21Z
+sha: c684c24a8128bdfb32e8e06279a9481e613fbbe7
+workdir: api
+command:
+uv run ruff check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
+uv run ruff format --check --config pyproject.toml ../scripts ../example-site/scripts/setup_moss.py
+uv run ruff check --config pyproject.toml ../ci/telemetry_smoke.py
+uv run ruff format --check --config pyproject.toml ../ci/telemetry_smoke.py
+GITHUB_WORKSPACE=/workspace
+---- output ----
+[1;32mAll checks passed![0m
+18 files already formatted
+[1;32mAll checks passed![0m
+1 file already formatted
+exit_code: 0

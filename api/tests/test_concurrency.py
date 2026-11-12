@@ -8,9 +8,9 @@ from app.outbox import claim_events
 from conftest import define, entry
 
 
+@pytest.mark.postgres
 def test_postgres_workers_skip_locked_rows_and_claim_once(app, client, admin):
-    if app.state.engine.dialect.name != "postgresql":
-        pytest.skip("PostgreSQL row-lock rehearsal")
+    assert app.state.engine.dialect.name == "postgresql"
     define(client, admin)
     ids = []
     for i in range(10):

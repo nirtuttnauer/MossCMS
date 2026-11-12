@@ -1,0 +1,11 @@
+label: local
+date: 2026-10-29T06:33:21Z
+sha: c684c24a8128bdfb32e8e06279a9481e613fbbe7
+workdir: api
+command:
+uv sync --locked --group dev
+GITHUB_WORKSPACE=/workspace
+---- output ----
+Resolved 72 packages in 1ms
+Checked 69 packages in 0.41ms
+exit_code: 0

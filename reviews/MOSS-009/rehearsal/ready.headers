@@ -1,0 +1,15 @@
+HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Date: Thu, 29 Oct 2026 05:36:44 GMT
+Content-Type: application/json
+Content-Length: 18
+Connection: keep-alive
+vary: Origin
+x-request-id: 16628c07-9b58-4a76-82c3-ffdd0891d6c9
+server-timing: app;dur=1.1
+x-content-type-options: nosniff
+referrer-policy: same-origin
+x-frame-options: DENY
+Strict-Transport-Security: max-age=300
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests
+

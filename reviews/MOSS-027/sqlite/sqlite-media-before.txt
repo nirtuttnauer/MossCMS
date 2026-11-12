@@ -1,0 +1,17 @@
+$ docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib
+root = pathlib.Path('/data')
+files = {}
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    files[str(path.relative_to(root))] = {
+        'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+        'bytes': path.stat().st_size,
+    }
+print(json.dumps({'count': len(files), 'files': files}, sort_keys=True))
+
+cwd: /workspace
+started: 2026-10-29T05:53:37Z
+exit: 0
+seconds: 0.62
+--- output ---
+{"count": 5, "files": {"aaa3d2ab-2787-46d4-af1c-d977949cd1ad/8bb6ffc7-1dcb-4af9-98d7-1f5e8a913e81": {"bytes": 1574, "sha256": "f5ab25a3634b73c5a28ddc23a7d3ec21c038b37b53399170c1a9a2000c22ef0d"}, "aaa3d2ab-2787-46d4-af1c-d977949cd1ad/8bb6ffc7-1dcb-4af9-98d7-1f5e8a913e81.320.webp": {"bytes": 160, "sha256": "4d5f731bc48151049bba43e764797f696f857c311de5c37f839163e5e251e69d"}, "aaa3d2ab-2787-46d4-af1c-d977949cd1ad/8bb6ffc7-1dcb-4af9-98d7-1f5e8a913e81.640.webp": {"bytes": 434, "sha256": "cddd3ecc494a5a17c531bc84a8e1110bb897a2b8b1ac656c5ae7552703ce0dd0"}, "aaa3d2ab-2787-46d4-af1c-d977949cd1ad/8bb6ffc7-1dcb-4af9-98d7-1f5e8a913e81.800.webp": {"bytes": 638, "sha256": "42be42c02750af7b315439ab2d80c350249f435004c63708865e2d1e0695a9db"}, "mosscms.db": {"bytes": 319488, "sha256": "fa67cd117cb3ff22e1424eadd5005c59289f5dcb4d3566e4bd59425477bb08c4"}}}

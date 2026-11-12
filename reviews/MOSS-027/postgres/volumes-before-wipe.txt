@@ -1,0 +1,9 @@
+$ docker volume ls --format {{.Name}}
+cwd: /workspace
+started: 2026-10-29T05:53:12Z
+exit: 0
+seconds: 0.02
+--- output ---
+workspace_moss_assets
+workspace_moss_data
+workspace_recovered_assets

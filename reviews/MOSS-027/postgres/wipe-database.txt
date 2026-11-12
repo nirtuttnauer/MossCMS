@@ -1,0 +1,6 @@
+$ docker compose exec -T db sh -c dropdb -U "$POSTGRES_USER" --if-exists mosscms
+cwd: /workspace
+started: 2026-10-29T05:53:12Z
+exit: 0
+seconds: 0.11
+--- output ---

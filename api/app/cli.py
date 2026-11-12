@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import logging
 import os
 import zipfile
 from pathlib import Path
@@ -42,12 +43,22 @@ def main():
         if args.command == "serve":
             import uvicorn
 
+            # Uvicorn configures its own loggers. The request log is on "mosscms" at INFO.
+            request_log = logging.getLogger("mosscms")
+            request_log.setLevel(logging.INFO)
+            if not request_log.handlers:
+                handler = logging.StreamHandler()
+                handler.setFormatter(logging.Formatter("%(message)s"))
+                request_log.addHandler(handler)
+            request_log.propagate = False
             uvicorn.run(
                 "app.main:app",
                 host="0.0.0.0",
                 port=int(os.getenv("PORT", os.getenv("MOSS_PORT", "8001"))),
                 log_level="info",
                 timeout_graceful_shutdown=20,
+                # Leave the TCP peer in place. X-Forwarded-For and Forwarded are not client identity.
+                proxy_headers=False,
             )
         elif args.command in {"export", "import"}:
             from .portability import export_workspace, import_workspace, _load
@@ -89,7 +100,7 @@ def main():
                     session.delete(existing)
                 raw, _ = issue_token(session, "reset", days=1, user_id=user.id, email=user.email)
                 audit(session, None, "operator", "account.recovery.issue", userId=user.id)
-                print(settings.public_url + "/#reset/" + raw)
+                print(settings.public_url.rstrip("/") + "/#reset/" + raw)
         elif args.command == "reindex":
             if not args.project:
                 parser.error("--project is required; reindexing is limited to one workspace")

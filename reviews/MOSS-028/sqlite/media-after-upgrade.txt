@@ -1,0 +1,21 @@
+label: local
+date: 2026-11-11T19:08:26Z
+phase: sqlite
+command:
+docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib, sys
+root = pathlib.Path('/data')
+skip = set(sys.argv[1:])
+files = []
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    rel = str(path.relative_to(root))
+    if rel in skip:
+        continue
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    files.append({'path': rel, 'sha256': digest, 'bytes': path.stat().st_size})
+manifest = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+print(json.dumps({'manifest_sha256': manifest, 'files': files}, sort_keys=True))
+ mosscms.db mosscms.db-wal mosscms.db-shm
+exit_code: 0
+---- output ----
+{"files": [{"bytes": 1572, "path": "72e30477-d9cc-4e7d-ad25-a1153116c13d/456a4dab-3994-457e-9c19-0ecadd84415c", "sha256": "1edeee3063250dc049dee1dcfe821008d99f5ada82e53d0e1dcc8103d87cfcde"}, {"bytes": 178, "path": "72e30477-d9cc-4e7d-ad25-a1153116c13d/456a4dab-3994-457e-9c19-0ecadd84415c.320.webp", "sha256": "1a61b275de0b016b18df2b5bb46087610c9c17b6786829d3df473977965fc2fd"}, {"bytes": 450, "path": "72e30477-d9cc-4e7d-ad25-a1153116c13d/456a4dab-3994-457e-9c19-0ecadd84415c.640.webp", "sha256": "d9aa898bbd7d1664a22fe4b243a495001698ce2599dda1e06647b80723b13f57"}, {"bytes": 656, "path": "72e30477-d9cc-4e7d-ad25-a1153116c13d/456a4dab-3994-457e-9c19-0ecadd84415c.800.webp", "sha256": "e51ad8d25ac3f37343bdba9c50744d496e25780255abb6e5bd59dcc6cb8a366a"}], "manifest_sha256": "7aa19fe64946f30679a6f048eef487d9ada880c026db70cd298679543167f5fb"}

@@ -1,0 +1,26 @@
+{
+  "database_matches_backup_source": true,
+  "media_matches": true,
+  "table_counts": {
+    "alembic_version": 1,
+    "assets": 1,
+    "audit": 38,
+    "content_types": 6,
+    "draft_receipts": 0,
+    "entries": 18,
+    "entry_field_indexes": 204,
+    "memberships": 2,
+    "oauth_identities": 0,
+    "preview_grants": 2,
+    "projects": 2,
+    "publication_events": 14,
+    "revisions": 18,
+    "schema_revisions": 6,
+    "tokens": 8,
+    "users": 1,
+    "webhook_deliveries": 0,
+    "webhooks": 0,
+    "website_paths": 8
+  },
+  "media_count": 4
+}

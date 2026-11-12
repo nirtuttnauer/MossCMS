@@ -15,6 +15,7 @@ from .security import (
     CmsError,
     audit,
     check_password,
+    client_address,
     digest,
     identify,
     issue_token,
@@ -133,7 +134,7 @@ def status(request: Request):
 
 @router.post("/auth/setup")
 def setup(body: Setup, request: Request, response: Response):
-    rate_limit("setup:" + (request.client.host if request.client else "unknown"), request)
+    rate_limit("setup:" + client_address(request), request)
     if not hmac.compare_digest(body.token, request.app.state.settings.setup_token):
         raise HTTPException(403, "Invalid setup token.")
     with request.app.state.db.begin() as session:
@@ -149,13 +150,13 @@ def setup(body: Setup, request: Request, response: Response):
             session.add(project)
         session.flush()
         session.add(Membership(project_id=project.id, user_id=user.id, role="admin"))
-        audit(session, project.id, user.email, "account.setup")
+        audit(session, project.id, user.email, "account.setup", client=client_address(request))
         return session_response(request, response, session, user)
 
 
 @router.post("/auth/login")
 def login(body: Login, request: Request, response: Response):
-    rate_limit("login:" + (request.client.host if request.client else "unknown"), request)
+    rate_limit("login:" + client_address(request), request)
     with request.app.state.db.begin() as session:
         user = session.scalar(select(User).where(User.email == valid_email(body.email)))
         if not user or not check_password(body.password, user.password_hash):
@@ -163,7 +164,7 @@ def login(body: Login, request: Request, response: Response):
             if not user:
                 password_hash("dummy-password-that-is-never-accepted")
             raise HTTPException(401, "Invalid email or password.")
-        audit(session, None, user.email, "account.login")
+        audit(session, None, user.email, "account.login", client=client_address(request))
         return session_response(request, response, session, user)
 
 
@@ -215,7 +216,7 @@ def logout(request: Request, response: Response):
 
 @router.post("/auth/accept")
 def accept(body: Accept, request: Request, response: Response):
-    rate_limit("accept:" + (request.client.host if request.client else "unknown"), request)
+    rate_limit("accept:" + client_address(request), request)
     with request.app.state.db.begin() as session:
         token = session.scalar(select(Token).where(Token.id == digest(body.token)).with_for_update())
         if not token or token.kind not in {"invite", "reset"} or token.expires_at <= now():
@@ -244,7 +245,9 @@ def accept(body: Accept, request: Request, response: Response):
             if membership:
                 raise HTTPException(409, "This account already belongs to the project.")
             session.add(Membership(project_id=token.project_id, user_id=user.id, role=token.role))
-        audit(session, token.project_id, user.email, "account." + token.kind + ".accept")
+        audit(
+            session, token.project_id, user.email, "account." + token.kind + ".accept", client=client_address(request)
+        )
         session.delete(token)
         return session_response(request, response, session, user)
 

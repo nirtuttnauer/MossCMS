@@ -1,0 +1,14 @@
+HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Date: Thu, 29 Oct 2026 05:13:43 GMT
+Content-Type: application/json
+Content-Length: 18
+Connection: keep-alive
+vary: Origin
+x-request-id: fa043058-20c9-4134-9606-39d74cc2c68a
+server-timing: app;dur=3.0
+x-content-type-options: nosniff
+referrer-policy: same-origin
+x-frame-options: DENY
+Strict-Transport-Security: max-age=300
+

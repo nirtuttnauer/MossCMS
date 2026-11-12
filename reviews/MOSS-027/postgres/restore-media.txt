@@ -1,0 +1,7 @@
+$ python3 scripts/restore_media.py /tmp/moss-027/backups/20261029T055151Z.media.tar.gz --confirm-empty-volume
+cwd: /workspace
+started: 2026-10-29T05:51:54Z
+exit: 0
+seconds: 0.74
+--- output ---
+Local media restored.

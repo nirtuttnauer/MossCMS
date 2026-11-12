@@ -1,0 +1,88 @@
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon   17.7MB
+Step 1/28 : FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS web-build
+ ---> 0a7108bf6c7b
+Step 2/28 : WORKDIR /web
+ ---> Using cache
+ ---> 47a38a4ff67b
+Step 3/28 : COPY shared/ /shared/
+ ---> Using cache
+ ---> a34869a5fffe
+Step 4/28 : COPY web/package.json web/package-lock.json ./
+ ---> Using cache
+ ---> 1adb57f7bcc9
+Step 5/28 : RUN npm ci
+ ---> Using cache
+ ---> 6253968c85ca
+Step 6/28 : COPY web/ ./
+ ---> Using cache
+ ---> dfe05302d93a
+Step 7/28 : ARG VITE_GRAPHQL_URL=/graphql
+ ---> Using cache
+ ---> aec55d29056c
+Step 8/28 : ENV VITE_GRAPHQL_URL=${VITE_GRAPHQL_URL}
+ ---> Using cache
+ ---> 6ec60210feb9
+Step 9/28 : RUN npm run check && npm run build
+ ---> Using cache
+ ---> ff22f1a10b5a
+Step 10/28 : FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d AS api-deps
+ ---> 02108f5d322d
+Step 11/28 : WORKDIR /api
+ ---> Using cache
+ ---> 1585efdc9be3
+Step 12/28 : ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/app/.venv
+ ---> Using cache
+ ---> 9b8058a6507d
+Step 13/28 : RUN pip install --no-cache-dir uv==0.12.23
+ ---> Using cache
+ ---> 9699ae51b9be
+Step 14/28 : COPY api/pyproject.toml api/uv.lock ./
+ ---> Using cache
+ ---> 81c7d8a8debf
+Step 15/28 : RUN uv sync --locked --no-dev --no-install-project
+ ---> Using cache
+ ---> 9b70a44483e3
+Step 16/28 : FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d AS runtime
+ ---> 02108f5d322d
+Step 17/28 : ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PATH="/app/.venv/bin:$PATH" PORT=8001 MOSS_STORAGE_DIR=/data
+ ---> Using cache
+ ---> f7fcb09d55db
+Step 18/28 : WORKDIR /app
+ ---> Using cache
+ ---> c4775dfa3f38
+Step 19/28 : RUN useradd --create-home --uid 10001 appuser && mkdir /data && chown appuser:appuser /data
+ ---> Using cache
+ ---> 93208e5c3354
+Step 20/28 : COPY --from=api-deps /app/.venv /app/.venv
+ ---> Using cache
+ ---> ebf3d0c6accd
+Step 21/28 : COPY api/app ./app
+ ---> Using cache
+ ---> ea08af5d50cf
+Step 22/28 : COPY api/migrations ./migrations
+ ---> Using cache
+ ---> 55fbebcd1912
+Step 23/28 : COPY api/alembic.ini ./alembic.ini
+ ---> Using cache
+ ---> 020c1238cc81
+Step 24/28 : COPY --from=web-build /web/dist ./static
+ ---> Using cache
+ ---> a899ba70254b
+Step 25/28 : USER appuser
+ ---> Using cache
+ ---> 46314eebf35f
+Step 26/28 : EXPOSE 8001
+ ---> Using cache
+ ---> b7e605c67cd2
+Step 27/28 : HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/ready', timeout=3)"
+ ---> Using cache
+ ---> 71f8c7f63954
+Step 28/28 : CMD ["python", "-m", "app.cli", "serve"]
+ ---> Using cache
+ ---> 13ded144bdb8
+Successfully built 13ded144bdb8
+Successfully tagged mosscms:smoke

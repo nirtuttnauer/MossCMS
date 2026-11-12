@@ -1,0 +1,7 @@
+$ python3 scripts/restore_media.py /tmp/moss-027/backups/20261029T055337Z.sqlite-data.tar.gz --confirm-empty-volume
+cwd: /workspace
+started: 2026-10-29T05:53:39Z
+exit: 0
+seconds: 0.65
+--- output ---
+Local media restored.

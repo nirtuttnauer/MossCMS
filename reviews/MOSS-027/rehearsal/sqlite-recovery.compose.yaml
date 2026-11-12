@@ -1,0 +1,7 @@
+services:
+  app:
+    image: mosscms:backup-20261029T055151Z
+    volumes: !override
+      - sqlite_recovered_assets:/data
+volumes:
+  sqlite_recovered_assets:

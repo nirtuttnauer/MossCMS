@@ -1,0 +1,17 @@
+uv-sync 0
+ruff-check 0
+ruff-format 0
+ruff-scripts 0
+ruff-scripts-format 0
+mypy 0
+pytest-sqlite 0
+pytest-postgres 0
+verify 0
+web-ci 0
+web-check 0
+web-test 0
+web-build 0
+site-ci 0
+site-check 0
+site-test 0
+site-build 0

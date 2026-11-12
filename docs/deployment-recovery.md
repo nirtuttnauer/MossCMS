@@ -8,9 +8,9 @@ For a fresh instance, run `python3 scripts/configure.py --production --public-ur
 
 To use SQLite without a separate database service, add `--sqlite` to the configuration command, which sets `MOSS_USE_SQLITE=true`, and start with `docker compose up --build -d`. Compose selects the active services from the boolean, so no additional startup flags are needed. SQLite persists at `/data/mosscms.db` in `moss_assets`, even with S3 uploads. Run one app instance; switching backends does not migrate content. Compose replaces any existing Postgres container with one that exits immediately, so no Postgres process keeps running; its database volume is preserved.
 
-For a published Docker Hub image, set `MOSS_IMAGE` in `.env` to a published `nirtuttnauer/mosscms` version or digest, run `docker compose pull app db`, then `docker compose up --no-build -d --wait app`. The same configuration, volumes and recovery tools apply. See [Docker publishing and upgrades](docker.md).
+By default Compose builds `mosscms:local` from this checkout (`pull_policy: build`) and does not pull an app image. For a published Docker Hub image, set both `MOSS_IMAGE` (a published `nirtuttnauer/mosscms` version or digest) and `MOSS_PULL_POLICY=missing` in `.env`, run `docker compose pull app db`, then `docker compose up --no-build -d --wait app`. The same configuration, volumes and recovery tools apply. See [Docker images and Compose](docker.md).
 
-Terminate TLS at a reverse proxy. Keep the default loopback bindings (CMS 8001, website 5174); PostgreSQL has no published host port. Allow required request/upload sizes and timeouts. Proxy website `/api/events` with streaming enabled and buffering disabled; polling remains a recovery path. Do not cache preview pages or `/api/preview`, and do not log preview bodies, cookies, bearer tokens or authorization headers. Keep the website's server routes available; uploading only its static build is insufficient.
+Terminate TLS at a reverse proxy, and add Content-Security-Policy and Strict-Transport-Security there. The procedure, the header values, and the curl and console checks are in the [client hardening guide](client-hardening.md). Run one app process even when the database is PostgreSQL. Setup, sign-in, and invitation rate limits live in that process's memory (`app.state.login_attempts` in `api/app/main.py`, enforced by `rate_limit` in `api/app/accounts.py`) and are not shared with a second process. Keep the default loopback bindings (CMS 8001, website 5174); PostgreSQL has no published host port. Allow required request/upload sizes and timeouts. Proxy website `/api/events` with streaming enabled and buffering disabled; polling remains a recovery path. Do not cache preview pages or `/api/preview`, and do not log preview bodies, cookies, bearer tokens or authorization headers. Keep the website's server routes available; uploading only its static build is insufficient.
 
 | Location | Setting | Purpose |
 | --- | --- | --- |
@@ -47,8 +47,27 @@ For local media retain the `moss_assets` volume. For S3 retain private bucket ob
 | Preview denied | Check grant expiry/revocation, issuer editor membership, token workspace/type scope and exact preview origins; regenerate after saving current revision |
 | Broken images | Check asset backend, original/variant presence, signed URL expiry and token scope; older assets need reupload for variants |
 | Slow request | Correlate `X-Request-ID`, GraphQL `extensions.requestId`, `Server-Timing` and structured duration logs; admin `/metrics` checks aggregate API state |
+| Cannot sign in | Follow [Reset a password without email](#reset-a-password-without-email). MossCMS has no mail delivery |
 
 Logs intentionally omit submitted bodies, query strings, secrets and GraphQL query text. Protect application/proxy logs and database dumps. API shutdown waits for active worker work before disposing database connections. Normal publication transactions never wait for network callbacks.
+
+## Reset a password without email
+
+MossCMS has no mail delivery. Use this when an account owner cannot sign in. The same steps are in the [client hardening guide](client-hardening.md#reset-a-password-without-email).
+
+1. Confirm the account email. From the repository root, with the app container running:
+
+   ```sh
+   docker compose exec app python -m app.cli reset-password --email person@example.com
+   ```
+
+   The command prints one line: `MOSS_PUBLIC_URL` plus `/#reset/` and a token. That line is the secret. Share it with the account owner through a channel you trust. The audit log records `account.recovery.issue` and the account id. The token is only in the printed line. `MOSS_PUBLIC_URL` must be the origin the owner can open, without a trailing slash. A trailing slash in the setting is removed from the printed link.
+
+2. The owner opens the link, enters that same email, and sets a new password of 12–128 characters.
+
+3. The new password works immediately. The previous password stops working. Existing sessions for that account are signed out.
+
+The link works once. A later visit reports that the link is invalid or expired, and the password stays as it was. An unused link expires one day after it was issued; expiry is checked against the server clock. Running the command again deletes any unused link for that account and prints a new one. Omitting `--email` exits with `--email is required`. An unknown email exits with `Account not found` and prints no link.
 
 ## Backup with writers stopped
 
@@ -58,8 +77,10 @@ Stop the app to pause editors, scheduler and outbox. Stop the website too if use
 
 ```sh
 docker compose stop app
-python3 scripts/backup.py
+MOSS_PULL_POLICY=never python3 scripts/backup.py
 ```
+
+`scripts/backup.py` stores the stdout of `docker compose run`. The app service defaults to `pull_policy: build`, and `docker compose run` has no `--no-build` flag. With that default the run builds the checkout, writes the build log to stdout, and moves the Compose image tag onto the new build. The saved `.media.tar.gz` is then the build log rather than a gzip archive. `MOSS_PULL_POLICY=never` uses the image already present. Keep the retained image tag recorded above on a different name; do not point `MOSS_IMAGE` at that retained tag while a build policy is still active.
 
 The backup tool uses a temporary container for the media archive and bypasses application startup, so the app may remain stopped. It creates restrictive timestamped `.dump` and `.media.tar.gz` files under `backups/`. Restart with `docker compose up -d --no-build` when backup completes; recreate/start the website if it was stopped. `--database-only` omits media and is appropriate only when you have a separate matching media backup. Copy backups off-host and validate recovery regularly. S3 objects require their own backup/versioning procedure.
 
@@ -82,11 +103,14 @@ Use a separate empty database and a **new** media volume. Keep the original data
    services:
      app:
        image: mosscms:backup-TIMESTAMP
+       pull_policy: never
        volumes: !override
          - recovered_assets:/data
    volumes:
      recovered_assets:
    ```
+
+   `pull_policy: never` keeps the retained tag in place. `scripts/restore_media.py` restores through `docker compose run`, which has no `--no-build` flag. Leaving the default `build` policy rebuilds `mosscms:backup-TIMESTAMP` from the current checkout, and the following `up --no-build` starts that new build.
 
    If the website is used, also set its matching retained `example-site.image` in this override. Keep PostgreSQL at the original major version.
 
@@ -111,9 +135,11 @@ Stop the app and optional website before archiving `/data`; this captures the SQ
 docker compose stop app
 umask 077
 mkdir -p backups
-docker compose run --rm --no-deps -T --entrypoint tar app -C /data -czf - . > "backups/$(date -u +%Y%m%dT%H%M%SZ).sqlite-data.tar.gz"
+MOSS_PULL_POLICY=never docker compose run --rm --no-deps -T --entrypoint tar app -C /data -czf - . > "backups/$(date -u +%Y%m%dT%H%M%SZ).sqlite-data.tar.gz"
 docker compose up -d --no-build
 ```
+
+Set `MOSS_PULL_POLICY=never` for the archive command for the same reason as the PostgreSQL backup. Without it, the redirected stdout is the image build log and the file is not gzip. Use the recovery override above, including `pull_policy: never`, when restoring the archive.
 
 Check that the archive command succeeds before retaining the backup; discard an incomplete archive. To recover, stop writers and select the retained image plus a **new empty** assets volume using the recovery override above. Restore the archive with `python3 scripts/restore_media.py backups/TIMESTAMP.sqlite-data.tar.gz --confirm-empty-volume`; this restores the SQLite file and media together without starting the app. Keep `MOSS_USE_SQLITE=true` and the matching secrets, then start with `docker compose up -d --no-build`. Verify readiness, sign-in, content and media before reopening access. Keep the original volume until recovery is confirmed.
 
