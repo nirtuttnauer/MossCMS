@@ -1,0 +1,17 @@
+label: local
+sha: 1dbd4655384657d2b89d2c84676d557857157f3b
+short_sha: 1dbd465
+started: 2026-11-12T14:53:10Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continue: pytest-postgres failed with exit 1
+continue: verify-required-runs failed with exit 1
+continue: pip-audit failed with exit 1
+continuation_finished: 2026-11-12T15:04:41Z
+continuation_result: failed
+continuation_failure: pytest-postgres 1
+continuation_failure: verify-required-runs 1
+continuation_failure: pip-audit 1
+pip-audit-retry: 0 (no known vulnerabilities found; lockfile matches origin/main)
+baseline_sqlite: 497 passed, 1 failed, 4 deselected (origin/main 5ea1d03)
+baseline_postgres: 501 passed, 1 failed (origin/main 5ea1d03)
