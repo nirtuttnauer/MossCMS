@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { confirmNavigation } from '../lib/unsaved'
 import { ArrowUpRight, Blocks, CalendarClock, Code2, FileText, FolderOpen, Layers, LayoutDashboard, LogOut, Menu, SearchCheck, Settings2, Users, ArrowLeftRight } from 'lucide-react'
 import { can } from '../lib/access'
@@ -71,7 +71,9 @@ export default function App() {
     finally { setBooting(false) }
   }
   useEffect(() => { void loadAccount() }, [])
-  useEffect(() => {
+  // A layout effect, so the listener for the committed account and workspace is in place before that commit is visible;
+  // a passive effect runs later, and a back or hash navigation in between would read the previous account and workspace.
+  useLayoutEffect(() => {
     const change = (event: Event) => {
       const currentFullHash = location.hash;
       if (currentFullHash === lastHashRef.current) return;
