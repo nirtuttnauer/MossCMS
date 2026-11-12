@@ -1,0 +1,16 @@
+label: local
+date: 2026-11-12T16:07:42Z
+sha: dab65dd27ba4680e93b966e801856d9a10a41418
+workdir: example-site
+command:
+npm ci
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+
+added 193 packages, and audited 194 packages in 2s
+
+85 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+exit_code: 0
