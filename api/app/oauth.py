@@ -83,8 +83,9 @@ async def link(provider: str, request: Request):
 
 @router.get("/auth/oauth/{provider}/callback")
 async def callback(provider: str, request: Request):
+    # Unknown providers stay 404. Provider failures below become a login redirect.
+    client = client_for(request, provider)
     try:
-        client = client_for(request, provider)
         # Authlib validates OAuth state; OIDC additionally validates ID-token signature, issuer, audience and nonce.
         token = await client.authorize_access_token(request)
         if provider == "github":
