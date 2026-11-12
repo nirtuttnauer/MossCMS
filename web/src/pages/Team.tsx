@@ -16,7 +16,12 @@ type TeamData = {
     role: string;
     expiresAt: string;
   }[];
+  customPermissions?: boolean;
+  fieldRules?: Record<string, unknown>;
+  explanations?: Record<string, string>;
 };
+const classicRoles = ['admin', 'editor', 'reader'];
+const customRoles = ['admin', 'publisher', 'editor', 'author', 'reader'];
 export function Team({ role, onChanged }: { role: string; onChanged: () => void }) {
   const [team, setTeam] = useState<TeamData>({ members: [], invitations: [] });
   const [error, setError] = useState('');
@@ -27,10 +32,15 @@ export function Team({ role, onChanged }: { role: string; onChanged: () => void 
   const busyRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [loaded, setLoaded] = useState(false);
+  const [custom, setCustom] = useState(false);
+  const [rules, setRules] = useState('{}');
   async function load() {
     setLoading(true); setError('');
     try {
-      setTeam(await rest<TeamData>('/api/team'));
+      const data = await rest<TeamData>('/api/team');
+      setTeam(data);
+      setCustom(Boolean(data.customPermissions));
+      setRules(JSON.stringify(data.fieldRules || {}, null, 2));
       setLoaded(true);
     }
     catch (reason) {
@@ -76,7 +86,21 @@ export function Team({ role, onChanged }: { role: string; onChanged: () => void 
       setNotice('Invitation revoked.'); await load();
     });
   }
+  async function savePermissions() {
+    let fieldRules: Record<string, unknown> = {};
+    if (custom) {
+      try { fieldRules = JSON.parse(rules); }
+      catch { setError('Field rules must be JSON.'); return; }
+    }
+    await perform('permissions', async () => {
+      await rest('/api/project/permissions', 'PATCH', { enabled: custom, fieldRules });
+      setNotice('Permissions updated. Author and publisher roles are available only while custom permissions stay on.');
+      await load();
+      onChanged();
+    });
+  }
+  const roles = team.customPermissions ? customRoles : classicRoles;
 
 
- return <><div className="page-heading"><div><div className="eyebrow">WORK TOGETHER</div><h1>Team</h1><p className="subtitle">Invite teammates and manage their access to this workspace.</p></div></div>{error && !remove && <p className="form-error" role="alert">{error} <Button disabled={loading || Boolean(busy)} variant="outline" onClick={load}>Retry loading team</Button></p>}{notice && <p className="notice" role="status">{notice}</p>}{loading && <p role="status">Loading team…</p>}<section className="plain-card"><h2>Members</h2><p>Administrators manage the workspace. Editors publish content. Readers can view drafts without editing.</p><div className="table-scroll"><table><thead><tr><th>NAME</th><th>EMAIL</th><th>ROLE</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead><tbody>{team.members.map(member => <tr key={member.id}><td>{member.name}</td><td>{member.email}</td><td>{role === 'admin' ? <select disabled={Boolean(busy) || loading} aria-label={`Role for ${member.name}`} value={member.role} onChange={e => change(member, e.target.value)}>{['admin', 'editor', 'reader'].map(r => <option key={r}>{r}</option>)}</select> : member.role}</td><td>{role === 'admin' && <button disabled={Boolean(busy) || loading} className="text-button muted" onClick={() => { setError(''); setRemove(member); }}>Remove</button>}</td></tr>)}</tbody></table></div></section>{role === 'admin' && <section className="plain-card"><h2>Invite a teammate</h2><form className="inline-form" onSubmit={invite}><input disabled={Boolean(busy)} type="email" name="email" required aria-label="Teammate email" placeholder="teammate@example.com" /><select disabled={Boolean(busy)} name="role" defaultValue="editor" aria-label="Invitation role"><option>reader</option><option>editor</option><option>admin</option></select><Button disabled={Boolean(busy) || loading} type="submit">{busy === 'invite' ? 'Creating invitation…' : 'Create invitation'}</Button></form>{url && <div className="notice"><p>Share this invitation with the intended teammate. It expires in seven days.</p><input aria-label="Invitation link" readOnly value={url} /><Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(url); setNotice('Invitation link copied.') } catch { setNotice('Select and copy the invitation link above.') } }}>Copy link</Button></div>}<h3>Pending invitations</h3>{team.invitations.length ? team.invitations.map(invitation => <div className="member-row" key={invitation.id}><span>{invitation.email} · {invitation.role}</span><small>Expires {new Date(invitation.expiresAt).toLocaleDateString()}</small><Button disabled={Boolean(busy) || loading} variant="outline" onClick={() => revoke(invitation.id)}>{busy === `revoke:${invitation.id}` ? 'Revoking…' : 'Revoke'}</Button></div>) : loaded ? <p>No pending invitations.</p> : !loading && <p>Invitations unavailable. Retry loading team above.</p>}</section>}{remove && <Dialog title="Remove team member?" open onClose={() => { if (!busy) { setRemove(null); setError(''); } }}><p>{remove.name} will lose access to this workspace. You can invite them again later.</p>{error && <p className="form-error" role="alert">{error}</p>}<div className="modal-actions"><Button disabled={Boolean(busy)} variant="outline" onClick={() => { setRemove(null); setError(''); }}>Cancel</Button><Button disabled={Boolean(busy)} onClick={removeMember}>{busy === 'remove' ? 'Removing access…' : 'Remove access'}</Button></div></Dialog>}</>
+ return <><div className="page-heading"><div><div className="eyebrow">WORK TOGETHER</div><h1>Team</h1><p className="subtitle">Invite teammates and manage their access to this workspace.</p></div></div>{error && !remove && <p className="form-error" role="alert">{error} <Button disabled={loading || Boolean(busy)} variant="outline" onClick={load}>Retry loading team</Button></p>}{notice && <p className="notice" role="status">{notice}</p>}{loading && <p role="status">Loading team…</p>}<section className="plain-card"><h2>Members</h2><p>{team.customPermissions ? 'Custom permissions are on. Author can write and upload. Publisher can publish, schedule, and review. Administrator access is never removed by field rules.' : 'Administrators manage the workspace. Editors publish content. Readers can view drafts without editing.'}</p>{team.customPermissions && team.explanations && <ul>{roles.map(name => <li key={name}><strong>{name}.</strong> {team.explanations?.[name]}</li>)}</ul>}<div className="table-scroll"><table><thead><tr><th>NAME</th><th>EMAIL</th><th>ROLE</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead><tbody>{team.members.map(member => <tr key={member.id}><td>{member.name}</td><td>{member.email}</td><td>{role === 'admin' ? <select disabled={Boolean(busy) || loading} aria-label={`Role for ${member.name}`} value={member.role} onChange={e => change(member, e.target.value)}>{roles.map(r => <option key={r}>{r}</option>)}</select> : member.role}</td><td>{role === 'admin' && <button disabled={Boolean(busy) || loading} className="text-button muted" onClick={() => { setError(''); setRemove(member); }}>Remove</button>}</td></tr>)}</tbody></table></div></section>{role === 'admin' && <section className="plain-card" aria-label="Custom permissions"><h2>Custom permissions</h2><p>Admin, editor, and reader keep their current access until this is saved. Author and publisher become available after that. Field rules are allow-lists for each content type and role. Use * for every field, or paths such as title, meta.note, and sections.*.caption. A writable path must also be readable.</p><label className="check-row"><input type="checkbox" checked={custom} aria-label="Use author and publisher roles" onChange={event => setCustom(event.target.checked)} /> Use author and publisher roles</label>{custom && <label>Field rules<textarea aria-label="Field rules" value={rules} onChange={event => setRules(event.target.value)} rows={8} spellCheck={false} /></label>}<Button disabled={Boolean(busy) || loading} type="button" onClick={() => { void savePermissions(); }}>{busy === 'permissions' ? 'Saving permissions…' : 'Save permissions'}</Button></section>}{role === 'admin' && <section className="plain-card"><h2>Invite a teammate</h2><form className="inline-form" onSubmit={invite}><input disabled={Boolean(busy)} type="email" name="email" required aria-label="Teammate email" placeholder="teammate@example.com" /><select disabled={Boolean(busy)} name="role" defaultValue="editor" aria-label="Invitation role">{roles.map(name => <option key={name}>{name}</option>)}</select><Button disabled={Boolean(busy) || loading} type="submit">{busy === 'invite' ? 'Creating invitation…' : 'Create invitation'}</Button></form>{url && <div className="notice"><p>Share this invitation with the intended teammate. It expires in seven days.</p><input aria-label="Invitation link" readOnly value={url} /><Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(url); setNotice('Invitation link copied.') } catch { setNotice('Select and copy the invitation link above.') } }}>Copy link</Button></div>}<h3>Pending invitations</h3>{team.invitations.length ? team.invitations.map(invitation => <div className="member-row" key={invitation.id}><span>{invitation.email} · {invitation.role}</span><small>Expires {new Date(invitation.expiresAt).toLocaleDateString()}</small><Button disabled={Boolean(busy) || loading} variant="outline" onClick={() => revoke(invitation.id)}>{busy === `revoke:${invitation.id}` ? 'Revoking…' : 'Revoke'}</Button></div>) : loaded ? <p>No pending invitations.</p> : !loading && <p>Invitations unavailable. Retry loading team above.</p>}</section>}{remove && <Dialog title="Remove team member?" open onClose={() => { if (!busy) { setRemove(null); setError(''); } }}><p>{remove.name} will lose access to this workspace. You can invite them again later.</p>{error && <p className="form-error" role="alert">{error}</p>}<div className="modal-actions"><Button disabled={Boolean(busy)} variant="outline" onClick={() => { setRemove(null); setError(''); }}>Cancel</Button><Button disabled={Boolean(busy)} onClick={removeMember}>{busy === 'remove' ? 'Removing access…' : 'Remove access'}</Button></div></Dialog>}</>
 }
