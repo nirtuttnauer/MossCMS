@@ -103,7 +103,8 @@ export function previewMiddleware(environment) {
     if (path === '/preview') {
       const nonce = randomBytes(16).toString('base64');
       response.setHeader('Content-Type', 'text/html; charset=utf-8');
-      response.setHeader('Content-Security-Policy', `default-src 'none'; script-src 'nonce-${nonce}'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'`);
+      const ancestor = new URL(environment.MOSS_API_URL || 'http://localhost:8001').origin
+      response.setHeader('Content-Security-Policy', `default-src 'none'; script-src 'nonce-${nonce}'; connect-src 'self'; base-uri 'none'; frame-ancestors ${ancestor}`);
       response.end(`<!doctype html><html><head>
 <meta name="robots" content="noindex,nofollow"><title>Opening preview</title>
 </head><body><p>Opening saved preview…</p><script nonce="${nonce}">
