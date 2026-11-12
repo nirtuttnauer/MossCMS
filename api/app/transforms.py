@@ -8,27 +8,50 @@ from .schema import NAME
 from .security import CmsError
 
 
+def _plain_json(value, seen=None, depth=0):
+    if depth > 100:
+        return False
+    kind = type(value)
+    if value is None or kind is str or kind is bool or kind is int:
+        return True
+    if kind is float:
+        return math.isfinite(value)
+    if kind is not list and kind is not dict:
+        return False
+    if seen is None:
+        seen = set()
+    marker = id(value)
+    if marker in seen:
+        return False
+    seen.add(marker)
+    if kind is list:
+        return all(_plain_json(item, seen, depth + 1) for item in value)
+    return all(type(key) is str and _plain_json(item, seen, depth + 1) for key, item in value.items())
+
+
 def validate_steps(steps):
-    if not isinstance(steps, list) or len(steps) > 100:
+    if type(steps) is not list or len(steps) > 100:
         raise CmsError("Transform steps must be a list of at most 100 operations.")
     for step in steps:
-        if not isinstance(step, dict):
+        if type(step) is not dict:
             raise CmsError("Each transform step must be an object.")
         op = step.get("op")
         allowed = {"rename": "to", "default": "value", "drop": None, "convert": "to"}
-        if not isinstance(op, str) or op not in allowed:
+        if type(op) is not str or op not in allowed:
             raise CmsError("Transforms support rename, default, drop, and convert.")
         path = step.get("path")
-        if not isinstance(path, str) or not path or len(path) > 500 or any(not p for p in path.split(".")):
+        if type(path) is not str or not path or len(path) > 500 or any(not p for p in path.split(".")):
             raise CmsError("Transform path must be a dotted field path; use * for list items or locales.")
         if set(step) - {"op", "path", "typeKey", allowed[op]} or (allowed[op] and allowed[op] not in step):
             raise CmsError("Invalid transform arguments.")
-        if "typeKey" in step and (not isinstance(step["typeKey"], str) or not NAME.fullmatch(step["typeKey"])):
+        if "typeKey" in step and (type(step["typeKey"]) is not str or not NAME.fullmatch(step["typeKey"])):
             raise CmsError("Transform typeKey must be a content type key.")
-        if op == "rename" and (not isinstance(step["to"], str) or not NAME.fullmatch(step["to"])):
+        if op == "rename" and (type(step["to"]) is not str or not NAME.fullmatch(step["to"])):
             raise CmsError("Rename to must be a field name in the same object.")
-        if op == "convert" and (not isinstance(step["to"], str) or step["to"] not in {"text", "number", "boolean"}):
+        if op == "convert" and (type(step["to"]) is not str or step["to"] not in {"text", "number", "boolean"}):
             raise CmsError("Convert to must be text, number, or boolean.")
+        if op == "default" and not _plain_json(step["value"]):
+            raise CmsError("Default value must be plain JSON data.")
 
 
 def _parents(value, parts, location="data"):
