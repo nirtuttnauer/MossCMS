@@ -1,0 +1,14 @@
+label: local
+sha: 4ae0c83b1ef41c911701518adaa82d6de219eee5
+short_sha: 4ae0c83
+started: 2026-11-12T15:01:08Z
+git status --porcelain: empty
+scripts/verify.sh MOSS-083: exit 1 at pytest-sqlite
+failed test: tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+same failed test on main 5ea1d037bb85e47c2efc1d97f72998d130130878
+continued: remaining verify.sh commands, logged in this directory
+pytest-postgres: rerun with MOSS_USE_SQLITE=false (the assignment verify.sh exports); 1 failed, 508 passed; exit 1
+pip-audit: rerun after python3.12-venv was installed; exit 0; No known vulnerabilities found
+verify-required-runs: exit 1 because the dependabot test did not pass
+finished: 2026-11-12T15:22:19Z
+result: product checks recorded; pre-existing dependabot failure remains

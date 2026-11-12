@@ -5,6 +5,7 @@ from sqlalchemy import select
 from .models import Project, User
 
 DEVELOPMENT_USER_ID = "00000000-0000-4000-8000-000000000001"
+DEVELOPMENT_USER_EMAIL = "development@mosscms.invalid"
 
 
 def initialize_development(factory):
@@ -13,7 +14,7 @@ def initialize_development(factory):
             session.add(
                 User(
                     id=DEVELOPMENT_USER_ID,
-                    email="development@mosscms.invalid",
+                    email=DEVELOPMENT_USER_EMAIL,
                     name="Local developer",
                     password_hash="development-bypass-disabled-for-password-login",
                 )
