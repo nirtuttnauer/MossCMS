@@ -1,0 +1,10 @@
+label: local
+date: 2026-11-12T15:16:55Z
+sha: b6c66870b98af990ee91766e5a965e823bf2b03d
+image: postgres:17-alpine
+command: docker run from scripts/verify.sh start_postgres (user pg, database postgres, 127.0.0.1:5432)
+---- output ----
+70f866ce327960620853587e836deb968777952164b6dd46db6e22c21a11ec41
+/var/run/postgresql:5432 - no response
+/var/run/postgresql:5432 - accepting connections
+postgres (PostgreSQL) 17.11

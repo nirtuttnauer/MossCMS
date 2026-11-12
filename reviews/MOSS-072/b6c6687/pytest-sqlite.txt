@@ -1,0 +1,35 @@
+label: local
+date: 2026-11-12T14:53:31Z
+sha: b6c66870b98af990ee91766e5a965e823bf2b03d
+workdir: /tmp/moss-base/api
+command: MOSS_USE_SQLITE=false MOSS_REQUIRED_RUN=sqlite /agent/repos/MossCMS/api/.venv/bin/pytest -m "not postgres" -q --tb=no
+note: worktree of main; pytest collected tests from that worktree. -q --tb=no, so the assertion text is the short summary line.
+---- output ----
+........................................................................ [ 14%]
+.....................................F.................................. [ 28%]
+........................................................................ [ 43%]
+........................................................................ [ 57%]
+........................................................................ [ 72%]
+........................................................................ [ 86%]
+..................................................................       [100%]
+=============================== warnings summary ===============================
+../../../agent/repos/MossCMS/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /agent/repos/MossCMS/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+../../../agent/repos/MossCMS/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5
+  /agent/repos/MossCMS/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5: AuthlibDeprecationWarning: The httpx module is deprecated; please use httpx2 instead.
+    from ._compat import httpx2
+
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+tests/test_cms.py::test_migration_preserves_legacy_articles
+  /agent/repos/MossCMS/api/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1192: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
+    cursor.execute(statement, parameters)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+1 failed, 497 passed, 4 deselected, 6 warnings in 184.99s (0:03:04)
+BASE_EXIT:1
