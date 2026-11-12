@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { ArrowRight, LockKeyhole } from 'lucide-react'
 import { Button } from '../components/ui/button'
-import { message, rest, type Me, type Provider } from '../lib/api'
+import { ApiError, message, rest, type Me, type Provider } from '../lib/api'
 
 export function Auth({ initialized, providers, onSuccess, me }: { initialized: boolean; providers: Provider[]; onSuccess: () => void; me: Me | null }) {
   const hash = location.hash.slice(1)
@@ -12,16 +12,18 @@ export function Auth({ initialized, providers, onSuccess, me }: { initialized: b
   const [busy, setBusy] = useState(false)
   const [signingIn, setSigningIn] = useState(false)
   const title = !initialized ? 'Create your workspace' : reset ? 'Reset your password' : invite && !signingIn ? 'Join your team' : 'Welcome back'
+  const login = initialized && !reset && !(invite && !signingIn)
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError('')
-    const form = Object.fromEntries(new FormData(event.currentTarget))
+    const formElement = event.currentTarget
     try {
+      const form = Object.fromEntries(new FormData(formElement))
       const path = !initialized ? '/auth/setup' : (invite && !signingIn) || reset ? '/auth/accept' : '/auth/login'
       await rest(path, 'POST', { ...form, token: token || form.token, name: form.name || me?.user.name || 'Member', password: form.password || 'existing-account' })
       if (invite && signingIn) setSigningIn(false)
       else if (!['content', 'overview', 'publications', 'types', 'assets', 'team', 'explorer', 'settings'].includes(hash.split('?')[0])) location.hash = 'content'
       onSuccess()
-    } catch (reason) { setError(message(reason)) }
+    } catch (reason) { setError(login && reason instanceof ApiError && reason.message === 'Invalid email or password.' ? reason.message : message(reason)) }
     finally { setBusy(false) }
   }
   return <main className="auth-shell auth-login">
@@ -43,7 +45,7 @@ export function Auth({ initialized, providers, onSuccess, me }: { initialized: b
         </div>
         {(!initialized || (invite && !signingIn && !me)) && <label>Your name<input name="name" required maxLength={100} autoComplete="name" /></label>}
         {!initialized && <label>Workspace name<input name="workspaceName" required maxLength={100} placeholder="My website" /></label>}
-        <label>Email<input name="email" type="email" required defaultValue={me?.user.email} autoComplete="email" placeholder="you@example.com" /></label>
+        <label>Email<input name="email" type={login ? 'text' : 'email'} inputMode={login ? 'email' : undefined} required defaultValue={me?.user.email} autoComplete="email" placeholder="you@example.com" /></label>
         {!(invite && me && !signingIn) && <label>{reset ? 'New password' : 'Password'}<input name="password" type="password" required minLength={!initialized || reset || (invite && !signingIn) ? 12 : 1} maxLength={128} aria-describedby={!initialized || reset || (invite && !signingIn) ? 'password-help' : undefined} autoComplete={reset || !initialized || invite ? 'new-password' : 'current-password'} /></label>}
         {(!initialized || reset || (invite && !signingIn)) && <small id="password-help">Use at least 12 characters.</small>}
         {!initialized && <label>Setup token<input name="token" type="password" required /><small>Find MOSS_SETUP_TOKEN in the server’s .env configuration.</small></label>}
