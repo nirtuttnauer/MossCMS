@@ -1,0 +1,6 @@
+label: local
+date: 2026-11-12T16:13:26Z
+sha: 673cdb1e3a18206de39e9b1ce468247c57528661
+command: python3 scripts/verify_report.py scan /agent/repos/MossCMS/reviews/MOSS-091/673cdb1/pytest-postgres.txt
+---- output ----
+exit_code: 0
