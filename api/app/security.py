@@ -68,12 +68,60 @@ def client_address(request):
     return host or "unknown"
 
 
+DRAFTS_TOKEN_KIND = "drafts"
+_REDACTED = "[redacted]"
+# Every raw secret this app issues is ``secrets.token_urlsafe(32)``: exactly 43 url-safe characters.
+# Entity ids (uuid4, 36 characters) and stored token ids (SHA-256 hex, 64 characters) do not match.
+_RAW_TOKEN = re.compile(r"^[A-Za-z0-9_-]{43}$")
+_BEARER = re.compile(r"Bearer\s+[A-Za-z0-9_-]{20,}")
+_IDENTIFIER_KEYS = {"tokenid", "invitationid"}
+
+
+def _normalized_key(key):
+    return re.sub(r"[^a-z0-9]", "", str(key).lower())
+
+
+def _sensitive_key(key):
+    name = _normalized_key(key)
+    if name in _IDENTIFIER_KEYS:
+        return False
+    if name in {"password", "passwd", "secret", "token", "authorization", "csrf", "bearer", "cookie", "apikey", "raw"}:
+        return True
+    return name.endswith(("password", "passwordhash", "secret", "token", "apikey"))
+
+
+def _looks_like_raw_token(value):
+    return isinstance(value, str) and _RAW_TOKEN.fullmatch(value) is not None
+
+
+def _scrub_string(value):
+    if _looks_like_raw_token(value) or _BEARER.search(value):
+        return _REDACTED
+    return value
+
+
+def _redact_audit_value(value, key=""):
+    if key and _sensitive_key(key):
+        return _REDACTED
+    if isinstance(value, dict):
+        return {str(name): _redact_audit_value(item, str(name)) for name, item in value.items()}
+    if isinstance(value, list):
+        return [_redact_audit_value(item, key) for item in value]
+    if isinstance(value, str):
+        return _scrub_string(value)
+    return value
+
+
 def audit(session, project_id, actor, action, **details):
-    session.add(Audit(project_id=project_id, actor=actor, action=action, details=details))
+    if _looks_like_raw_token(actor):
+        actor = _REDACTED
+    session.add(Audit(project_id=project_id, actor=actor, action=action, details=_redact_audit_value(details) or {}))
 
 
-def identify(request, session, delivery=False, project=True):
-    if request.app.state.settings.skip_auth and not delivery:
+def identify(request, session, delivery=False, project=True, *, drafts=False):
+    if drafts and delivery:
+        raise HTTPException(401, "A valid drafts token is required.")
+    if request.app.state.settings.skip_auth and not delivery and not drafts:
         user = session.get(User, DEVELOPMENT_USER_ID)
         project_id = request.headers.get("x-moss-project") if project else None
         if project and not project_id:
@@ -91,8 +139,24 @@ def identify(request, session, delivery=False, project=True):
     authorization = request.headers.get("authorization", "")
     raw = authorization[7:] if authorization.startswith("Bearer ") else request.cookies.get("moss_session", "")
     token = session.get(Token, digest(raw)) if raw else None
-    if not token or token.expires_at <= now() or token.kind != ("delivery" if delivery else "session"):
-        raise HTTPException(401, "Sign in required." if not delivery else "A valid delivery token is required.")
+    if drafts:
+        expected, failure = DRAFTS_TOKEN_KIND, "A valid drafts token is required."
+    elif delivery:
+        expected, failure = "delivery", "A valid delivery token is required."
+    else:
+        expected, failure = "session", "Sign in required."
+    if not token or token.expires_at <= now() or token.kind != expected or (drafts and not token.project_id):
+        raise HTTPException(401, failure)
+    if drafts:
+        return {
+            "project_id": token.project_id,
+            "delivery": False,
+            "drafts": True,
+            "scopes": list(token.scopes or []),
+            "role": "reader",
+            "actor": token.name or "drafts",
+            "token": token,
+        }
     if delivery:
         return {
             "project_id": token.project_id,
@@ -121,6 +185,8 @@ def identify(request, session, delivery=False, project=True):
 def require(context, role="reader", write=False, capability=None):
     if not context.get("project_id"):
         raise CmsError("Select a project.", "FORBIDDEN")
+    if context.get("drafts") and (write or role != "reader" or capability not in {None, "read"}):
+        raise CmsError("Draft tokens cannot write content.", "FORBIDDEN")
     if context.get("delivery"):
         if write or role != "reader" or capability not in {None, "read"}:
             raise CmsError(

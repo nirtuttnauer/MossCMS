@@ -1,0 +1,10 @@
+label: local
+date: 2026-11-12T14:49:04Z
+sha: 592607fcbf2e17c490eb870430681828e938dcdc
+workdir: api
+command:
+uv run mypy app
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+Success: no issues found in 31 source files
+exit_code: 0
