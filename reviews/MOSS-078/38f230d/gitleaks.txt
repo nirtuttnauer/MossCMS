@@ -1,0 +1,10 @@
+label: local
+sha: 38f230dc0be4fe0d22e76a1acf535365df9f4fc9
+date: 2026-11-12T14:51:54Z
+workdir: /agent/repos/MossCMS
+command:
+snapshot="$(mktemp -d)"; trap "rm -rf \"$snapshot\"" EXIT; git archive HEAD | tar -x -C "$snapshot"; gitleaks detect --no-git --source "$snapshot" --redact=100 --no-banner --exit-code 1
+---- output ----
+2:51PM INF scanned ~8654643 bytes (8.65 MB) in 425ms
+2:51PM INF no leaks found
+exit_code: 0
