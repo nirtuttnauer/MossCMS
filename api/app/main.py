@@ -33,7 +33,7 @@ from .models import ContentType, database
 from .oauth import configure_oauth, router as oauth_router
 from .preview import router as preview_router
 from .query_limits import bounded_query
-from .security import CmsError, identify, require
+from .security import CmsError, client_address, identify, require
 from .storage import router as storage_router
 from .telemetry import Telemetry, TelemetryMiddleware
 from .workspace_migration import MAX_ARCHIVE_UPLOAD, router as migration_router
@@ -180,6 +180,7 @@ def create_app(settings=None):
                     "status": response.status_code,
                     "seconds": round(duration, 4),
                     **telemetry.log_fields(),
+                    "client": client_address(request),
                 }
             )
         )

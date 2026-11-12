@@ -1,0 +1,14 @@
+label: local
+date: 2026-11-11T18:29:34Z
+sha: f15a9a654e2712bd4609e82573fde315ff57eca5
+note: continued after scripts/verify.sh stopped on pip-audit; same command as the script
+workdir: .
+command:
+snapshot="$(mktemp -d)"
+trap 'rm -rf "$snapshot"' EXIT
+git archive HEAD | tar -x -C "$snapshot"
+gitleaks detect --no-git --source "$snapshot" --redact=100 --no-banner --exit-code 1
+---- output ----
+6:29PM INF scanned ~7202855 bytes (7.20 MB) in 340ms
+6:29PM INF no leaks found
+exit_code: 0

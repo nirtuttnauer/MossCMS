@@ -1,0 +1,26 @@
+label: local
+date: 2026-11-11T19:08:13Z
+phase: postgres
+command:
+docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$1" -v ON_ERROR_STOP=1 -tA sh mosscms
+exit_code: 0
+---- output ----
+alembic_version
+assets
+audit
+content_types
+draft_receipts
+entries
+entry_field_indexes
+memberships
+oauth_identities
+preview_grants
+projects
+publication_events
+revisions
+schema_revisions
+tokens
+users
+webhook_deliveries
+webhooks
+website_paths

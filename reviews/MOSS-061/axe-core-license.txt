@@ -1,0 +1,10 @@
+label: local
+package: axe-core
+version: 4.14.0
+license: MPL-2.0
+scope: devDependency of example-site
+lockfile: example-site/package-lock.json records "license": "MPL-2.0" under node_modules/axe-core
+registry: https://registry.npmjs.org/axe-core/-/axe-core-4.14.0.tgz
+notice: Mozilla Public License 2.0. The package copyright notice is in node_modules/axe-core/axe.js after install. It is not a dependency of the API or the admin web app.
+
+The example-site node test loads HTML fixtures with jsdom 31.0.0 (MIT, devDependency) so axe-core can run without a browser. jsdom is not a runtime dependency of the site.

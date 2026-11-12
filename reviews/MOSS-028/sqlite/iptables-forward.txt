@@ -1,0 +1,10 @@
+label: local
+date: 2026-11-11T19:08:38Z
+phase: sqlite
+command:
+sudo iptables-legacy -S FORWARD
+exit_code: 0
+---- output ----
+-P FORWARD DROP
+-A FORWARD -j DOCKER-USER
+-A FORWARD -j DOCKER-FORWARD

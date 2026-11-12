@@ -1,0 +1,7 @@
+label: local
+date: 2026-11-11T19:07:34Z
+phase: rehearsal
+command:
+sudo nginx -c /agent/repos/MossCMS/reviews/MOSS-028/rehearsal/nginx.conf
+exit_code: 0
+---- output ----

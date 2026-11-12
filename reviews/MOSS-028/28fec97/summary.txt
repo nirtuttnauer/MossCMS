@@ -1,0 +1,11 @@
+label: local
+sha: 28fec97d050934117bfb9a6f00b9584060d2fccc
+short_sha: 28fec97
+started: 2026-11-11T19:09:53Z
+git status --porcelain: empty
+verify.sh: pip-audit failed with exit 1
+continuation: commands after pip-audit in scripts/verify.sh, same sha, labeled local
+continuation finished: 2026-11-11T19:20:46Z
+production-up exit 1 on this VM; production-up-retry exit 0 after iptables-legacy adjustment
+result: pip-audit exit 1; the later commands are recorded in this directory
+continue: production-up failed with exit 1

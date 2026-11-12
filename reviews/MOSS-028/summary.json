@@ -1,0 +1,102 @@
+{
+  "date": "2026-11-11T19:08:41Z",
+  "label": "local",
+  "postgres": {
+    "backup": {
+      "dump": {
+        "bytes": 42628,
+        "gzip": false,
+        "head": "PGDMP\u0001\u0010\u0000\u0004\b\u0001\u0001\u0000-\u0000\u0000\u0000\u0000\u0007\u0000\u0000\u0000\u0000\u0013\u0000\u0000\u0000\u0000\u000b\u0000\u0000\u0000\u0000\n\u0000\u0000\u0000\u0000~\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0007\u0000\u0000\u0000mosscms\u0000\u0005\u0000\u0000\u000017.11\u0000\u0005\u0000\u0000\u000017.11\u0000o\u0000\u0000\u0000\u00006\u000e\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u00000\u0000\u0001\u0000\u0000\u00000\u0000\b\u0000\u0000\u0000ENCODING\u0000\b\u0000\u0000\u0000ENCODING\u0000\u0002\u0000\u0000\u0000\u0000\u001e\u0000\u0000\u0000SET client_encoding = 'UTF8';\n\u0001\u0001\u0000\u0000\u0000\u0001\u0001\u0000",
+        "path": "/tmp/moss028/backup-postgres/20261111T190745Z.dump",
+        "sha256": "f25b87496726ee12775280533432695fe13578d4cccd0831f3d10a1fa4deba31"
+      },
+      "dump_restore_list_exit": 0,
+      "gzip_media_exit": 0,
+      "image_id": "sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344",
+      "media": {
+        "bytes": 733,
+        "gzip": true,
+        "path": "/tmp/moss028/backup-postgres/20261111T190745Z.media.tar.gz",
+        "sha256": "efdd3b44b1f8c36e99e0baccb2aa243006c8495a2c6e4bb687b8b630ae2f8d1b"
+      }
+    },
+    "backup_image": "mosscms:backup-20261111T190745Z",
+    "backup_image_id": "sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344",
+    "content_checksum_equal_after_rollback": true,
+    "engine": "postgresql",
+    "entries_equal": true,
+    "media_checksum_equal_after_rollback": true,
+    "new_image": "mosscms:moss028-58a0f15",
+    "new_image_id": "sha256:8817c47d07fe82e92f5d670f16bb3c7ea1d05c5f07e74321c681091fd2a71599",
+    "old_image": "mosscms:moss028-1d6d0ef",
+    "old_image_id": "sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344",
+    "probe_media_is_gzip": false,
+    "probe_rebuilt_image": true,
+    "restored_database_equals_pre_upgrade": true,
+    "revision_after_rollback": "0009",
+    "revision_after_upgrade": "0014",
+    "revision_before": "0009",
+    "table_rows_before": {
+      "alembic_version": 1,
+      "assets": 1,
+      "audit": 5,
+      "content_types": 1,
+      "draft_receipts": 0,
+      "entries": 2,
+      "memberships": 1,
+      "oauth_identities": 0,
+      "preview_grants": 0,
+      "projects": 1,
+      "publication_events": 1,
+      "revisions": 2,
+      "schema_revisions": 1,
+      "tokens": 1,
+      "users": 1,
+      "webhook_deliveries": 0,
+      "webhooks": 0,
+      "website_paths": 0
+    },
+    "upgraded_database_revision_after_rollback": "0014"
+  },
+  "sqlite": {
+    "backup": {
+      "bytes": 7424,
+      "gzip": true,
+      "path": "/tmp/moss028/backup-sqlite/20261111T190821Z.sqlite-data.tar.gz",
+      "sha256": "22363c8cd2e0b0d2cea8bbfad208863ebf316c0ea8c0a1731b86436cee0ea33e"
+    },
+    "backup_image": "mosscms:backup-sqlite-20261111T190821Z",
+    "backup_image_id": "sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344",
+    "content_checksum_equal_after_rollback": true,
+    "engine": "sqlite",
+    "entries_equal": true,
+    "media_checksum_equal_after_rollback": true,
+    "old_image_id": "sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344",
+    "probe_media_is_gzip": false,
+    "probe_rebuilt_image": true,
+    "restored_database_equals_pre_upgrade": true,
+    "revision_after_rollback": "0009",
+    "revision_after_upgrade": "0014",
+    "revision_before": "0009",
+    "table_rows_before": {
+      "alembic_version": 1,
+      "assets": 1,
+      "audit": 5,
+      "content_types": 1,
+      "draft_receipts": 0,
+      "entries": 2,
+      "memberships": 1,
+      "oauth_identities": 0,
+      "preview_grants": 0,
+      "projects": 1,
+      "publication_events": 1,
+      "revisions": 2,
+      "schema_revisions": 1,
+      "tokens": 1,
+      "users": 1,
+      "webhook_deliveries": 0,
+      "webhooks": 0,
+      "website_paths": 0
+    }
+  }
+}

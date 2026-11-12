@@ -1,0 +1,24 @@
+[
+  {
+    "data": {
+      "body": "Draft kept across the upgrade.",
+      "marker": "upgrade-rehearsal-marker",
+      "title": "Upgrade rehearsal draft"
+    },
+    "id": "a337ab6d-e29e-416b-a677-608dd039ee05",
+    "slug": "upgrade-rehearsal-draft",
+    "status": "draft",
+    "version": 1
+  },
+  {
+    "data": {
+      "body": "Loaded before the upgrade. Asset 79a6b940-bfed-44c1-a915-7eeb7be8bc3e.",
+      "marker": "upgrade-rehearsal-marker",
+      "title": "Upgrade rehearsal note"
+    },
+    "id": "b9a986d8-2191-42dc-a9f0-7109320dba1d",
+    "slug": "upgrade-rehearsal-note",
+    "status": "published",
+    "version": 1
+  }
+]

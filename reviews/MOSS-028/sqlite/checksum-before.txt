@@ -1,0 +1,33 @@
+label: local
+date: 2026-11-11T19:08:21Z
+phase: sqlite
+command:
+docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, sqlite3
+con = sqlite3.connect('file:/data/mosscms.db?mode=ro', uri=True)
+tables = [row[0] for row in con.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"
+)]
+recorded = {}
+for table in tables:
+    cols = [row[1] for row in con.execute(f'PRAGMA table_info("{table}")')]
+    rows = []
+    for record in con.execute(f'SELECT * FROM "{table}"'):
+        payload = {}
+        for col, value in zip(cols, record):
+            if isinstance(value, bytes):
+                payload[col] = {'b': value.hex()}
+            else:
+                payload[col] = value
+        rows.append(hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()).hexdigest())
+    rows.sort()
+    recorded[table] = {
+        'rows': len(rows),
+        'sha256': hashlib.sha256(''.join(rows).encode()).hexdigest(),
+    }
+version = con.execute('SELECT version_num FROM alembic_version').fetchone()[0]
+print(json.dumps({'alembic_version': version, 'tables': recorded}, sort_keys=True))
+
+exit_code: 0
+---- output ----
+{"alembic_version": "0009", "tables": {"alembic_version": {"rows": 1, "sha256": "f71f05f3e78069e6aefb3726653a0871198fb0566f71d2388ccad10fde2ae825"}, "assets": {"rows": 1, "sha256": "ae21080cc0e45fe27362be6a7c34a79f13313e632862e10c36aad5bb2ffa8fe4"}, "audit": {"rows": 5, "sha256": "faf69846882307a0eec528180deec2767284742e3239021939813b5d553c8651"}, "content_types": {"rows": 1, "sha256": "865d191d57527bcfbbfe9d292df31328c4ae9f109735c8c35a2da3fb4ebbe6eb"}, "draft_receipts": {"rows": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, "entries": {"rows": 2, "sha256": "0119533e36ad08fe02c758cd5953950d8dc3c888b574307dbe2e89aa968c92f8"}, "memberships": {"rows": 1, "sha256": "f450a23027a57a868ffc8b649b376bc7e74c21ff44501ad287837b90cef32849"}, "oauth_identities": {"rows": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, "preview_grants": {"rows": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, "projects": {"rows": 1, "sha256": "21a9cba967d5cd29f778b8d7671f81915f36d60fe129ca3a03afbab32c3b9d34"}, "publication_events": {"rows": 1, "sha256": "eb293abc4b418200c6f181a5e8c4bec85e13ca9ed57594227803cf4092b7c663"}, "revisions": {"rows": 2, "sha256": "54ed4c6dcccec4f3bd3453f097cf3c475d1b45352444b85849ef2f07faaf6a5c"}, "schema_revisions": {"rows": 1, "sha256": "ce2edd0d17158cc5e27b8e1dde01f7633add3ea4947c31de2a475176a8a0b735"}, "tokens": {"rows": 1, "sha256": "1fcba08db956b283ddb8d952e00136ffd4072dbfd9478f3c6216fd9a2504c64e"}, "users": {"rows": 1, "sha256": "2e99dce0f435692138acc18a1a1e0a76dd15ed0184b61dd987a64bebb59c1540"}, "webhook_deliveries": {"rows": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, "webhooks": {"rows": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, "website_paths": {"rows": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}}}

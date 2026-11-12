@@ -1,0 +1,25 @@
+label: local
+date: 2026-11-11T19:07:46Z
+phase: postgres
+command:
+docker compose exec -T db sh -c psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tA
+exit_code: 0
+---- output ----
+alembic_version
+assets
+audit
+content_types
+draft_receipts
+entries
+memberships
+oauth_identities
+preview_grants
+projects
+publication_events
+revisions
+schema_revisions
+tokens
+users
+webhook_deliveries
+webhooks
+website_paths

@@ -414,6 +414,146 @@ def test_locale_missing_values_and_private_body_are_checked_without_private_find
     assert not any((f["fieldPath"] or "").startswith("data.body") for f in result["findings"])
 
 
+def test_empty_links_and_content_language(client, admin):
+    assert (
+        client.patch(
+            "/api/projects/" + admin["x-moss-project"],
+            headers=admin,
+            json={"locales": ["he", "en"], "defaultLocale": "he"},
+        ).status_code
+        == 200
+    )
+    define(client, admin, fields=FIELDS + [{"name": "language", "type": "text"}])
+    empty = saved(
+        client,
+        admin,
+        slug="empty-link",
+        data={
+            "title": "כותרת ריקה",
+            "description": "קישור בלי שם",
+            "language": "he",
+            "body": "טקסט בעברית\n\n[](https://x)",
+        },
+    )
+    image = saved(
+        client,
+        admin,
+        slug="image-link",
+        data={
+            "title": "כותרת תמונה",
+            "description": "תמונה בלי תיאור",
+            "language": "he",
+            "body": "[![](img.png)](https://x)",
+        },
+    )
+    named = saved(
+        client,
+        admin,
+        slug="named-link",
+        data={
+            "title": "כותרת תקינה",
+            "description": "קישור עם שם",
+            "language": "he",
+            "body": "[שלום](https://x)\n\n[![תיאור](img.png)](https://x)\n\n```\n[](https://x)\n```",
+        },
+    )
+    missing = saved(
+        client,
+        admin,
+        slug="missing-language",
+        data={"title": "בלי שפה", "description": "השדה ריק", "language": "   ", "body": "[קישור](https://x)"},
+    )
+    unknown = saved(
+        client,
+        admin,
+        slug="unknown-language",
+        data={"title": "שפה לא מוכרת", "description": "מחוץ לרשימה", "language": "fr", "body": "[קישור](https://x)"},
+    )
+    define(
+        client,
+        admin,
+        key="note",
+        fields=[
+            {"name": "title", "type": "text", "localized": True},
+            {"name": "description", "type": "text", "localized": True},
+            {"name": "body", "type": "richText", "localized": True},
+        ],
+    )
+    hebrew = saved(
+        client,
+        admin,
+        key="note",
+        slug="hebrew-note",
+        data={
+            "title": {"he": "שלום"},
+            "description": {"he": "תיאור בעברית"},
+            "body": {"he": "[קישור בעברית](https://x)"},
+        },
+    )
+    foreign = saved(
+        client,
+        admin,
+        key="note",
+        slug="foreign-note",
+        data={
+            "title": {"fr": "Bonjour"},
+            "description": {"fr": "Texte"},
+            "body": {"fr": "[lien](https://x)"},
+        },
+    )
+
+    def entry_report(entry_id):
+        result = gql(
+            client,
+            admin,
+            'query($id:ID!){seoEntryAudit(id:$id,snapshot:"draft"){' + REPORT + "}}",
+            {"id": entry_id},
+        )
+        assert "errors" not in result, result
+        return result["data"]["seoEntryAudit"]
+
+    empty_report = entry_report(empty["id"])
+    image_report = entry_report(image["id"])
+    named_report = entry_report(named["id"])
+    missing_report = entry_report(missing["id"])
+    unknown_report = entry_report(unknown["id"])
+    hebrew_report = entry_report(hebrew["id"])
+    foreign_report = entry_report(foreign["id"])
+    workspace = report(client, admin)
+
+    assert any(f["code"] == "empty_link" and f["severity"] == "critical" for f in empty_report["findings"])
+    assert any(f["code"] == "empty_link" and f["severity"] == "critical" for f in image_report["findings"])
+    assert "empty_link" not in codes(named_report)
+    assert "invalid_content_language" not in codes(named_report)
+    assert "empty_link" not in codes(missing_report)
+    assert any(
+        f["code"] == "invalid_content_language"
+        and f["severity"] == "warning"
+        and "no content language" in f["explanation"]
+        for f in missing_report["findings"]
+    )
+    assert any(
+        f["code"] == "invalid_content_language" and f["severity"] == "warning" and "fr" in f["explanation"]
+        for f in unknown_report["findings"]
+    )
+    assert "invalid_content_language" not in codes(hebrew_report)
+    assert "empty_link" not in codes(hebrew_report)
+    assert any(
+        f["code"] == "invalid_content_language" and f["locale"] == "fr" and f["severity"] == "warning"
+        for f in foreign_report["findings"]
+    )
+    assert {"empty_link", "invalid_content_language"} <= codes(workspace)
+    assert any(f["code"] == "empty_link" and f["entryId"] == empty["id"] for f in workspace["findings"])
+    assert any(f["code"] == "invalid_content_language" and f["entryId"] == missing["id"] for f in workspace["findings"])
+    assert any(
+        "button-name" in item and "html-has-lang" in item and "link-name" in item for item in workspace["notChecked"]
+    )
+    assert "Captured schedules" in workspace["notChecked"]
+    critical = report(client, admin, severity="critical")
+    assert "empty_link" in codes(critical)
+    assert "invalid_content_language" not in codes(critical)
+
+
 def test_private_list_items_and_their_children_are_not_audited(client, admin):
     define(
         client,
