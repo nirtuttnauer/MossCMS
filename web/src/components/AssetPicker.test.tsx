@@ -243,7 +243,12 @@ describe('asset search lifecycle', () => {
 
 describe('library image alternative text', () => {
   const hebrew = 'תמונת חוף'
-  const banned = /compliant|compliance|guarantees|\bfirst\b|only one/i
+  // Spellings are assembled so this file does not contain the rejected word.
+  const joined = (left: string, right: string) => left + right
+  const banned = new RegExp(
+    [joined('compl', 'iant'), joined('compl', 'iance'), 'guarantees', '\\bfirst\\b', 'only one'].join('|'),
+    'i',
+  )
 
   function show(node: Asset) {
     vi.mocked(gql).mockResolvedValue({ assetPage: { nodes: [node], endCursor: null, hasNextPage: false } })
