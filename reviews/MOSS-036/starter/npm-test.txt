@@ -1,0 +1,49 @@
+label: local
+date: 2026-11-11T21:50:50Z
+command: npm test
+---- output ----
+
+> moss-nextjs-starter@0.1.0 test
+> node --test lib/live.test.mjs
+
+TAP version 13
+# Subtest: drafts are not routed or rendered
+ok 1 - drafts are not routed or rendered
+  ---
+  duration_ms: 25.520789
+  type: 'test'
+  ...
+# Subtest: markdown uses the shared URL policy and leaves raw HTML unrendered
+ok 2 - markdown uses the shared URL policy and leaves raw HTML unrendered
+  ---
+  duration_ms: 4.362564
+  type: 'test'
+  ...
+# Subtest: localized markdown bodies stay text
+ok 3 - localized markdown bodies stay text
+  ---
+  duration_ms: 0.125064
+  type: 'test'
+  ...
+# Subtest: example website routes and a plain published slug resolve the same way
+ok 4 - example website routes and a plain published slug resolve the same way
+  ---
+  duration_ms: 1.66017
+  type: 'test'
+  ...
+# Subtest: encoded slugs round-trip through the shared route helpers
+ok 5 - encoded slugs round-trip through the shared route helpers
+  ---
+  duration_ms: 0.520446
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 144.592963
+exit_code: 0
