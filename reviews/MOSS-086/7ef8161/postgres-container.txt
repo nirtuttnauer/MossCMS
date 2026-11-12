@@ -1,0 +1,42 @@
+label: local
+sha: 7ef81619fa9d40e0cd1b48e63c3caef6d50b421a
+image: postgres:17-alpine
+command: docker run --rm -d --name moss-verify-pg -e POSTGRES_USER=pg -e POSTGRES_PASSWORD=<redacted> -e POSTGRES_DB=postgres -p 127.0.0.1:5432:5432 postgres:17-alpine
+---- output ----
+Unable to find image 'postgres:17-alpine' locally
+17-alpine: Pulling from library/postgres
+5c816eed2102: Pulling fs layer
+0465fcfe7974: Pulling fs layer
+bdfe5a2c0729: Pulling fs layer
+253db6c496ed: Pulling fs layer
+a6e011ae4b07: Pulling fs layer
+80bf5832b7b5: Pulling fs layer
+06b8a748e903: Pulling fs layer
+e0de8084b760: Pulling fs layer
+4af2f594366f: Pulling fs layer
+bdfe5a2c0729: Download complete
+4af2f594366f: Download complete
+253db6c496ed: Download complete
+e0de8084b760: Download complete
+5c816eed2102: Download complete
+80bf5832b7b5: Download complete
+0465fcfe7974: Download complete
+6181e1346d1c: Download complete
+a6e011ae4b07: Download complete
+c932c337cdf0: Download complete
+4af2f594366f: Pull complete
+80bf5832b7b5: Pull complete
+a6e011ae4b07: Pull complete
+06b8a748e903: Download complete
+bdfe5a2c0729: Pull complete
+253db6c496ed: Pull complete
+e0de8084b760: Pull complete
+5c816eed2102: Pull complete
+0465fcfe7974: Pull complete
+06b8a748e903: Pull complete
+Digest: sha256:e5d2edd28b1f8d40a0a6c0c9cdc545b19b56a0d5d88f94bc11a97d970d4700d0
+Status: Downloaded newer image for postgres:17-alpine
+a47b6719c2ae4d36220e3ce25a01ff333039b0e6bf35f18bf104d4f15b6c36c5
+/var/run/postgresql:5432 - no response
+/var/run/postgresql:5432 - accepting connections
+postgres (PostgreSQL) 17.11
