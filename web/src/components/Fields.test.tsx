@@ -103,15 +103,15 @@ describe('schema field editors', () => {
       expect(inputs.map(input => input.getAttribute('dir'))).toEqual(['ltr', 'ltr'])
       expect(inputs.every(input => input.getAttribute('lang') === null)).toBe(true)
     }
-    const bodies = screen.getAllByLabelText<HTMLTextAreaElement>('body')
-    expect(bodies.map(input => [input.dir, input.lang])).toEqual([['rtl', 'he'], ['ltr', 'en']])
+    const visuals = screen.getAllByRole('group', { name: 'body visual editor' })
+    expect(visuals.map(group => [group.getAttribute('dir'), group.getAttribute('lang')])).toEqual([['rtl', 'he'], ['ltr', 'en']])
+    expect(visuals[0].querySelector('[role="textbox"]')?.getAttribute('dir')).toBe('rtl')
+    expect(visuals[0].textContent).toContain('שלום')
     const alts = screen.getAllByLabelText('Image alt text')
     expect(alts.map(input => [input.getAttribute('dir'), input.getAttribute('lang')])).toEqual([['rtl', 'he'], ['ltr', 'en']])
-    fireEvent.click(screen.getAllByRole('button', { name: 'Preview Markdown' })[0])
-    const preview = document.querySelector('.markdown-preview')
-    expect(preview?.getAttribute('dir')).toBe('rtl')
-    expect(preview?.getAttribute('lang')).toBe('he')
-    expect(preview?.textContent).toContain('שלום')
+    for (const button of screen.getAllByRole('button', { name: 'Source' })) fireEvent.click(button)
+    const bodies = screen.getAllByLabelText<HTMLTextAreaElement>('body')
+    expect(bodies.map(input => [input.dir, input.lang])).toEqual([['rtl', 'he'], ['ltr', 'en']])
   })
 
   it('locks each item in a localized list to that locale key', () => {

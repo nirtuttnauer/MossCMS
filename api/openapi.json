@@ -583,6 +583,24 @@
         "title": "Login",
         "type": "object"
       },
+      "PermissionInput": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "fieldRules": {
+            "additionalProperties": true,
+            "title": "Fieldrules",
+            "type": "object"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "PermissionInput",
+        "type": "object"
+      },
       "PreviewOriginInput": {
         "properties": {
           "origin": {
@@ -1062,6 +1080,42 @@
           }
         },
         "summary": "Configure Locales"
+      }
+    },
+    "/api/project/permissions": {
+      "patch": {
+        "operationId": "update_permissions_api_project_permissions_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PermissionInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Permissions"
       }
     },
     "/api/project/preview": {
