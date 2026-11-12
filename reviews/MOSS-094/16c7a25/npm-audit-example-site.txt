@@ -1,0 +1,11 @@
+label: local
+date: 2026-11-12T16:02:12Z
+sha: 16c7a250c25d763a2e176c39a09aaa7efd3ce782
+workdir: example-site
+continued: after scripts/verify.sh MOSS-094 exited 1 at pytest-sqlite
+command:
+npm audit
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+found 0 vulnerabilities
+exit_code: 0
