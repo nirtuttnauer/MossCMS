@@ -1,0 +1,236 @@
+label: local
+date: 2026-11-12T15:11:29Z
+sha: 4ae0c83b1ef41c911701518adaa82d6de219eee5
+workdir: .
+command:
+docker build --tag mosscms:smoke .
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  21.62MB
+Step 1/29 : FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS web-build
+22-alpine: Pulling from library/node
+Digest: sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+Status: Downloaded newer image for node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+ ---> 0a7108bf6c7b
+Step 2/29 : WORKDIR /web
+ ---> Running in 741dd2e33a46
+ ---> Removed intermediate container 741dd2e33a46
+ ---> 8c31c12f9467
+Step 3/29 : COPY shared/ /shared/
+ ---> d4b6391010b0
+Step 4/29 : COPY web/package.json web/package-lock.json ./
+ ---> e71729cfc70e
+Step 5/29 : RUN npm ci
+ ---> Running in aaacc4ff1504
+
+added 283 packages, and audited 284 packages in 3s
+
+106 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+[91mnpm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
+[0m ---> Removed intermediate container aaacc4ff1504
+ ---> af2947af773a
+Step 6/29 : COPY web/ ./
+ ---> 85feb87f0fdf
+Step 7/29 : ARG VITE_GRAPHQL_URL=/graphql
+ ---> Running in 17c228ce0858
+ ---> Removed intermediate container 17c228ce0858
+ ---> aaa1211201fa
+Step 8/29 : ENV VITE_GRAPHQL_URL=${VITE_GRAPHQL_URL}
+ ---> Running in 17fd7a52f489
+ ---> Removed intermediate container 17fd7a52f489
+ ---> 904bb45f66e7
+Step 9/29 : RUN npm run check && npm run build
+ ---> Running in a2fde37e9a3b
+
+> mosscms-admin@0.1.0 check
+> tsc -b
+
+
+> mosscms-admin@0.1.0 build
+> tsc -b && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 1848 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                      0.40 kB │ gzip:   0.28 kB
+dist/assets/index-BmMc5LXz.css      63.20 kB │ gzip:  13.74 kB
+dist/assets/Migration-C2itvHal.js   15.44 kB │ gzip:   5.27 kB
+dist/assets/index-DyPD0FP2.js      558.53 kB │ gzip: 177.27 kB
+[91m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[0m✓ built in 7.17s
+ ---> Removed intermediate container a2fde37e9a3b
+ ---> 3207974daad0
+Step 10/29 : FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d AS api-deps
+3.12-slim: Pulling from library/python
+Digest: sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
+Status: Downloaded newer image for python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
+ ---> 02108f5d322d
+Step 11/29 : WORKDIR /api
+ ---> Running in 27ed4f065fe6
+ ---> Removed intermediate container 27ed4f065fe6
+ ---> bd03fa23fa61
+Step 12/29 : ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/app/.venv
+ ---> Running in 0977100dc034
+ ---> Removed intermediate container 0977100dc034
+ ---> b3d1c1034161
+Step 13/29 : RUN pip install --no-cache-dir uv==0.12.23
+ ---> Running in b1cb2f848484
+Collecting uv==0.12.23
+  Downloading uv-0.12.23-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (11 kB)
+Downloading uv-0.12.23-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (20.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 20.6/20.6 MB 244.3 MB/s eta 0:00:00
+Installing collected packages: uv
+[91mWARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+[0mSuccessfully installed uv-0.12.23
+[91m
+[notice] A new release of pip is available: 25.0.1 -> 26.3
+[notice] To update, run: pip install --upgrade pip
+[0m ---> Removed intermediate container b1cb2f848484
+ ---> ea052ae500bb
+Step 14/29 : COPY api/pyproject.toml api/uv.lock ./
+ ---> dda0ecd8706d
+Step 15/29 : RUN uv sync --locked --no-dev --no-install-project
+ ---> Running in 5feed3d31653
+[91mUsing CPython 3.12.15 interpreter at: /usr/local/bin/python3
+Creating virtual environment at: /app/.venv
+[0m[91mResolved 72 packages in 1ms
+[0m[91mDownloading pydantic-core (2.0MiB)
+[0m[91mDownloading uvloop (4.3MiB)
+[0m[91mDownloading psycopg-binary (5.0MiB)
+[0m[91mDownloading cryptography (4.5MiB)
+[0m[91mDownloading botocore (15.3MiB)
+[0m[91mDownloading[0m[91m pillow (6.8MiB)
+Downloading sqlalchemy (4.5MiB)
+[0m[91m Downloaded pydantic-core
+[0m[91m [0m[91mDownloaded[0m[91m [0m[91muvloop[0m[91m
+[0m[91m [0m[91mDownloaded cryptography
+[0m[91m Downloaded sqlalchemy
+[0m[91m Downloaded [0m[91mpsycopg-binary
+[0m[91m Downloaded pillow
+[0m[91m Downloaded botocore
+[0m[91mPrepared 59 packages in 332ms
+[0m[91mInstalled 59 packages in 210ms
+[0m[91mBytecode compiled 2537 files in 802ms
+ + alembic==1.20.0
+ + annotated-doc==0.0.5
+ + annotated-types==0.8.0
+ + anyio==4.15.1
+ + authlib==1.9.1
+ + boto3==1.43.108
+ + botocore==1.43.108
+ + certifi==2026.10.23
+ + cffi==2.1.1
+ + click==8.5.0
+ + cross-web==0.7.0
+ + cryptography==50.0.2
+ + fastapi==0.142.2
+ + googleapis-common-protos==1.75.5
+ + graphql-core==3.3.1
+ + h11==0.16.0
+ + httpcore==1.0.9
+ + httptools==0.8.0
+ + httpx==0.28.1
+ + idna==3.20
+ + itsdangerous==2.2.0
+ + jmespath==1.1.0
+ + joserfc==1.7.6
+ + mako==1.4.3
+ + markdown-it-py==4.2.0
+ + markupsafe==3.0.4
+ + mdurl==0.1.2
+ + opentelemetry-api==1.45.1[0m[91m
+ + opentelemetry-exporter-http-transport==0.66b0
+ + opentelemetry-exporter-otlp-common==0.66b0
+ + opentelemetry-exporter-otlp-proto-common==1.45.0
+ + opentelemetry-exporter-otlp-proto-http==1.45.0
+ + opentelemetry-proto==1.45.0
+ + opentelemetry-sdk==1.45.1[0m[91m
+ + opentelemetry-semantic-conventions==0.[0m[91m66b1
+ +[0m[91m packaging==[0m[91m26.3[0m[91m
+ [0m[91m+ pillow[0m[91m==13.0.0[0m[91m
+[0m[91m + [0m[91mprotobuf[0m[91m==7.[0m[91m36.2[0m[91m
+ [0m[91m+ psycopg[0m[91m==3.3[0m[91m.6
+[0m[91m [0m[91m+ [0m[91mpsycopg-binary[0m[91m==3.[0m[91m3.6[0m[91m
+ [0m[91m+ pycparser[0m[91m==[0m[91m3.0[0m[91m
+ [0m[91m+ [0m[91mpydantic[0m[91m==2.13.5
+ +[0m[91m [0m[91mpydantic-core==2[0m[91m.46.[0m[91m5[0m[91m
+ +[0m[91m [0m[91mpython-dateutil==2[0m[91m.9[0m[91m.0.post0[0m[91m
+ + python-dotenv[0m[91m==1.2[0m[91m.4[0m[91m
+ +[0m[91m python-multipart==[0m[91m0.0.32
+[0m[91m + [0m[91mpyyaml[0m[91m==6.[0m[91m0[0m[91m.3[0m[91m
+ [0m[91m+ [0m[91ms3transfer==0.[0m[91m19[0m[91m.2[0m[91m
+ [0m[91m+ [0m[91msix==1[0m[91m.[0m[91m17.0[0m[91m
+ [0m[91m+ sqlalchemy[0m[91m==[0m[91m2.[0m[91m1.[0m[91m3
+[0m[91m +[0m[91m [0m[91mstarlette[0m[91m==1.7[0m[91m.0
+ [0m[91m+ [0m[91mstrawberry-graphql==0.330.3
+ + typing-extensions==4.16.0
+ + typing-inspection==0.4.4
+ + urllib3==2.8.0
+ +[0m[91m uvicorn==0[0m[91m.54.0[0m[91m
+ +[0m[91m uvloop[0m[91m==[0m[91m0.23.[0m[91m0
+ +[0m[91m watchfiles==1.3.0
+ + websockets==17.2[0m[91m
+[0m ---> Removed intermediate container 5feed3d31653
+ ---> 7a8d5557fd6f
+Step 16/29 : FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d AS runtime
+ ---> 02108f5d322d
+Step 17/29 : ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PATH="/app/.venv/bin:$PATH" PORT=8001 MOSS_STORAGE_DIR=/data
+ ---> Running in 8a82560fb530
+ ---> Removed intermediate container 8a82560fb530
+ ---> a10b056996de
+Step 18/29 : WORKDIR /app
+ ---> Running in 50215657d3f4
+ ---> Removed intermediate container 50215657d3f4
+ ---> 3a7df2642024
+Step 19/29 : RUN useradd --create-home --uid 10001 appuser && mkdir /data && chown appuser:appuser /data
+ ---> Running in c7b1c64b0227
+ ---> Removed intermediate container c7b1c64b0227
+ ---> 114177406d24
+Step 20/29 : COPY --from=api-deps /app/.venv /app/.venv
+ ---> 44ed9b85266e
+Step 21/29 : COPY api/app ./app
+ ---> 969f1ab55ef4
+Step 22/29 : COPY api/migrations ./migrations
+ ---> e285544986ee
+Step 23/29 : COPY api/alembic.ini ./alembic.ini
+ ---> d78263317baf
+Step 24/29 : COPY shared/ /shared/
+ ---> 311e224df223
+Step 25/29 : COPY --from=web-build /web/dist ./static
+ ---> eadc1f31032b
+Step 26/29 : USER appuser
+ ---> Running in 0a6375c4dbfc
+ ---> Removed intermediate container 0a6375c4dbfc
+ ---> e0dc5ec45c53
+Step 27/29 : EXPOSE 8001
+ ---> Running in c1874fc17302
+ ---> Removed intermediate container c1874fc17302
+ ---> 487c3bf02c69
+Step 28/29 : HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/ready', timeout=3)"
+ ---> Running in 39f52379b816
+ ---> Removed intermediate container 39f52379b816
+ ---> 6cd956a19269
+Step 29/29 : CMD ["python", "-m", "app.cli", "serve"]
+ ---> Running in eab7ab5a11fe
+ ---> Removed intermediate container eab7ab5a11fe
+ ---> 09ede1c689b7
+Successfully built 09ede1c689b7
+Successfully tagged mosscms:smoke
+exit_code: 0

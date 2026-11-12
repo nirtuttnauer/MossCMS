@@ -1,0 +1,26 @@
+{
+  "sha": "5ea1d037bb85e47c2efc1d97f72998d130130878",
+  "sqlite": {
+    "passed": 497,
+    "failed": 1,
+    "deselected": 4,
+    "skipped": 0
+  },
+  "postgres": {
+    "passed": 501,
+    "failed": 1,
+    "deselected": 0,
+    "skipped": 0
+  },
+  "web": {
+    "files_passed": 36,
+    "passed": 356,
+    "skipped": 0
+  },
+  "example_site": {
+    "passed": 50,
+    "failed": 0,
+    "skipped": 0
+  },
+  "failed_test": "tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests"
+}
