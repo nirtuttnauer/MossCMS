@@ -4,9 +4,12 @@ from .security import CmsError
 
 MAX_QUERY_DEPTH = 12
 MAX_QUERY_SELECTIONS = 200
+MAX_QUERY_CHARACTERS = 30000
 
 
 def bounded_query(query, *, return_document=False):
+    if isinstance(query, str) and len(query) > MAX_QUERY_CHARACTERS:
+        raise CmsError("Query length limit exceeded.", "QUERY_LIMIT")
     document = parse(query)
     fragments = {d.name.value: d for d in document.definitions if isinstance(d, FragmentDefinitionNode)}
     count = 0
