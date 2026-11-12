@@ -1,0 +1,21 @@
+label: local
+date: 2026-11-12T15:06:45Z
+sha: b431a037659057c31b3cf8890f25849cafb8e381
+workdir: api
+command:
+uv run python tests/verify_required_runs.py
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+sqlite run failed:
+  tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+sqlite passed ids do not match the tests that run executes
+  missing: ['tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests']
+  unexpected: []
+postgres run failed:
+  tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+postgres passed ids do not match the tests that run executes
+  missing: ['tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests']
+  unexpected: []
+collected test ids that did not pass in any required run:
+  tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+exit_code: 1

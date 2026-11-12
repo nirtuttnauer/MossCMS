@@ -1,0 +1,14 @@
+label: local
+sha: b431a037659057c31b3cf8890f25849cafb8e381
+short_sha: b431a03
+started: 2026-11-12T14:49:59Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continuation-started: 2026-11-12T14:55:04Z
+note: scripts/verify.sh stopped at pytest-sqlite exit 1. The failed test is the dependabot manifest check, which fails the same way on main b6c6687. Remaining commands from scripts/verify.sh follow.
+continuation-started: 2026-11-12T15:02:16Z
+note: postgres rerun with MOSS_USE_SQLITE=false so a collected import cannot switch the process to SQLite. The earlier postgres log was discarded for that reason.
+continuation: pytest-postgres exited 1; kept going to compare with the dependabot failure on main
+continuation: verify-required-runs exited 1; kept going to compare with the dependabot failure on main
+finished: 2026-11-12T15:09:19Z
+result: continuation finished
