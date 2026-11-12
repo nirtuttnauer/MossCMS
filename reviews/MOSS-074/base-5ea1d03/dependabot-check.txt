@@ -1,0 +1,2 @@
+starters/nextjs/package.json (npm /starters/nextjs) is not covered by .github/dependabot.yml
+dependabot_exit:1

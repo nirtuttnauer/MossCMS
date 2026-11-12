@@ -1,7 +1,7 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { useDraftAutosave } from './autosave'
-import { ApiError, gql, setContext, type Entry } from './api'
+import { ApiError, draftReceiptQuery, gql, saveDraftMutation, saveEntryMutation, setContext, type Entry } from './api'
 vi.mock('./api', async original => ({...await original<typeof import('./api')>(),gql:vi.fn()}))
 afterEach(() => {cleanup();vi.restoreAllMocks();vi.mocked(gql).mockReset()})
 const initial:Entry={id:'one',typeKey:'article',slug:'hello',title:'Hello',data:{title:'Hello'},status:'draft',version:1,updatedAt:'2026-10-08T00:00:00Z',isLive:false,hasUnpublishedChanges:true}
@@ -204,5 +204,81 @@ describe('autosave request lifecycle', () => {
     expect(await outcome).toBe('Editor workspace changed; delayed save cancelled.')
     await act(async () => { await vi.advanceTimersByTimeAsync(20) })
     expect(gql).toHaveBeenCalledTimes(1)
+  })
+
+  test.each(['published', 'scheduled'])('background save persists a Hebrew title when the entry is %s', async status => {
+    const hebrew = 'כותרת טיוטה'
+    const current: Entry = {
+      ...initial,
+      status,
+      isLive: status === 'published',
+      scheduledAt: status === 'scheduled' ? '2027-01-01T12:00:00Z' : null,
+    }
+    vi.mocked(gql).mockResolvedValue({
+      saveDraft: { ...current, version: 2, title: hebrew, data: { title: hebrew } },
+    })
+    const hook = renderHook(({ data }) => useDraftAutosave(current, { ...values, data }, true, true, 10), {
+      initialProps: { data: current.data },
+    })
+    hook.rerender({ data: { title: hebrew } })
+    await act(async () => { await vi.advanceTimersByTimeAsync(10) })
+    expect(gql).toHaveBeenCalledTimes(1)
+    const [query, variables] = vi.mocked(gql).mock.calls[0]
+    expect(query).toBe(saveDraftMutation)
+    expect(query).not.toBe(saveEntryMutation)
+    expect(query).not.toContain('saveEntry')
+    expect(query).not.toMatch(/\$status|status:\s*"(published|scheduled)"/)
+    expect(variables).toEqual({
+      typeKey: 'article',
+      slug: 'hello',
+      data: { title: hebrew },
+      id: current.id,
+      version: current.version,
+      requestKey: expect.any(String),
+    })
+    expect(variables).not.toHaveProperty('status')
+    expect(variables).not.toHaveProperty('scheduledAt')
+    expect(hook.result.current.state).toBe('Saved')
+    expect(hook.result.current.dirty).toBe(false)
+    expect(hook.result.current.entry?.version).toBe(2)
+    expect(hook.result.current.entry?.data.title).toBe(hebrew)
+  })
+
+  test('a lost background save checks the draft receipt for a Hebrew title', async () => {
+    const hebrew = 'שמירה לא מאושרת'
+    const scheduled: Entry = { ...initial, status: 'scheduled', scheduledAt: '2027-01-01T12:00:00Z', isLive: true }
+    vi.mocked(gql)
+      .mockRejectedValueOnce(new ApiError('Timed out', 'TIMEOUT', undefined, true))
+      .mockResolvedValueOnce({ draftReceipt: { ...scheduled, version: 2, title: hebrew, data: { title: hebrew } } })
+    const hook = renderHook(({ data }) => useDraftAutosave(scheduled, { ...values, data }, true, true, 10), {
+      initialProps: { data: scheduled.data },
+    })
+    hook.rerender({ data: { title: hebrew } })
+    await act(async () => { await vi.advanceTimersByTimeAsync(10) })
+    expect(gql).toHaveBeenCalledTimes(2)
+    const [saveQuery, saveVariables] = vi.mocked(gql).mock.calls[0]
+    const [receiptQuery, receiptVariables] = vi.mocked(gql).mock.calls[1]
+    expect(saveQuery).toBe(saveDraftMutation)
+    expect(saveQuery).not.toContain('saveEntry')
+    expect(saveQuery).not.toMatch(/\$status|status:\s*"(published|scheduled)"/)
+    expect(saveVariables).toEqual({
+      typeKey: 'article',
+      slug: 'hello',
+      data: { title: hebrew },
+      id: scheduled.id,
+      version: scheduled.version,
+      requestKey: expect.any(String),
+    })
+    expect(saveVariables).not.toHaveProperty('status')
+    expect(saveVariables).not.toHaveProperty('scheduledAt')
+    expect(receiptQuery).toBe(draftReceiptQuery)
+    expect(receiptQuery).not.toContain('saveEntry')
+    expect(receiptQuery).not.toMatch(/\$status|status:\s*"(published|scheduled)"/)
+    expect(receiptVariables).toEqual({ key: saveVariables?.requestKey })
+    expect(receiptVariables).not.toHaveProperty('status')
+    expect(receiptVariables).not.toHaveProperty('scheduledAt')
+    expect(hook.result.current.state).toBe('Saved')
+    expect(hook.result.current.entry?.data.title).toBe(hebrew)
+    expect(hook.result.current.entry?.version).toBe(2)
   })
 })
