@@ -17,6 +17,7 @@ updates:
       - "/web"
       - "/example-site"
       - "/ci"
+      - "/starters/nextjs"
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 3

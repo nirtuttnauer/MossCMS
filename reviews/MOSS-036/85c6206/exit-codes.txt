@@ -1,0 +1,5 @@
+uv-sync 0
+ruff 0
+ruff-scripts 0
+mypy 0
+pytest-sqlite 1
