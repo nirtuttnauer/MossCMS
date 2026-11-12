@@ -261,6 +261,15 @@ def database(url):
         def foreign_keys(connection, _):
             connection.execute("PRAGMA foreign_keys=ON")
 
+        @event.listens_for(engine, "savepoint")
+        def write_lock_before_savepoint(connection, _):
+            # pysqlite begins a transaction only before DML, so a SAVEPOINT issued first opens a deferred
+            # transaction whose reads hold a shared lock. Its first write must then upgrade that lock, and SQLite
+            # reports "database is locked" at once, without the busy timeout, when another connection is
+            # committing. Taking the write lock up front waits for that writer under the busy timeout instead.
+            if not connection.connection.dbapi_connection.in_transaction:
+                connection.exec_driver_sql("BEGIN IMMEDIATE")
+
     return engine, sessionmaker(engine, expire_on_commit=False)
 
 
