@@ -580,9 +580,9 @@ def test_hebrew_niqqud_round_trip_stays_draft_and_omits_auth_secrets(workspace):
     session_id = "moss078-session-id-sentinel"
     session_csrf = "moss078-session-csrf-sentinel"
     invite_raw = "moss078-invite-raw-sentinel"
-    invite_secret = "moss078-invite-secret-sentinel"
+    invite_row = "moss078-invite-row-marker"
     # Raw bearer strings are not stored. The rows below are what the database keeps.
-    auth_secrets = (password_hash, session_raw, session_id, session_csrf, invite_raw, invite_secret, "never exported")
+    auth_secrets = (password_hash, session_raw, session_id, session_csrf, invite_raw, invite_row, "never exported")
 
     with w.factory.begin() as session:
         session.get(User, "admin").password_hash = password_hash
@@ -624,7 +624,7 @@ def test_hebrew_niqqud_round_trip_stays_draft_and_omits_auth_secrets(workspace):
         )
         session.add(
             Token(
-                id=invite_secret,
+                id=invite_row,
                 kind="invite",
                 project_id="source",
                 name="invitation",
