@@ -1,8 +1,9 @@
+import '../../../shared/markdown.css';
 import './globals.css';
 
 export const metadata = {
   title: 'MossCMS published entries',
-  description: 'Published entries read from MossCMS with the shared delivery client.',
+  description: 'Published entries read from MossCMS and rendered with the shared route and Markdown modules.',
 };
 
 export default function RootLayout({ children }) {

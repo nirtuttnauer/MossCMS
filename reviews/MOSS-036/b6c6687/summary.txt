@@ -1,0 +1,6 @@
+label: local
+sha: b6c66870b98af990ee91766e5a965e823bf2b03d
+short_sha: b6c6687
+started: 2026-11-11T21:54:51Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
