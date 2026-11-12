@@ -72,6 +72,8 @@ test.each([
   ['ar', 'rtl'],
   ['he-IL', 'rtl'],
   ['ar-EG', 'rtl'],
+  ['fa', 'rtl'],
+  ['ur', 'rtl'],
   ['en', 'ltr'],
   ['pt-BR', 'ltr'],
   ['fr-CA', 'ltr'],

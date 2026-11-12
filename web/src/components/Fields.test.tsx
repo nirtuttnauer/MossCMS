@@ -94,6 +94,15 @@ describe('schema field editors', () => {
     expect(localeCode.getAttribute('lang')).toBeNull()
   })
 
+  it('locks Persian, Urdu, and Yiddish values to rtl and honours an explicit script subtag', () => {
+    render(<FieldInput {...common} field={{ name: 'title', type: 'text', localized: true }} value={{ fa: 'سلام', ur: 'سلام', yi: 'שלום', 'he-Latn': 'Shalom', 'ms-Arab': 'سلامت' }} onChange={vi.fn()} defaultLocale="fa" locales={['fa']} />)
+    for (const [locale, dir] of [['fa', 'rtl'], ['ur', 'rtl'], ['yi', 'rtl'], ['he-Latn', 'ltr'], ['ms-Arab', 'rtl']]) {
+      const input = screen.getByLabelText(locale)
+      expect(input.getAttribute('dir')).toBe(dir)
+      expect(input.getAttribute('lang')).toBe(locale)
+    }
+  })
+
   it('passes the locale key into nested text, numbers, and Markdown', () => {
     render(<FieldInput {...common} field={{ name: 'meta', type: 'object', localized: true, fields: [{ name: 'title', type: 'text' }, { name: 'count', type: 'number' }, { name: 'when', type: 'date' }, { name: 'body', type: 'richText' }] }} value={{ he: { title: 'כותרת', count: 2, when: '2026-11-11', body: 'שלום' }, en: { title: 'Title', count: 3, when: '2026-11-12', body: 'Hello' } }} onChange={vi.fn()} />)
     const titles = screen.getAllByLabelText('title')
