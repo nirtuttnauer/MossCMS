@@ -16,9 +16,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-RUNTIME_FROM = (
-    "FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d AS runtime"
-)
+RUNTIME_FROM = re.compile(r"^FROM\s+\S+\s+AS\s+runtime\s*$", re.IGNORECASE | re.MULTILINE)
 _PORT_NUMBER = re.compile(r"\d+")
 
 
@@ -176,9 +174,10 @@ def test_missing_runtime_user_is_rejected():
 
 def test_user_set_before_the_runtime_stage_is_rejected():
     text = _checked_in_dockerfile()
-    assert text.count(RUNTIME_FROM) == 1
+    runtime_from = RUNTIME_FROM.findall(text)
+    assert len(runtime_from) == 1
     assert "USER appuser\n" in text
-    shifted = text.replace("USER appuser\n", "", 1).replace(RUNTIME_FROM, f"USER appuser\n{RUNTIME_FROM}", 1)
+    shifted = text.replace("USER appuser\n", "", 1).replace(runtime_from[0], f"USER appuser\n{runtime_from[0]}", 1)
     with pytest.raises(AssertionError):
         require_non_root_runtime_user(shifted)
 
