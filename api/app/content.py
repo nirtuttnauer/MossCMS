@@ -110,7 +110,7 @@ def entry_dict(session, identity, record):
                 "publishedAt": record.published_at.isoformat() + "Z" if record.published_at else None,
             },
         )
-    return {
+    document = {
         "id": record.id,
         "typeKey": definition.key,
         "slug": record.published_slug if delivery else record.slug,
@@ -137,11 +137,16 @@ def entry_dict(session, identity, record):
         "publishedSlug": None if delivery else record.published_slug,
         "publishedTitle": None if delivery else record.published_slug if hide_title else record.published_title,
         "publishedSnapshot": snapshot,
-        "reviewState": None if delivery else record.review_state,
-        "approvedRevision": None if delivery else record.approved_revision,
-        "reviewerId": None if delivery else record.reviewer_id,
-        "reviewAuthorId": None if delivery else record.review_author_id,
     }
+    if not delivery:
+        # Review state is editorial. Delivery REST serves this dict as EntryDocument, which has no review keys.
+        document.update(
+            reviewState=record.review_state,
+            approvedRevision=record.approved_revision,
+            reviewerId=record.reviewer_id,
+            reviewAuthorId=record.review_author_id,
+        )
+    return document
 
 
 def private_title_types(session, identity):
