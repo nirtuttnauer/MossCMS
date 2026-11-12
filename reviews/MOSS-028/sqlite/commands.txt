@@ -1,0 +1,344 @@
+2026-11-11T18:33:43Z exit=0 python3 scripts/configure.py --production --public-url https://cms.moss.test:8443 --sqlite
+2026-11-11T18:33:44Z exit=0 docker compose up -d --no-build
+2026-11-11T18:33:44Z exit=0 docker network inspect moss028_default --format {{.Id}}
+2026-11-11T18:33:44Z exit=0 sudo iptables-legacy -S FORWARD
+2026-11-11T18:33:44Z exit=0 sudo iptables-legacy -S DOCKER-FORWARD
+2026-11-11T18:33:44Z exit=0 sudo iptables-legacy -A DOCKER-FORWARD -i br-031b609a468e -j ACCEPT
+2026-11-11T18:33:47Z exit=0 docker compose stop app
+2026-11-11T18:33:47Z exit=0 docker image tag sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344 mosscms:moss028-probe
+2026-11-11T18:33:47Z exit=0 docker compose run --rm --no-deps -T --entrypoint tar app -C /data -czf - . > /tmp/moss028/probe-sqlite/20261111T183347Z.sqlite-data.tar.gz
+2026-11-11T18:33:47Z exit=1 gzip -t /tmp/moss028/probe-sqlite/20261111T183347Z.sqlite-data.tar.gz
+2026-11-11T18:33:48Z exit=0 docker compose run --rm --no-deps -T --entrypoint tar app -C /data -czf - . > /tmp/moss028/backup-sqlite/20261111T183347Z.sqlite-data.tar.gz
+2026-11-11T18:33:48Z exit=0 gzip -t /tmp/moss028/backup-sqlite/20261111T183347Z.sqlite-data.tar.gz
+2026-11-11T18:33:48Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, sqlite3
+con = sqlite3.connect('file:/data/mosscms.db?mode=ro', uri=True)
+tables = [row[0] for row in con.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"
+)]
+recorded = {}
+for table in tables:
+    cols = [row[1] for row in con.execute(f'PRAGMA table_info("{table}")')]
+    rows = []
+    for record in con.execute(f'SELECT * FROM "{table}"'):
+        payload = {}
+        for col, value in zip(cols, record):
+            if isinstance(value, bytes):
+                payload[col] = {'b': value.hex()}
+            else:
+                payload[col] = value
+        rows.append(hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()).hexdigest())
+    rows.sort()
+    recorded[table] = {
+        'rows': len(rows),
+        'sha256': hashlib.sha256(''.join(rows).encode()).hexdigest(),
+    }
+version = con.execute('SELECT version_num FROM alembic_version').fetchone()[0]
+print(json.dumps({'alembic_version': version, 'tables': recorded}, sort_keys=True))
+
+2026-11-11T18:33:49Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib, sys
+root = pathlib.Path('/data')
+skip = set(sys.argv[1:])
+files = []
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    rel = str(path.relative_to(root))
+    if rel in skip:
+        continue
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    files.append({'path': rel, 'sha256': digest, 'bytes': path.stat().st_size})
+manifest = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+print(json.dumps({'manifest_sha256': manifest, 'files': files}, sort_keys=True))
+ mosscms.db mosscms.db-wal mosscms.db-shm
+2026-11-11T18:33:49Z exit=0 docker image tag sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344 mosscms:backup-sqlite-20261111T183347Z
+2026-11-11T18:33:49Z exit=0 docker compose up -d --no-build --force-recreate
+2026-11-11T18:33:49Z exit=0 docker network inspect moss028_default --format {{.Id}}
+2026-11-11T18:33:49Z exit=0 sudo iptables-legacy -S FORWARD
+2026-11-11T18:33:49Z exit=0 sudo iptables-legacy -S DOCKER-FORWARD
+2026-11-11T18:33:52Z exit=0 docker compose logs --no-color --tail 400 app
+2026-11-11T18:33:52Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, sqlite3
+con = sqlite3.connect('file:/data/mosscms.db?mode=ro', uri=True)
+tables = [row[0] for row in con.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"
+)]
+recorded = {}
+for table in tables:
+    cols = [row[1] for row in con.execute(f'PRAGMA table_info("{table}")')]
+    rows = []
+    for record in con.execute(f'SELECT * FROM "{table}"'):
+        payload = {}
+        for col, value in zip(cols, record):
+            if isinstance(value, bytes):
+                payload[col] = {'b': value.hex()}
+            else:
+                payload[col] = value
+        rows.append(hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()).hexdigest())
+    rows.sort()
+    recorded[table] = {
+        'rows': len(rows),
+        'sha256': hashlib.sha256(''.join(rows).encode()).hexdigest(),
+    }
+version = con.execute('SELECT version_num FROM alembic_version').fetchone()[0]
+print(json.dumps({'alembic_version': version, 'tables': recorded}, sort_keys=True))
+
+2026-11-11T18:33:52Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib, sys
+root = pathlib.Path('/data')
+skip = set(sys.argv[1:])
+files = []
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    rel = str(path.relative_to(root))
+    if rel in skip:
+        continue
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    files.append({'path': rel, 'sha256': digest, 'bytes': path.stat().st_size})
+manifest = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+print(json.dumps({'manifest_sha256': manifest, 'files': files}, sort_keys=True))
+ mosscms.db mosscms.db-wal mosscms.db-shm
+2026-11-11T18:34:03Z exit=0 docker compose stop app
+2026-11-11T18:34:03Z exit=0 python3 scripts/restore_media.py /tmp/moss028/backup-sqlite/20261111T183347Z.sqlite-data.tar.gz --confirm-empty-volume
+2026-11-11T18:34:04Z exit=1 python3 scripts/restore_media.py /tmp/moss028/backup-sqlite/20261111T183347Z.sqlite-data.tar.gz --confirm-empty-volume
+2026-11-11T18:34:04Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, sqlite3
+con = sqlite3.connect('file:/data/mosscms.db?mode=ro', uri=True)
+tables = [row[0] for row in con.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"
+)]
+recorded = {}
+for table in tables:
+    cols = [row[1] for row in con.execute(f'PRAGMA table_info("{table}")')]
+    rows = []
+    for record in con.execute(f'SELECT * FROM "{table}"'):
+        payload = {}
+        for col, value in zip(cols, record):
+            if isinstance(value, bytes):
+                payload[col] = {'b': value.hex()}
+            else:
+                payload[col] = value
+        rows.append(hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()).hexdigest())
+    rows.sort()
+    recorded[table] = {
+        'rows': len(rows),
+        'sha256': hashlib.sha256(''.join(rows).encode()).hexdigest(),
+    }
+version = con.execute('SELECT version_num FROM alembic_version').fetchone()[0]
+print(json.dumps({'alembic_version': version, 'tables': recorded}, sort_keys=True))
+
+2026-11-11T18:34:05Z exit=0 docker compose up -d --no-build --no-deps app
+2026-11-11T18:34:05Z exit=0 docker network inspect moss028_default --format {{.Id}}
+2026-11-11T18:34:05Z exit=0 sudo iptables-legacy -S FORWARD
+2026-11-11T18:34:05Z exit=0 sudo iptables-legacy -S DOCKER-FORWARD
+2026-11-11T18:34:07Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, sqlite3
+con = sqlite3.connect('file:/data/mosscms.db?mode=ro', uri=True)
+tables = [row[0] for row in con.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"
+)]
+recorded = {}
+for table in tables:
+    cols = [row[1] for row in con.execute(f'PRAGMA table_info("{table}")')]
+    rows = []
+    for record in con.execute(f'SELECT * FROM "{table}"'):
+        payload = {}
+        for col, value in zip(cols, record):
+            if isinstance(value, bytes):
+                payload[col] = {'b': value.hex()}
+            else:
+                payload[col] = value
+        rows.append(hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()).hexdigest())
+    rows.sort()
+    recorded[table] = {
+        'rows': len(rows),
+        'sha256': hashlib.sha256(''.join(rows).encode()).hexdigest(),
+    }
+version = con.execute('SELECT version_num FROM alembic_version').fetchone()[0]
+print(json.dumps({'alembic_version': version, 'tables': recorded}, sort_keys=True))
+
+2026-11-11T18:34:08Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib, sys
+root = pathlib.Path('/data')
+skip = set(sys.argv[1:])
+files = []
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    rel = str(path.relative_to(root))
+    if rel in skip:
+        continue
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    files.append({'path': rel, 'sha256': digest, 'bytes': path.stat().st_size})
+manifest = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+print(json.dumps({'manifest_sha256': manifest, 'files': files}, sort_keys=True))
+ mosscms.db mosscms.db-wal mosscms.db-shm
+2026-11-11T18:34:08Z exit=0 docker compose stop app
+2026-11-11T19:08:16Z exit=0 python3 scripts/configure.py --production --public-url https://cms.moss.test:8443 --sqlite
+2026-11-11T19:08:17Z exit=0 docker compose up -d --no-build
+2026-11-11T19:08:17Z exit=0 docker network inspect moss028_default --format {{.Id}}
+2026-11-11T19:08:17Z exit=0 sudo iptables-legacy -S FORWARD
+2026-11-11T19:08:17Z exit=0 sudo iptables-legacy -S DOCKER-FORWARD
+2026-11-11T19:08:17Z exit=0 sudo iptables-legacy -A DOCKER-FORWARD -i br-670485be4e0d -j ACCEPT
+2026-11-11T19:08:20Z exit=0 docker compose stop app
+2026-11-11T19:08:20Z exit=0 docker image tag sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344 mosscms:moss028-probe
+2026-11-11T19:08:21Z exit=0 docker compose run --rm --no-deps -T --entrypoint tar app -C /data -czf - . > /tmp/moss028/probe-sqlite/20261111T190820Z.sqlite-data.tar.gz
+2026-11-11T19:08:21Z exit=1 gzip -t /tmp/moss028/probe-sqlite/20261111T190820Z.sqlite-data.tar.gz
+2026-11-11T19:08:21Z exit=0 docker compose run --rm --no-deps -T --entrypoint tar app -C /data -czf - . > /tmp/moss028/backup-sqlite/20261111T190821Z.sqlite-data.tar.gz
+2026-11-11T19:08:21Z exit=0 gzip -t /tmp/moss028/backup-sqlite/20261111T190821Z.sqlite-data.tar.gz
+2026-11-11T19:08:21Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, sqlite3
+con = sqlite3.connect('file:/data/mosscms.db?mode=ro', uri=True)
+tables = [row[0] for row in con.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"
+)]
+recorded = {}
+for table in tables:
+    cols = [row[1] for row in con.execute(f'PRAGMA table_info("{table}")')]
+    rows = []
+    for record in con.execute(f'SELECT * FROM "{table}"'):
+        payload = {}
+        for col, value in zip(cols, record):
+            if isinstance(value, bytes):
+                payload[col] = {'b': value.hex()}
+            else:
+                payload[col] = value
+        rows.append(hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()).hexdigest())
+    rows.sort()
+    recorded[table] = {
+        'rows': len(rows),
+        'sha256': hashlib.sha256(''.join(rows).encode()).hexdigest(),
+    }
+version = con.execute('SELECT version_num FROM alembic_version').fetchone()[0]
+print(json.dumps({'alembic_version': version, 'tables': recorded}, sort_keys=True))
+
+2026-11-11T19:08:22Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib, sys
+root = pathlib.Path('/data')
+skip = set(sys.argv[1:])
+files = []
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    rel = str(path.relative_to(root))
+    if rel in skip:
+        continue
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    files.append({'path': rel, 'sha256': digest, 'bytes': path.stat().st_size})
+manifest = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+print(json.dumps({'manifest_sha256': manifest, 'files': files}, sort_keys=True))
+ mosscms.db mosscms.db-wal mosscms.db-shm
+2026-11-11T19:08:22Z exit=0 docker image tag sha256:1bca835ec6b7aff479d71257d53de0b9b92bf688afefbcf3185a720019d6a344 mosscms:backup-sqlite-20261111T190821Z
+2026-11-11T19:08:23Z exit=0 docker compose up -d --no-build --force-recreate
+2026-11-11T19:08:23Z exit=0 docker network inspect moss028_default --format {{.Id}}
+2026-11-11T19:08:23Z exit=0 sudo iptables-legacy -S FORWARD
+2026-11-11T19:08:23Z exit=0 sudo iptables-legacy -S DOCKER-FORWARD
+2026-11-11T19:08:25Z exit=0 docker compose logs --no-color --tail 400 app
+2026-11-11T19:08:25Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, sqlite3
+con = sqlite3.connect('file:/data/mosscms.db?mode=ro', uri=True)
+tables = [row[0] for row in con.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"
+)]
+recorded = {}
+for table in tables:
+    cols = [row[1] for row in con.execute(f'PRAGMA table_info("{table}")')]
+    rows = []
+    for record in con.execute(f'SELECT * FROM "{table}"'):
+        payload = {}
+        for col, value in zip(cols, record):
+            if isinstance(value, bytes):
+                payload[col] = {'b': value.hex()}
+            else:
+                payload[col] = value
+        rows.append(hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()).hexdigest())
+    rows.sort()
+    recorded[table] = {
+        'rows': len(rows),
+        'sha256': hashlib.sha256(''.join(rows).encode()).hexdigest(),
+    }
+version = con.execute('SELECT version_num FROM alembic_version').fetchone()[0]
+print(json.dumps({'alembic_version': version, 'tables': recorded}, sort_keys=True))
+
+2026-11-11T19:08:26Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib, sys
+root = pathlib.Path('/data')
+skip = set(sys.argv[1:])
+files = []
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    rel = str(path.relative_to(root))
+    if rel in skip:
+        continue
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    files.append({'path': rel, 'sha256': digest, 'bytes': path.stat().st_size})
+manifest = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+print(json.dumps({'manifest_sha256': manifest, 'files': files}, sort_keys=True))
+ mosscms.db mosscms.db-wal mosscms.db-shm
+2026-11-11T19:08:36Z exit=0 docker compose stop app
+2026-11-11T19:08:37Z exit=0 python3 scripts/restore_media.py /tmp/moss028/backup-sqlite/20261111T190821Z.sqlite-data.tar.gz --confirm-empty-volume
+2026-11-11T19:08:37Z exit=1 python3 scripts/restore_media.py /tmp/moss028/backup-sqlite/20261111T190821Z.sqlite-data.tar.gz --confirm-empty-volume
+2026-11-11T19:08:38Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, sqlite3
+con = sqlite3.connect('file:/data/mosscms.db?mode=ro', uri=True)
+tables = [row[0] for row in con.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"
+)]
+recorded = {}
+for table in tables:
+    cols = [row[1] for row in con.execute(f'PRAGMA table_info("{table}")')]
+    rows = []
+    for record in con.execute(f'SELECT * FROM "{table}"'):
+        payload = {}
+        for col, value in zip(cols, record):
+            if isinstance(value, bytes):
+                payload[col] = {'b': value.hex()}
+            else:
+                payload[col] = value
+        rows.append(hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()).hexdigest())
+    rows.sort()
+    recorded[table] = {
+        'rows': len(rows),
+        'sha256': hashlib.sha256(''.join(rows).encode()).hexdigest(),
+    }
+version = con.execute('SELECT version_num FROM alembic_version').fetchone()[0]
+print(json.dumps({'alembic_version': version, 'tables': recorded}, sort_keys=True))
+
+2026-11-11T19:08:38Z exit=0 docker compose up -d --no-build --no-deps app
+2026-11-11T19:08:38Z exit=0 docker network inspect moss028_default --format {{.Id}}
+2026-11-11T19:08:38Z exit=0 sudo iptables-legacy -S FORWARD
+2026-11-11T19:08:38Z exit=0 sudo iptables-legacy -S DOCKER-FORWARD
+2026-11-11T19:08:40Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, sqlite3
+con = sqlite3.connect('file:/data/mosscms.db?mode=ro', uri=True)
+tables = [row[0] for row in con.execute(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY 1"
+)]
+recorded = {}
+for table in tables:
+    cols = [row[1] for row in con.execute(f'PRAGMA table_info("{table}")')]
+    rows = []
+    for record in con.execute(f'SELECT * FROM "{table}"'):
+        payload = {}
+        for col, value in zip(cols, record):
+            if isinstance(value, bytes):
+                payload[col] = {'b': value.hex()}
+            else:
+                payload[col] = value
+        rows.append(hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()).hexdigest())
+    rows.sort()
+    recorded[table] = {
+        'rows': len(rows),
+        'sha256': hashlib.sha256(''.join(rows).encode()).hexdigest(),
+    }
+version = con.execute('SELECT version_num FROM alembic_version').fetchone()[0]
+print(json.dumps({'alembic_version': version, 'tables': recorded}, sort_keys=True))
+
+2026-11-11T19:08:41Z exit=0 docker compose run --rm --no-deps -T --entrypoint python app -c 
+import hashlib, json, pathlib, sys
+root = pathlib.Path('/data')
+skip = set(sys.argv[1:])
+files = []
+for path in sorted(p for p in root.rglob('*') if p.is_file()):
+    rel = str(path.relative_to(root))
+    if rel in skip:
+        continue
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    files.append({'path': rel, 'sha256': digest, 'bytes': path.stat().st_size})
+manifest = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+print(json.dumps({'manifest_sha256': manifest, 'files': files}, sort_keys=True))
+ mosscms.db mosscms.db-wal mosscms.db-shm
+2026-11-11T19:08:41Z exit=0 docker compose stop app

@@ -1,0 +1,11 @@
+label: local
+date: 2026-11-11T19:08:08Z
+phase: postgres
+command:
+docker compose up -d --no-build --no-deps app
+exit_code: 0
+---- output ----
+ Container moss028-app-1  Recreate
+ Container moss028-app-1  Recreated
+ Container moss028-app-1  Starting
+ Container moss028-app-1  Started
