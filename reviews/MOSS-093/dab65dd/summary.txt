@@ -1,0 +1,16 @@
+label: local
+sha: dab65dd27ba4680e93b966e801856d9a10a41418
+short_sha: dab65dd
+started: 2026-11-12T15:57:01Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continued: 2026-11-12T16:09:20Z
+note: scripts/verify.sh exited at pytest-sqlite. Later steps used the same commands.
+sqlite: 513 passed, 1 failed, 4 deselected, 0 skipped, collected 518
+postgres: 517 passed, 1 failed, 0 skipped, collected 518
+web: 36 files, 356 passed, 0 skipped
+example-site: 50 passed, 0 failed, 0 skipped
+production: 2 passed, 0 skipped
+base 5ea1d03 sqlite: 497 passed, 1 failed, 4 deselected, 0 skipped, collected 502
+base 5ea1d03 postgres: 501 passed, 1 failed, 0 skipped, collected 502
+failed id on base and head: tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests

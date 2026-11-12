@@ -1,0 +1,62 @@
+label: local
+date: 2026-11-12T16:01:26Z
+sha: 16c7a250c25d763a2e176c39a09aaa7efd3ce782
+workdir: web
+continued: after scripts/verify.sh MOSS-094 exited 1 at pytest-sqlite
+command:
+npm run check && npm test && npm run build && npm audit --audit-level=high
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+
+> mosscms-admin@0.1.0 check
+> tsc -b
+
+
+> mosscms-admin@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /agent/repos/MossCMS/web
+
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+
+ Test Files  36 passed (36)
+      Tests  356 passed (356)
+   Start at  16:01:30
+   Duration  13.99s (transform 1.50s, setup 0ms, import 7.01s, tests 18.88s, environment 11.94s)
+
+
+> mosscms-admin@0.1.0 build
+> tsc -b && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 1848 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                      0.40 kB │ gzip:   0.28 kB
+dist/assets/index-DOXHVdFt.css      63.56 kB │ gzip:  13.81 kB
+dist/assets/Migration-CR20st6L.js   15.44 kB │ gzip:   5.27 kB
+dist/assets/index-Ch9QJoIr.js      558.53 kB │ gzip: 177.27 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 7.18s
+found 0 vulnerabilities
+exit_code: 0
