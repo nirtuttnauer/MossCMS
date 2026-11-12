@@ -1,6 +1,6 @@
 # Editor workflows
 
-Select the correct workspace before editing. Administrators manage schemas/access; editors manage entries and media; readers can inspect drafts, history and publication queues but cannot save, publish, issue previews or retry schedules.
+Select the correct workspace before editing. Until an administrator turns on custom permissions, administrators manage schemas and access, editors manage entries and media, and readers can inspect drafts, history, and publication queues without saving or publishing. With custom permissions, authors can create and edit drafts and upload media, and publishers can publish, schedule, and review. Field allow-lists are described in [permissions](permissions.md).
 
 ## Draft, live and scheduled versions
 
@@ -15,6 +15,10 @@ An entry can have a working draft, a live version and a captured schedule at the
 
 The date picker uses the displayed browser timezone; the API stores UTC. The scheduler checks approximately every five seconds and checks overdue work at startup. Keep the CMS running. Publication revalidates the captured data and live slug, so a conflicting route or removed reference may fail later even when scheduling originally succeeded.
 
+When a content type requires review, publish, schedule, and release all refuse a revision that is not approved. Approval belongs to one saved revision, slug, and schema version. A material edit or schema migration clears it. The reviewer is a different person from the author. A failed schedule or release leaves the previous live snapshot in place.
+
+**Releases** capture a set of approved publish or unpublish actions for one workspace. Add an entry only when it has no individual schedule. An entry in an open release cannot be published, scheduled, unpublished, or trashed on its own. Publish now or schedule the whole release. Every action commits, or none do. Later draft edits do not change the captured revisions. One `release.published` event records completion.
+
 Open **Publications** for upcoming, overdue and failed captures. A failure shows a code, explanation, original due time and revision; it stops automatic retries and preserves the previous live version. Repair the cause and choose **Retry captured revision** to revalidate/requeue the same capture. To publish newer edits, use **Edit / replace schedule**. **Resolve / discard failed schedule** clears the capture without changing live content. The queue refreshes every 15 seconds and pauses while its editor is open; the content library refreshes every ten seconds while visible.
 
 ## Autosave, conflicts and uncertain outcomes
@@ -27,7 +31,7 @@ After a lost publication response, **Check outcome** looks up the operation rece
 
 ## Markdown and images
 
-Rich-text fields remain strings, now interpreted as Markdown. Use the formatting controls and preview for headings, emphasis, lists, links, fenced code and images. Plain existing text remains readable. Raw HTML does not execute; unsafe URL schemes are excluded. Uploaded images use `![description](asset:ASSET_ID)`, keeping an asset ID rather than an expiring URL.
+Rich-text fields remain Markdown strings. The visual editor starts on headings, emphasis, lists, links, breaks, fenced code, and `asset:` images. **Source** is one action away. If the visual editor cannot represent the string, it leaves the source unchanged. Raw HTML does not execute, and unsafe URL schemes are excluded. Uploaded images use `![description](asset:ASSET_ID)`, keeping an asset ID rather than an expiring URL.
 
 Blog posts/projects have optional covers; projects also have ordered galleries with optional Markdown captions. Search or page through image thumbnails, choose an uploaded JPEG/PNG/WebP raster, set meaningful alt text and optionally focal percentages/cover-or-contain fit. Gallery buttons support keyboard reordering. Non-image IDs and assets from another workspace are rejected. Missing media has a fallback.
 
@@ -35,9 +39,9 @@ New eligible uploads generate bounded WebP sizes without upscaling. Older upload
 
 ## Preview a saved website revision
 
-An administrator first sets **Settings → Website preview → Website preview origin** to the exact trusted site origin. The website's server delivery token must cover the selected workspace and type. From a website entry, choose **Save draft & prepare website preview**, then open the saved revision link. Issuance is restricted to editors/admins; the URL is a secret bearer capability, not a viewer sign-in requirement. Do not share it.
+An administrator first sets **Settings → Website preview → Website preview origin** to the exact trusted site origin. The website's server delivery token must cover the selected workspace and type. From a website entry, choose **Save draft & prepare website preview**. The saved revision opens beside the draft. **Refresh preview** loads the saved revision again after a save. The pane shows unsaved edits, the previewed revision, expiry, and a missing preview origin. The same grant can be opened in a new tab. Issuance follows edit access; the URL is a secret bearer capability, not a viewer sign-in requirement. Do not share it.
 
-The grant lasts 15 minutes and is bound to one saved revision. The website strips the fragment credential and uses an HttpOnly session. A persistent banner identifies preview mode and provides **Exit preview**. Only the selected entry/slide is replaced; private fields remain absent and other visitors keep public content. Every fetch revalidates the grant, issuer access and delivery scope. Revocation, expiry, removal of editing access or a website restart ends access. Use **Revoke preview** in the editor to end it explicitly. Preview responses are no-store/noindex and never enter feeds or the shared public cache.
+The grant lasts 15 minutes and is bound to one saved revision. The example site allows the CMS origin to frame the preview bootstrap page. The website strips the fragment credential and uses an HttpOnly session. A persistent banner identifies preview mode and provides **Exit preview**. Only the selected entry/slide is replaced; private fields remain absent and other visitors keep public content. Every fetch revalidates the grant, issuer access and delivery scope. Revocation, expiry, removal of editing access or a website restart ends access. Use **Revoke preview** in the editor to end it explicitly. Preview responses are no-store/noindex and never enter feeds, the shared public cache, or a publish action.
 
 ## Schema editing
 
