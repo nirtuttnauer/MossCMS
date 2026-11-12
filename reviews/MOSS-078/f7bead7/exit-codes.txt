@@ -1,0 +1,17 @@
+uv-sync 0
+ruff 0
+ruff-scripts 0
+mypy 0
+pytest-sqlite 1
+web-npm-ci 0
+web 0
+web-skip-scan 0
+npm-audit-web 0
+example-site-npm-ci 0
+example-site 0
+example-site-skip-scan 0
+npm-audit-example-site 0
+ci-npm-ci 0
+npm-audit-ci 0
+pip-audit 1
+gitleaks 1

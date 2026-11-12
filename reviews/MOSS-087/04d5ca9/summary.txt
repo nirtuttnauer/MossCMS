@@ -1,0 +1,8 @@
+label: local
+sha: 04d5ca90af4a4acc32f10f5e343c7b1d9a1ee4d2
+short_sha: 04d5ca9
+started: 2026-11-12T14:54:42Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continued: 2026-11-12T15:06:46Z
+note: scripts/verify.sh stopped at pytest-sqlite exit 1. Remaining commands were run with the same arguments and logged here.

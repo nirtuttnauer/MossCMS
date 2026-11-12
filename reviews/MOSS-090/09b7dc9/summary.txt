@@ -1,0 +1,10 @@
+label: local
+sha: 09b7dc9b995ad5f40461aa455b2fe28e60a6ff2d
+short_sha: 09b7dc9
+started: 2026-11-12T14:56:46Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continuation: 2026-11-12T15:08:55Z
+continuation result: remaining scripts/verify.sh commands were run after the script stopped
+sqlite failure id: tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+postgres failure id: tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests

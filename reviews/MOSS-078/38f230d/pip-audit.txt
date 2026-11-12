@@ -1,0 +1,9 @@
+label: local
+sha: 38f230dc0be4fe0d22e76a1acf535365df9f4fc9
+date: 2026-11-12T14:53:41Z
+command: uv export --frozen --all-groups --no-emit-project -o /tmp/moss078-head/requirements.txt && uv run --with pip-audit pip-audit --progress-spinner off -r /tmp/moss078-head/requirements.txt
+note: rerun after installing python3.12-venv; the first attempt exited 1 because ensurepip was missing
+---- output ----
+pip-audit 2.10.1
+No known vulnerabilities found
+exit_code: 0

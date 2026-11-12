@@ -26,7 +26,11 @@ def main():
             ["sh", "-c", 'exec pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc'],
             ".dump",
         ),
-        ("app", ["tar", "-C", "/data", "-czf", "-", "."], ".media.tar.gz"),
+        (
+            "app",
+            ["tar", "-C", "/data", "--exclude=.env", "--exclude=.env.*", "-czf", "-", "."],
+            ".media.tar.gz",
+        ),
     ]:
         if args.database_only and service == "app":
             continue

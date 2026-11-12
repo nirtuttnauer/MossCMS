@@ -1,0 +1,10 @@
+label: local
+sha: 9e5a1ef2e6203be745a97c347537860d9d40d450
+short_sha: 9e5a1ef
+started: 2026-11-12T14:42:47Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continue: pytest-postgres failed with exit 1
+continue: verify-required-runs failed with exit 1
+continue: pip-audit failed with exit 1
+continuation_finished: 2026-11-12T14:58:13Z

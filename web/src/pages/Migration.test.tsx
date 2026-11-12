@@ -58,7 +58,8 @@ test('editing, reordering, removing, or changing the archive invalidates the rev
   await screen.findByRole('heading', { name: 'Validation passed — review import' })
   const body = vi.mocked(rest).mock.calls[vi.mocked(rest).mock.calls.length - 1][2] as FormData
   expect(JSON.parse(body.get('pipeline') as string).steps).toEqual([{ op: 'drop', path: 'obsolete' }, { op: 'rename', path: 'old', to: 'title' }])
-  expect(document.activeElement?.id).toBe('migration-review')
+  // The review heading takes focus in a passive effect, which React flushes in a later task than the commit that renders it.
+  await waitFor(() => expect(document.activeElement?.id).toBe('migration-review'))
   fireEvent.click(screen.getByRole('button', { name: 'Remove step 1' }))
   expect(screen.queryByRole('button', { name: 'Import reviewed archive' })).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'Validate import' }))

@@ -498,3 +498,167 @@ describe('revision ID lookup lifecycle', () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 })
+
+const pointedHebrew = 'ש\u05B8\u05C1\u05DC\u05D5\u05B9\u05DD'
+const plainHebrew = 'שלום'
+
+const revisionMarkdown = [
+  `**${pointedHebrew}**`,
+  '<script>alert(1)</script>',
+  '<img src="x" onerror="alert(1)">',
+  '<a href="javascript:alert(1)">html-link</a>',
+  '<iframe src="javascript:alert(2)"></iframe>',
+  '<svg onload="alert(3)"></svg>',
+  'Inline <span onclick="alert(14)">span-text</span> html',
+  '[js](javascript:alert(1))',
+  '[encoded](javascript:alert%281%29)',
+  '[spaced](java\nscript:alert(3))',
+  '[entity](&#106;avascript:alert(4))',
+  '[angle](<javascript:alert(8)>)',
+  '[mixed](JAVASCRIPT:alert(9))',
+  '[padded]( javascript:alert(10) )',
+  '[nul](java\u0000script:alert(11))',
+  '[bs](javascript\\:alert(12))',
+  '[\\]](javascript:alert(13))',
+  '[data-link](data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==)',
+  '![data-pic](data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9ImFsZXJ0KDEpIi8+)',
+  '[safe](https://example.com/docs)',
+  '![Cover](asset:asset-1)',
+  '![pic](javascript:alert(6))',
+  '[ref][bad]',
+  '[bad]: javascript:alert(5)',
+  '```\n<script>alert(7)</script>\n```',
+  '`<script>`',
+  '~~~\nif (a < b && c > d) return <T>\n~~~',
+  'See <https://example.com/auto> and <mailto:help@example.com>.',
+].join('\n\n')
+
+function renderSavedRevisionPair() {
+  const revisions: Revision[] = [
+    {
+      number: 1,
+      snapshot: { slug: 'note', title: plainHebrew, data: { content: 'לפני' } },
+      author: 'a@example.com',
+      createdAt: '2026-10-01T10:00:00Z',
+    },
+    {
+      number: 2,
+      snapshot: { slug: 'note', title: pointedHebrew, data: { content: revisionMarkdown } },
+      author: 'b@example.com',
+      createdAt: '2026-10-02T10:00:00Z',
+    },
+  ]
+  render(
+    <RevisionCompare
+      entry={{ ...sampleEntry, data: { content: 'draft' }, publishedData: { content: 'live' } }}
+      definition={mockType}
+      revisions={revisions}
+      references={[]}
+      assets={mockAssets}
+      role="editor"
+      onClose={vi.fn()}
+      onRestore={vi.fn()}
+    />,
+  )
+  fireEvent.click(screen.getByRole('tab', { name: /Compare two saved revisions/ }))
+}
+
+function hrefUsesJavascript(href: string): boolean {
+  let value = href.trim()
+  if (value.startsWith('<') && value.endsWith('>')) value = value.slice(1, -1).trim()
+  for (let pass = 0; pass < 3; pass += 1) {
+    const entities = value
+      .replace(/&#x([0-9a-f]+);?/gi, (match, hex: string) => {
+        const code = Number.parseInt(hex, 16)
+        return code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match
+      })
+      .replace(/&#(\d+);?/g, (match, digits: string) => {
+        const code = Number.parseInt(digits, 10)
+        return code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match
+      })
+      .replace(/&colon;/gi, ':')
+    let decoded = entities
+    try {
+      decoded = decodeURIComponent(entities)
+    } catch {
+      decoded = entities
+    }
+    if (decoded === value) break
+    value = decoded
+  }
+  return value.replace(/[\u0000-\u0020\u007f\\]+/g, '').replace(/\s+/g, '').toLowerCase().startsWith('javascript:')
+}
+
+it('shows a Hebrew niqqud change on the compare view', () => {
+  renderSavedRevisionPair()
+  const titleRow = screen.getByText('Title').closest('tr')
+  expect(titleRow?.textContent).toContain('changed')
+  expect(titleRow?.textContent).toContain(plainHebrew)
+  expect(titleRow?.textContent).toContain(pointedHebrew)
+  for (const mark of ['\u05B8', '\u05C1', '\u05B9']) expect(titleRow?.textContent).toContain(mark)
+  const cells = titleRow!.querySelectorAll('td[dir="auto"]')
+  expect(cells).toHaveLength(2)
+  expect(cells[0].textContent).toContain(pointedHebrew)
+  expect(cells[1].textContent).toContain(plainHebrew)
+  expect(Array.from(document.querySelector('.diff-markdown strong')?.textContent || '')).toEqual(Array.from(pointedHebrew))
+  for (const block of document.querySelectorAll('.diff-markdown')) expect(block.getAttribute('dir')).toBe('auto')
+  fireEvent.click(screen.getByLabelText(/Hide unchanged fields/))
+  expect(screen.getByText('Title').closest('tr')?.textContent).toContain(pointedHebrew)
+  expect(document.querySelector('.diff-markdown strong')?.textContent).toBe(pointedHebrew)
+})
+
+it('keeps revision Markdown HTML and javascript and data URLs from running or becoming hrefs', () => {
+  renderSavedRevisionPair()
+  const markdownBlocks = document.querySelectorAll('.diff-markdown')
+  expect(markdownBlocks.length).toBeGreaterThan(0)
+  for (const block of markdownBlocks) {
+    expect(block.querySelector('script, iframe, object, embed, svg, span[onclick]')).toBeNull()
+    expect(block.querySelector('[onerror], [onload], [onclick]')).toBeNull()
+  }
+  expect(document.body.textContent).not.toContain('alert(1)</script>')
+  expect(document.body.textContent).toContain('span-text')
+  const codeText = [...document.querySelectorAll('code')].map(node => node.textContent).join('\n')
+  expect(codeText).toContain('<script>alert(7)</script>')
+  expect(codeText).toContain('<script>')
+  expect(screen.queryByRole('link', { name: 'html-link' })).toBeNull()
+  for (const name of ['js', 'encoded', 'entity', 'angle', 'mixed', 'padded', 'bs', ']', 'ref', 'data-link']) {
+    const link = screen.getByText(name, { selector: 'a' })
+    expect(link.getAttribute('href')).toBe('')
+  }
+  expect(screen.getByRole('link', { name: 'safe' }).getAttribute('href')).toBe('https://example.com/docs')
+  for (const element of document.querySelectorAll('[href]')) {
+    const href = element.getAttribute('href') || ''
+    expect(hrefUsesJavascript(href)).toBe(false)
+    expect(href.trim().toLowerCase().startsWith('data:')).toBe(false)
+  }
+  const cover = screen.getByAltText('Cover')
+  expect(cover.getAttribute('src')).toBe('/media/banner.png')
+  expect(screen.queryByAltText('pic')).toBeNull()
+  expect(screen.queryByAltText('data-pic')).toBeNull()
+  for (const image of document.querySelectorAll('img')) {
+    const src = (image.getAttribute('src') || '').toLowerCase()
+    expect(src.includes('javascript')).toBe(false)
+    expect(src.startsWith('data:')).toBe(false)
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'Raw JSON' }))
+  const raw = document.querySelector('.compare-raw-view')
+  expect(raw?.textContent).toContain(pointedHebrew)
+  expect(raw?.textContent).toContain('<script>alert(1)</script>')
+  expect(raw?.textContent).toContain('\u05B8')
+  expect(raw?.querySelector('script, iframe, object, embed, svg')).toBeNull()
+  expect(document.querySelector('.revision-compare-modal [href]')).toBeNull()
+})
+
+it('keeps comparison operators in a tilde fence as literal code', () => {
+  renderSavedRevisionPair()
+  const fenced = [...document.querySelectorAll('.diff-markdown pre code')].map(node => node.textContent)
+  expect(fenced).toContain('if (a < b && c > d) return <T>\n')
+  expect(document.body.textContent).not.toContain('&lt;')
+  expect(document.body.textContent).not.toContain('&amp;')
+})
+
+it('renders angle-bracket autolinks in revision Markdown as links', () => {
+  renderSavedRevisionPair()
+  expect(screen.getByRole('link', { name: 'https://example.com/auto' }).getAttribute('href')).toBe('https://example.com/auto')
+  expect(screen.getByRole('link', { name: 'mailto:help@example.com' }).getAttribute('href')).toBe('mailto:help@example.com')
+})

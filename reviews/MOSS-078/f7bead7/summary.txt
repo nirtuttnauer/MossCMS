@@ -1,0 +1,10 @@
+label: local
+sha: f7bead783772ed388c09ff0a1d65dddfab54d577
+short_sha: f7bead7
+started: 2026-11-12T14:43:06Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+REST_DONE 2026-11-12T14:46:32Z
+rest: pip-audit failed with exit 1
+rest: gitleaks failed with exit 1
+rest-finished: 2026-11-12T14:47:53Z

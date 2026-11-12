@@ -1,0 +1,14 @@
+label: local
+sha: 25b5b3e1bd6e7e02fec7fc4983860f0f6f9c34b7
+short_sha: 25b5b3e
+started: 2026-11-12T14:44:38Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continuation started: 2026-11-12T14:51:36Z
+continuation: pytest-postgres exit 1 is the Dependabot coverage failure that also fails on main 5ea1d03
+continuation: verify-required-runs exit 1 names the Dependabot test
+continuation: pip-audit failed with exit 1
+continuation_exit: 1
+continuation finished: 2026-11-12T15:01:50Z
+result: continuation completed
+continuation_exit: 0

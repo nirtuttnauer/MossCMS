@@ -1,0 +1,17 @@
+label: local
+sha: c641c10b02dbdd316bb61b10c50ac0e142fef041
+short_sha: c641c10
+started: 2026-11-12T14:48:23Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continuation-started: 2026-11-12T14:55:18Z
+continue: pytest-postgres failed with exit 1
+continue: verify-required-runs failed with exit 1
+continue: pip-audit failed with exit 1
+continue: gitleaks failed with exit 127
+continuation-finished: 2026-11-12T15:06:46Z
+continuation-nonzero-steps: 4
+pip-audit-retry 0
+gitleaks-retry 0
+note: pip-audit-retry reports no known vulnerabilities on the unchanged lock
+note: gitleaks-retry reports no leaks

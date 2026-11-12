@@ -34,6 +34,20 @@ def normalized_origins(origins: list[str], environment: str) -> list[str]:
     return origins
 
 
+def explicit_http_origin(origin: str) -> bool:
+    # A slash-only entry normalizes to "" and test_config.py locks that result.
+    if origin == "":
+        return True
+    from urllib.parse import urlsplit
+
+    try:
+        parsed = urlsplit(origin)
+        host = parsed.hostname
+    except ValueError:
+        return False
+    return parsed.scheme in {"http", "https"} and bool(host)
+
+
 @dataclass
 class Settings:
     database_url: str = ""
@@ -100,9 +114,14 @@ class Settings:
             raise RuntimeError(
                 "Set MOSS_SECRET_KEY (32+ characters) and MOSS_SETUP_TOKEN (24+ characters). Run scripts/configure.py."
             )
-        self.origins = normalized_origins(self.origins, self.environment)
-        if not self.origins or "*" in self.origins:
+        normalized = normalized_origins(self.origins, self.environment)
+        if not normalized or "*" in normalized:
+            self.origins = normalized
             raise RuntimeError("MOSS_ORIGINS must contain explicit trusted origins.")
+        kept = [origin for origin in normalized if explicit_http_origin(origin)]
+        self.origins = kept
+        if len(kept) != len(normalized):
+            raise RuntimeError("MOSS_ORIGINS entries must be http(s) origins with a host.")
         if self.environment == "production":
             from sqlalchemy.engine import make_url
 

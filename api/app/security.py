@@ -44,7 +44,9 @@ def password_hash(password):
 
 def check_password(password, stored):
     try:
-        _, salt, expected = stored.split("$")
+        scheme, salt, expected = stored.split("$")
+        if scheme != "scrypt":
+            return False
         value = hashlib.scrypt(password.encode(), salt=salt.encode(), n=16384, r=8, p=1).hex()
         return hmac.compare_digest(value, expected)
     except (ValueError, AttributeError):
@@ -146,7 +148,10 @@ def require(context, role="reader", write=False, capability=None):
 
 
 def valid_email(value):
+    if isinstance(value, str) and ("\n" in value or "\r" in value):
+        raise CmsError("Enter a valid email address.")
     value = value.strip().lower()
-    if len(value) > 254 or "@" not in value or "." not in value.rsplit("@", 1)[-1]:
+    domain = value.rsplit("@", 1)[-1]
+    if len(value) > 254 or value.count("@") != 1 or "." not in domain:
         raise CmsError("Enter a valid email address.")
     return value

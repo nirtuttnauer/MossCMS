@@ -1,0 +1,27 @@
+label: local
+base_sha: 5ea1d037bb85e47c2efc1d97f72998d130130878
+worktree: /tmp/mosscms-main
+date: 2026-11-12
+
+# After iptables-legacy FORWARD policy ACCEPT. Comparison counts use these logs.
+cd /tmp/mosscms-main/api
+MOSS_USE_SQLITE=false MOSS_REQUIRED_RUN=sqlite uv run pytest -m "not postgres" -q --tb=line
+# exit 1 — 1 failed, 497 passed, 4 deselected
+# failed: tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+
+MOSS_USE_SQLITE=false MOSS_REQUIRED_RUN=postgres \
+  MOSS_TEST_DATABASE_URL='postgresql+psycopg://pg:pgtestpw@127.0.0.1:5432/postgres' \
+  uv run pytest -q --tb=line
+# exit 1 — 1 failed, 501 passed
+# failed: tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+
+# Web, on the same base tree, before the firewall change (no Docker bridge).
+cd /tmp/mosscms-main/web
+npm ci
+# exit 0
+npm run check
+# exit 0
+npm test
+# exit 0 — Test Files 36 passed, Tests 356 passed
+npm run build
+# exit 0
