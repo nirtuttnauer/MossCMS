@@ -48,6 +48,10 @@ class EntryNode:
     published_slug: str | None = None
     published_title: str | None = None
     published_snapshot: JSON | None = None
+    review_state: str | None = None
+    approved_revision: int | None = None
+    reviewer_id: str | None = None
+    review_author_id: str | None = None
 
     @strawberry.field
     def resolved_assets(self, info: strawberry.Info) -> list["AssetNode"]:
@@ -79,6 +83,10 @@ class EntryNode:
             published_slug=d.get("publishedSlug"),
             published_title=d.get("publishedTitle"),
             published_snapshot=d.get("publishedSnapshot"),
+            review_state=d.get("reviewState"),
+            approved_revision=d.get("approvedRevision"),
+            reviewer_id=d.get("reviewerId"),
+            review_author_id=d.get("reviewAuthorId"),
         )
 
 
@@ -116,6 +124,16 @@ class TypeNode:
     name: str
     fields: JSON
     version: int
+
+    @strawberry.field
+    def review_required(self, info: strawberry.Info) -> bool:
+        from .models import Project
+
+        c = info.context
+        if c.get("delivery"):
+            return False
+        project = c["session"].get(Project, c["project_id"])
+        return bool(project and (project.review_types or {}).get(self.key))
 
     @strawberry.field
     def entry_count(self, info: strawberry.Info) -> int:
@@ -299,9 +317,15 @@ class Query:
             )
             .all()
         )
+        from .permissions import present_snapshot
+
+        definition = c["session"].get(ContentType, content.get_entry(c["session"], c, str(id)).type_id)
         return [
             RevisionNode(
-                number=r.number, snapshot=r.snapshot, author=r.author, created_at=r.created_at.isoformat() + "Z"
+                number=r.number,
+                snapshot=present_snapshot(c, definition, r.snapshot),
+                author=r.author,
+                created_at=r.created_at.isoformat() + "Z",
             )
             for r in rows
         ]
@@ -309,7 +333,7 @@ class Query:
     @strawberry.field
     def schema_history(self, info: strawberry.Info, key: str) -> JSON:
         c = info.context
-        require(c, "admin")
+        require(c, capability="schema")
         definition = content.get_type(c["session"], c, key)
         rows = (
             c["session"]
@@ -441,6 +465,24 @@ class Query:
         )
 
     @strawberry.field
+    def releases(self, info: strawberry.Info, first: int = 20) -> JSON:
+        from .models import Release
+        from .releases import release_dict
+
+        c = info.context
+        require(c, capability="read")
+        if c.get("delivery"):
+            raise CmsError("Releases are editorial only.", "FORBIDDEN")
+        if not 1 <= first <= 50:
+            raise CmsError("Use a release page size of 1–50.")
+        rows = (
+            c["session"]
+            .scalars(content.scoped(c["session"], Release, c).order_by(Release.updated_at.desc()).limit(first))
+            .all()
+        )
+        return cast(JSON, [release_dict(c["session"], row) for row in rows])
+
+    @strawberry.field
     def audit_log(self, info: strawberry.Info, first: int = 50) -> JSON:
         c = info.context
         require(c, "admin")
@@ -538,7 +580,7 @@ class Mutation:
     @strawberry.mutation
     def delete_content_type(self, info: strawberry.Info, key: str) -> bool:
         c = info.context
-        require(c, "admin", write=True)
+        require(c, capability="schema", write=True)
         session = c["session"]
         definition = content.get_type(session, c, key)
         if session.scalar(select(Entry.id).where(Entry.type_id == definition.id).limit(1)):
@@ -591,6 +633,135 @@ class Mutation:
     def delete_entry(self, info: strawberry.Info, id: strawberry.ID, version: int) -> bool:
         c = info.context
         return content.archive_entry(c["session"], c, str(id), version)
+
+    @strawberry.mutation
+    def set_review_required(self, info: strawberry.Info, key: str, required: bool, version: int) -> TypeNode:
+        from .models import Project
+
+        c = info.context
+        require(c, capability="schema", write=True)
+        definition = content.get_type(c["session"], c, key)
+        if definition.version != version:
+            raise CmsError("This schema changed. Reload it.", "CONFLICT")
+        project = c["session"].get(Project, c["project_id"])
+        rules = dict(project.review_types or {})
+        if required:
+            rules[key] = True
+        else:
+            rules.pop(key, None)
+        project.review_types = rules
+        audit(c["session"], c["project_id"], c["actor"], "schema.review", key=key, required=required)
+        return type_node(definition)
+
+    @strawberry.mutation
+    def submit_for_review(
+        self, info: strawberry.Info, id: strawberry.ID, version: int, reviewer_id: strawberry.ID
+    ) -> EntryNode:
+        from .reviews import submit_for_review
+
+        c = info.context
+        require(c, capability="edit", write=True)
+        record = content.get_entry(c["session"], c, str(id))
+        if record.version != version:
+            raise CmsError("This entry changed. Reload before submitting it.", "CONFLICT")
+        definition = c["session"].get(ContentType, record.type_id)
+        submit_for_review(c["session"], c, record, definition, str(reviewer_id))
+        audit(
+            c["session"],
+            c["project_id"],
+            c["actor"],
+            "review.submit",
+            entryId=record.id,
+            revision=record.version,
+            reviewerId=str(reviewer_id),
+        )
+        return EntryNode.from_dict(content.entry_dict(c["session"], c, record))
+
+    @strawberry.mutation
+    def approve_entry(self, info: strawberry.Info, id: strawberry.ID, version: int) -> EntryNode:
+        from .reviews import decide_review
+
+        c = info.context
+        require(c, capability="review", write=True)
+        record = content.get_entry(c["session"], c, str(id))
+        if record.version != version:
+            raise CmsError("This entry changed. Reload before approving it.", "CONFLICT")
+        definition = c["session"].get(ContentType, record.type_id)
+        decide_review(c["session"], c, record, definition, True)
+        audit(c["session"], c["project_id"], c["actor"], "review.approve", entryId=record.id, revision=record.version)
+        return EntryNode.from_dict(content.entry_dict(c["session"], c, record))
+
+    @strawberry.mutation
+    def return_entry(self, info: strawberry.Info, id: strawberry.ID, version: int) -> EntryNode:
+        from .reviews import decide_review
+
+        c = info.context
+        require(c, capability="review", write=True)
+        record = content.get_entry(c["session"], c, str(id))
+        if record.version != version:
+            raise CmsError("This entry changed. Reload before returning it.", "CONFLICT")
+        definition = c["session"].get(ContentType, record.type_id)
+        decide_review(c["session"], c, record, definition, False)
+        audit(c["session"], c["project_id"], c["actor"], "review.return", entryId=record.id, revision=record.version)
+        return EntryNode.from_dict(content.entry_dict(c["session"], c, record))
+
+    @strawberry.mutation
+    def create_release(self, info: strawberry.Info, name: str) -> JSON:
+        from .releases import create_release, release_dict
+
+        c = info.context
+        require(c, capability="publish", write=True)
+        release = create_release(c["session"], c, name)
+        return cast(JSON, release_dict(c["session"], release))
+
+    @strawberry.mutation
+    def add_release_entry(
+        self, info: strawberry.Info, id: strawberry.ID, entry_id: strawberry.ID, action: str, version: int
+    ) -> JSON:
+        from .releases import add_release_entry, release_dict
+
+        c = info.context
+        require(c, capability="publish", write=True)
+        release = add_release_entry(c["session"], c, str(id), str(entry_id), action, version)
+        return cast(JSON, release_dict(c["session"], release))
+
+    @strawberry.mutation
+    def remove_release_entry(
+        self, info: strawberry.Info, id: strawberry.ID, entry_id: strawberry.ID, version: int
+    ) -> JSON:
+        from .releases import release_dict, remove_release_entry
+
+        c = info.context
+        require(c, capability="publish", write=True)
+        release = remove_release_entry(c["session"], c, str(id), str(entry_id), version)
+        return cast(JSON, release_dict(c["session"], release))
+
+    @strawberry.mutation
+    def publish_release(self, info: strawberry.Info, id: strawberry.ID, version: int) -> JSON:
+        from .releases import publish_release, release_dict
+
+        c = info.context
+        require(c, capability="publish", write=True)
+        release = publish_release(c["session"], c, str(id), version)
+        return cast(JSON, release_dict(c["session"], release))
+
+    @strawberry.mutation
+    def schedule_release(self, info: strawberry.Info, id: strawberry.ID, version: int, scheduled_at: str) -> JSON:
+        from .releases import release_dict, schedule_release
+
+        c = info.context
+        require(c, capability="schedule", write=True)
+        release = schedule_release(c["session"], c, str(id), version, scheduled_at)
+        return cast(JSON, release_dict(c["session"], release))
+
+    @strawberry.mutation
+    def cancel_release(self, info: strawberry.Info, id: strawberry.ID, version: int) -> JSON:
+        from .releases import cancel_release, release_dict
+
+        c = info.context
+        require(c, capability="publish", write=True)
+        release = cancel_release(c["session"], c, str(id), version)
+        return cast(JSON, release_dict(c["session"], release))
 
     @strawberry.mutation
     def restore_entry(self, info: strawberry.Info, id: strawberry.ID, number: int, version: int) -> EntryNode:
