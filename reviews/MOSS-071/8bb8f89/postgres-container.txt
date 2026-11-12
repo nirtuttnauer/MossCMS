@@ -1,0 +1,7 @@
+label: local
+sha: 8bb8f896c34d0baae901309f62f4f2d560442b03
+date: 2026-11-12T15:05:27Z
+a37d52a0744c31f4c1d5edef5b1cb4aa632fcf706134bb0a57a8bddbded7bc10
+/var/run/postgresql:5432 - no response
+/var/run/postgresql:5432 - accepting connections
+ready: 1

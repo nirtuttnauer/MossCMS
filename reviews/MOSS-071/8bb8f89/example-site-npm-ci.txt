@@ -1,0 +1,16 @@
+label: local
+date: 2026-11-12T15:10:34Z
+sha: 8bb8f896c34d0baae901309f62f4f2d560442b03
+workdir: example-site
+command:
+npm ci
+note: verify.sh stopped at pytest-sqlite; this command was run next with the same arguments
+---- output ----
+
+added 193 packages, and audited 194 packages in 2s
+
+85 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+exit_code: 0
