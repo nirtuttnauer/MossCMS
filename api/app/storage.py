@@ -26,7 +26,7 @@ def upload(request: Request, file: UploadFile, imagesOnly: bool = Form(False)):
     settings = request.app.state.settings
     with request.app.state.db.begin() as session:
         c = context(request, session)
-        require(c, "editor", write=True)
+        require(c, capability="media", write=True)
         session.scalar(select(Project.id).where(Project.id == c["project_id"]).with_for_update())
         data = file.file.read(settings.max_upload + 1)
         if not data or len(data) > settings.max_upload:

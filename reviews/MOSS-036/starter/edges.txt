@@ -1,0 +1,13 @@
+label: local
+date: 2026-11-11T21:48:00Z through 2026-11-11T21:49:00Z
+Captured from production servers before the clean npm ci recorded in npm-ci-build.txt.
+The delivery token is not in this file.
+
+missing token:
+<main><h1>Published entries</h1><p class="status" role="alert">Set MOSS_DELIVERY_TOKEN in the server environment.</p></main>
+
+CMS origin not accepting connections:
+<main><h1>Published entries</h1><p class="status" role="alert">MossCMS could not be reached.</p></main>
+
+delivery token scoped to a type with no published entries:
+<main><h1>Published entries</h1><p class="status">No published entries.</p></main>
