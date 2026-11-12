@@ -1,0 +1,12 @@
+label: local
+sha: 38f230dc0be4fe0d22e76a1acf535365df9f4fc9
+date: 2026-11-12T14:51:54Z
+workdir: /agent/repos/MossCMS/ci
+command:
+npm ci
+---- output ----
+
+added 3 packages, and audited 4 packages in 377ms
+
+found 0 vulnerabilities
+exit_code: 0

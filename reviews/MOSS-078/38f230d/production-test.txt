@@ -1,0 +1,26 @@
+label: local
+sha: 38f230dc0be4fe0d22e76a1acf535365df9f4fc9
+date: 2026-11-12T15:03:24Z
+workdir: /agent/repos/MossCMS/ci
+command:
+npm test
+---- output ----
+
+> test
+> playwright test
+
+
+Running 2 tests using 1 worker
+
+(node:37154) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 production.spec.mjs:7:1 › production readiness and packaged branding assets (464ms)
+  ✓  2 production.spec.mjs:21:1 › production setup, login and branding on desktop and mobile (1.9s)
+
+  2 passed (4.0s)
+
+To open last HTML report run:
+
+  npx playwright show-report
+
+exit_code: 0
