@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from app.config import Settings
-from app.development import DEVELOPMENT_USER_EMAIL, DEVELOPMENT_USER_ID, development_actor, initialize_development
+from app.development import DEVELOPMENT_USER_EMAIL, DEVELOPMENT_USER_ID, initialize_development
 from app.main import create_app
 from app.security import identify
 
@@ -29,18 +29,6 @@ def _settings(tmp_path, *, environment, skip_auth):
     return Settings(**values)
 
 
-def test_development_actor_refuses_delivery(tmp_path):
-    settings = _settings(tmp_path, environment="development", skip_auth=True)
-    assert settings.validate() is settings
-    assert settings.skip_auth is True
-    assert development_actor(settings) == DEVELOPMENT_USER_ID
-
-    with pytest.raises(RuntimeError, match=r"^The development identity cannot act as a delivery token\.$"):
-        development_actor(settings, delivery=True)
-
-    assert settings.skip_auth is True
-
-
 def test_production_validation_still_rejects_skip_auth():
     settings = Settings(
         environment="production",
@@ -55,24 +43,29 @@ def test_production_validation_still_rejects_skip_auth():
     with pytest.raises(RuntimeError, match=r"^MOSS_SKIP_AUTH is only available when MOSS_ENV=development\.$"):
         settings.validate()
 
-    assert settings.skip_auth is True
-    with pytest.raises(RuntimeError, match=r"^MOSS_SKIP_AUTH is not enabled for this process\.$"):
-        development_actor(settings)
+    assert settings.validated_environment is None
 
 
 def test_production_skip_auth_flip_after_validation_stays_off(tmp_path):
     settings = _settings(tmp_path, environment="production", skip_auth=False)
-    settings.validate()
-    settings.skip_auth = True
+    assert settings.validate() is settings
+    assert settings.validated_environment == "production"
 
+    with pytest.raises(
+        RuntimeError,
+        match=r"^MOSS_SKIP_AUTH cannot be enabled after validation when MOSS_ENV is not development\.$",
+    ):
+        settings.skip_auth = True
     assert settings.skip_auth is False
-    with pytest.raises(RuntimeError, match=r"^MOSS_SKIP_AUTH cannot be enabled after process start in production\.$"):
-        development_actor(settings)
 
-    settings.environment = "development"
+    with pytest.raises(RuntimeError, match=r"^MOSS_ENV cannot change after the configuration is validated\.$"):
+        settings.environment = "development"
+    assert settings.environment == "production"
     assert settings.skip_auth is False
-    with pytest.raises(RuntimeError, match=r"^MOSS_SKIP_AUTH cannot be enabled after process start in production\.$"):
-        development_actor(settings)
+
+    settings.skip_auth = False
+    settings.environment = "production"
+    assert settings.skip_auth is False
 
 
 def test_development_skip_auth_flip_after_validation_stays_available(tmp_path):
@@ -81,12 +74,10 @@ def test_development_skip_auth_flip_after_validation_stays_available(tmp_path):
     settings.skip_auth = True
 
     assert settings.skip_auth is True
-    assert development_actor(settings) == DEVELOPMENT_USER_ID
 
-    settings.environment = "production"
-    assert settings.skip_auth is False
-    with pytest.raises(RuntimeError, match=r"^MOSS_SKIP_AUTH is not enabled for this process\.$"):
-        development_actor(settings)
+    with pytest.raises(RuntimeError, match=r"^MOSS_ENV cannot change after the configuration is validated\.$"):
+        settings.environment = "production"
+    assert settings.environment == "development"
 
 
 def test_development_identity_is_not_a_delivery_credential(tmp_path):
@@ -144,7 +135,8 @@ def test_production_request_stays_signed_out_after_skip_auth_flip(tmp_path):
     app = create_app(_settings(tmp_path, environment="production", skip_auth=False))
     with TestClient(app, base_url="https://cms.invalid") as client:
         assert client.get("/auth/me").status_code == 401
-        app.state.settings.skip_auth = True
+        with pytest.raises(RuntimeError, match=r"^MOSS_SKIP_AUTH cannot be enabled after validation"):
+            app.state.settings.skip_auth = True
         assert app.state.settings.skip_auth is False
         me = client.get("/auth/me")
         assert me.status_code == 401

@@ -67,6 +67,26 @@ class Settings:
     otel_service_name: str = field(default_factory=lambda: os.getenv("OTEL_SERVICE_NAME", "mosscms"))
     otel_sample_rate: float = field(default_factory=lambda: float(os.getenv("MOSS_OTEL_TRACES_SAMPLE_RATE", "0.1")))
     otel_metric_interval_ms: int = field(default_factory=lambda: int(os.getenv("OTEL_METRIC_EXPORT_INTERVAL", "10000")))
+    validated_environment: str | None = field(default=None, init=False, repr=False, compare=False)
+    """The environment recorded by the last successful ``validate()``; ``None`` before validation."""
+
+    def __setattr__(self, name: str, value: object) -> None:
+        """Keep a validated configuration from gaining the development identity.
+
+        After ``validate()`` succeeds, ``environment`` cannot change, and ``skip_auth``
+        can be turned on only when the recorded environment is development.
+
+        :raises RuntimeError: when an assignment would break that rule.
+        """
+        recorded = self.__dict__.get("validated_environment")
+        if recorded is not None:
+            if name == "environment" and value != recorded:
+                raise RuntimeError("MOSS_ENV cannot change after the configuration is validated.")
+            if name == "skip_auth" and value and recorded != "development":
+                raise RuntimeError(
+                    "MOSS_SKIP_AUTH cannot be enabled after validation when MOSS_ENV is not development."
+                )
+        super().__setattr__(name, value)
 
     def __post_init__(self):
         if self.use_sqlite:
@@ -112,4 +132,5 @@ class Settings:
                     raise RuntimeError("Production SQLite requires MOSS_USE_SQLITE=true.")
             elif url.password in {None, "", "change-me", "mosscms"}:
                 raise RuntimeError("Production requires PostgreSQL and a non-default database password.")
+        self.validated_environment = self.environment
         return self
