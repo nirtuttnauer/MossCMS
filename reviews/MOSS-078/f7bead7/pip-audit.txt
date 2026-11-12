@@ -1,0 +1,11 @@
+label: local
+date: 2026-11-12T14:47:52Z
+sha: f7bead783772ed388c09ff0a1d65dddfab54d577
+workdir: api
+command:
+uv export --frozen --all-groups --no-emit-project -o "$EVIDENCE/requirements.txt"
+uv run --with pip-audit pip-audit --version
+uv run --with pip-audit pip-audit --progress-spinner off -r "$EVIDENCE/requirements.txt"
+---- output ----
+bash: line 1: EVIDENCE: unbound variable
+exit_code: 1

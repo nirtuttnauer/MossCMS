@@ -1,0 +1,22 @@
+label: local
+date: 2026-11-12T15:04:22Z
+sha: c641c10b02dbdd316bb61b10c50ac0e142fef041
+workdir: api
+note: scripts/verify.sh MOSS-082 exited at pytest-sqlite. This is that script's next command, on the same commit.
+command:
+uv run python tests/verify_required_runs.py
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+sqlite run failed:
+  tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+sqlite passed ids do not match the tests that run executes
+  missing: ['tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests']
+  unexpected: []
+postgres run failed:
+  tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+postgres passed ids do not match the tests that run executes
+  missing: ['tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests']
+  unexpected: []
+collected test ids that did not pass in any required run:
+  tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+exit_code: 1

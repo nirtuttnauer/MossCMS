@@ -1,0 +1,20 @@
+label: local
+date: 2026-11-12T14:56:07Z
+sha: 25b5b3e1bd6e7e02fec7fc4983860f0f6f9c34b7
+workdir: api
+command:
+uv run python tests/verify_required_runs.py
+---- output ----
+sqlite run failed:
+  tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+sqlite passed ids do not match the tests that run executes
+  missing: ['tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests']
+  unexpected: []
+postgres run failed:
+  tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+postgres passed ids do not match the tests that run executes
+  missing: ['tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests']
+  unexpected: []
+collected test ids that did not pass in any required run:
+  tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+exit_code: 1

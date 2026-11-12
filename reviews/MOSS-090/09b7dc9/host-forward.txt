@@ -1,0 +1,7 @@
+label: local
+date: 2026-11-12T15:01:41Z
+sha: 09b7dc9b995ad5f40461aa455b2fe28e60a6ff2d
+iptables-legacy FORWARD policy was DROP. It was set to ACCEPT before this continuation so Compose container networking works.
+-P FORWARD ACCEPT
+-A FORWARD -j DOCKER-USER
+-A FORWARD -j DOCKER-FORWARD

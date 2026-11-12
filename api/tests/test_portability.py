@@ -2,6 +2,7 @@ import hashlib
 import json
 import stat
 import sys
+import unicodedata
 import zipfile
 from datetime import datetime
 from io import BytesIO
@@ -23,6 +24,7 @@ from app.models import (
     Project,
     Revision,
     SchemaRevision,
+    Token,
     User,
     database,
 )
@@ -551,3 +553,164 @@ def test_trash_stays_trashed_and_public_history_titles_are_preserved(workspace):
         assert record.status == "deleted"
         original = session.scalar(select(Revision).where(Revision.entry_id == record.id)).snapshot["imported"]
         assert original["history"][0]["snapshot"]["title"] == "Historical title"
+
+
+def _same_text(actual, source):
+    """Stored text may stay as written, or be NFC."""
+    return actual == source or actual == unicodedata.normalize("NFC", source)
+
+
+def _archive_files(path):
+    with zipfile.ZipFile(path) as archive:
+        return {name: archive.read(name) for name in archive.namelist()}
+
+
+def test_hebrew_niqqud_round_trip_stays_draft_and_omits_auth_secrets(workspace):
+    w = workspace
+    seed(w)
+    title = "שָׁלוֹם עוֹלָם\ufb2a"
+    mark = "\u05d1\u05c1\u05bc"
+    draft_body = "בְּרֵאשִׁית בָּרָא " + mark
+    published_body = "הַשָּׁמַיִם וְהָאָרֶץ " + mark
+    assert any(unicodedata.category(character) == "Mn" for character in title + draft_body)
+    assert mark != unicodedata.normalize("NFC", mark)
+    localized_private = "moss078-localized-private-sentinel"
+    password_hash = "moss078-password-hash-sentinel"
+    session_raw = "moss078-session-raw-sentinel"
+    session_id = "moss078-session-id-sentinel"
+    session_csrf = "moss078-session-csrf-sentinel"
+    invite_raw = "moss078-invite-raw-sentinel"
+    invite_row = "moss078-invite-row-marker"
+    # Raw bearer strings are not stored. The rows below are what the database keeps.
+    auth_secrets = (password_hash, session_raw, session_id, session_csrf, invite_raw, invite_row, "never exported")
+
+    with w.factory.begin() as session:
+        session.get(User, "admin").password_hash = password_hash
+        definition = session.get(ContentType, "type")
+        definition.fields = [
+            *definition.fields,
+            {"name": "note", "type": "text", "localized": True, "private": True},
+        ]
+        record = session.get(Entry, "entry-0")
+        note = {"en": localized_private, "he": localized_private}
+        record.title = title
+        record.data = {**record.data, "title": {"en": "Draft", "he": title}, "body": draft_body, "note": note}
+        record.published_title = title
+        record.published_data = {
+            **record.published_data,
+            "title": {"en": "Live", "he": title},
+            "body": published_body,
+            "note": dict(note),
+        }
+        record.scheduled_title = title
+        record.scheduled_data = {
+            **record.scheduled_data,
+            "title": {"en": "Due", "he": title},
+            "body": draft_body,
+            "note": dict(note),
+        }
+        session.add(
+            Token(
+                id=session_id,
+                kind="session",
+                user_id="admin",
+                project_id="source",
+                name="browser",
+                email="admin@example.com",
+                role="admin",
+                csrf=session_csrf,
+                expires_at=datetime(2026, 12, 1),
+            )
+        )
+        session.add(
+            Token(
+                id=invite_row,
+                kind="invite",
+                project_id="source",
+                name="invitation",
+                email="guest@example.com",
+                role="editor",
+                csrf="",
+                expires_at=datetime(2026, 12, 1),
+            )
+        )
+
+    export(w, history=True)
+    files = _archive_files(w.archive)
+    rows = [json.loads(line) for line in files["entries.ndjson"].splitlines()]
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["status"] == "published"
+    assert _same_text(row["draft"]["data"]["title"]["he"], title)
+    assert row["draft"]["data"]["title"]["en"] == "Draft"
+    assert _same_text(row["draft"]["data"]["body"], draft_body)
+    assert _same_text(row["published"]["data"]["title"]["he"], title)
+    assert _same_text(row["published"]["data"]["body"], published_body)
+    assert (
+        title.encode() in files["entries.ndjson"]
+        or unicodedata.normalize("NFC", title).encode() in files["entries.ndjson"]
+    )
+    assert (
+        draft_body.encode() in files["entries.ndjson"]
+        or unicodedata.normalize("NFC", draft_body).encode() in files["entries.ndjson"]
+    )
+    blob = b"".join(files.values())
+    metadata = b"".join(body for name, body in files.items() if not name.startswith("assets/"))
+    for secret in auth_secrets:
+        assert secret.encode() not in blob
+    assert localized_private.encode() not in metadata
+    assert b"private sentinel" not in metadata
+
+    private_archive = w.root / "with-private.zip"
+    export_workspace(
+        w.factory,
+        w.settings,
+        "source",
+        "admin@example.com",
+        private_archive,
+        include_private=True,
+        history=True,
+    )
+    private_blob = b"".join(_archive_files(private_archive).values())
+    for secret in auth_secrets:
+        assert secret.encode() not in private_blob
+
+    applied = transfer(w, apply=True)
+    with w.factory() as session:
+        source = session.get(Entry, "entry-0")
+        assert source.status == "published"
+        assert _same_text(source.data["title"]["he"], title)
+        assert _same_text(source.data["body"], draft_body)
+        assert _same_text(source.published_data["body"], published_body)
+        record = session.get(Entry, applied["mapping"]["entries"]["entry-0"])
+        assert record.status == "draft"
+        assert record.published_data is None
+        assert record.published_slug is None
+        assert record.published_title is None
+        assert record.published_at is None
+        assert record.published_revision is None
+        assert record.scheduled_data is None
+        assert record.scheduled_slug is None
+        assert record.scheduled_title is None
+        assert record.scheduled_at is None
+        assert _same_text(record.title, title)
+        assert _same_text(record.data["title"]["he"], title)
+        assert record.data["title"]["en"] == "Draft"
+        assert _same_text(record.data["body"], draft_body)
+        assert unicodedata.normalize("NFC", record.data["body"]) == unicodedata.normalize("NFC", draft_body)
+        assert unicodedata.normalize("NFC", record.title) == unicodedata.normalize("NFC", title)
+        assert any(unicodedata.category(character) == "Mn" for character in record.data["body"])
+        assert "secret" not in record.data
+        assert "note" not in record.data
+        assert "secret" not in record.data["related"][0]
+        imported = session.scalar(select(Revision).where(Revision.entry_id == record.id)).snapshot["imported"]
+        assert imported["entry"]["status"] == "published"
+        assert _same_text(imported["entry"]["draft"]["data"]["title"]["he"], title)
+        assert _same_text(imported["entry"]["draft"]["data"]["body"], draft_body)
+        assert _same_text(imported["entry"]["published"]["data"]["body"], published_body)
+        assert (
+            session.scalar(
+                select(func.count()).select_from(Entry).where(Entry.project_id == "target", Entry.status == "published")
+            )
+            == 0
+        )

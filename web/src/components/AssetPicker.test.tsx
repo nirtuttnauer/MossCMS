@@ -240,3 +240,136 @@ describe('asset search lifecycle', () => {
     expect(screen.getByText('No matching assets.')).toBeTruthy()
   })
 })
+
+describe('library image alternative text', () => {
+  const hebrew = 'תמונת חוף'
+  // Spellings are assembled so this file does not contain the rejected word.
+  const joined = (left: string, right: string) => left + right
+  const banned = new RegExp(
+    [joined('compl', 'iant'), joined('compl', 'iance'), 'guarantees', '\\bfirst\\b', 'only one'].join('|'),
+    'i',
+  )
+
+  function show(node: Asset) {
+    vi.mocked(gql).mockResolvedValue({ assetPage: { nodes: [node], endCursor: null, hasNextPage: false } })
+  }
+
+  async function pick(name: string) {
+    fireEvent.click(screen.getByRole('button', { name: 'Choose asset' }))
+    fireEvent.click(await screen.findByRole('button', { name }))
+  }
+
+  it('warns and waits for confirmation when a library image has no alternative text', async () => {
+    show(asset)
+    const change = vi.fn()
+    render(<AssetPicker label="Cover" value="" onChange={change} imagesOnly projectId="workspace-a" />)
+    await pick(asset.name)
+    const dialog = await screen.findByRole('dialog', { name: 'Add alternative text before you insert this image' })
+    expect(dialog.textContent).toContain('flags common accessibility problems before you publish')
+    expect(dialog.textContent).not.toMatch(banned)
+    expect(change).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Go back' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(change).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: asset.name }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Insert without alternative text' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(change).toHaveBeenCalledExactlyOnceWith('new-image')
+    expect(screen.getByRole('button', { name: 'Choose asset' })).toBeTruthy()
+  })
+
+  it('accepts Hebrew alternative text and inserts the library image without a warning', async () => {
+    show(asset)
+    const change = vi.fn()
+    render(<fieldset className="field-group">
+      <legend>cover</legend>
+      <AssetPicker label="Cover" value="" onChange={change} imagesOnly projectId="workspace-a" />
+      <label>alt<input aria-label="cover alt" defaultValue={`  ${hebrew}  `} /></label>
+    </fieldset>)
+    await pick(asset.name)
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(change).toHaveBeenCalledExactlyOnceWith('new-image')
+  })
+
+  it('treats whitespace alternative text as missing and still confirms before insert', async () => {
+    show(asset)
+    const change = vi.fn()
+    render(<fieldset className="field-group">
+      <legend>cover</legend>
+      <AssetPicker label="Cover" value="" onChange={change} imagesOnly />
+      <label>alt *<input aria-label="cover alt" defaultValue="   " /></label>
+    </fieldset>)
+    await pick(asset.name)
+    expect(await screen.findByRole('dialog')).toBeTruthy()
+    expect(change).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Go back' }))
+    fireEvent.change(screen.getByLabelText('cover alt'), { target: { value: hebrew } })
+    fireEvent.click(screen.getByRole('button', { name: asset.name }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(change).toHaveBeenCalledExactlyOnceWith('new-image')
+  })
+
+  it('accepts Hebrew alternative text on a localized alt field', async () => {
+    show(asset)
+    const change = vi.fn()
+    render(<fieldset className="field-group">
+      <legend>cover</legend>
+      <AssetPicker label="Cover" value="" onChange={change} imagesOnly />
+      <fieldset className="field-group">
+        <legend>alt</legend>
+        <label>he<input aria-label="Hebrew alt" defaultValue={hebrew} /></label>
+        <label>en<input aria-label="English alt" defaultValue="" /></label>
+      </fieldset>
+    </fieldset>)
+    await pick(asset.name)
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(change).toHaveBeenCalledExactlyOnceWith('new-image')
+  })
+
+  it('does not use another field’s alternative text for an image that has no alt field', async () => {
+    show(asset)
+    const change = vi.fn()
+    render(<fieldset className="entry-writing">
+      <label>alt<input defaultValue={hebrew} /></label>
+      <AssetPicker label="Portrait" value="" onChange={change} imagesOnly />
+    </fieldset>)
+    await pick(asset.name)
+    expect(await screen.findByRole('dialog', { name: 'Add alternative text before you insert this image' })).toBeTruthy()
+    expect(change).not.toHaveBeenCalled()
+  })
+
+  it('keeps the Markdown insert path, which already requires alternative text', async () => {
+    show(asset)
+    const change = vi.fn()
+    render(<div className="inline-form">
+      <AssetPicker label="Image asset" value="" onChange={change} imagesOnly />
+      <label>Image alt text<input defaultValue="" /></label>
+      <button type="button">Insert image</button>
+    </div>)
+    await pick(asset.name)
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(change).toHaveBeenCalledExactlyOnceWith('new-image')
+  })
+
+  it('inserts a non-image library file without an alternative-text warning', async () => {
+    const notes = { ...asset, id: 'notes', name: 'notes.pdf', mime: 'application/pdf' }
+    show(notes)
+    const change = vi.fn()
+    render(<AssetPicker label="Download" value="" onChange={change} />)
+    await pick(notes.name)
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(change).toHaveBeenCalledExactlyOnceWith('notes')
+  })
+
+  it('still warns for an image chosen from a mixed library', async () => {
+    show(asset)
+    const change = vi.fn()
+    render(<AssetPicker label="Download" value="" onChange={change} />)
+    await pick(asset.name)
+    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(change).not.toHaveBeenCalled()
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(change).not.toHaveBeenCalled()
+  })
+})

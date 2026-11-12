@@ -1,0 +1,60 @@
+label: local
+date: 2026-11-12T15:06:34Z
+sha: 09b7dc9b995ad5f40461aa455b2fe28e60a6ff2d
+workdir: web
+command:
+npm run check && npm test && npm run build && npm audit --audit-level=high
+---- output ----
+
+> mosscms-admin@0.1.0 check
+> tsc -b
+
+
+> mosscms-admin@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /agent/repos/MossCMS/web
+
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+
+ Test Files  36 passed (36)
+      Tests  358 passed (358)
+   Start at  15:06:38
+   Duration  14.63s (transform 1.58s, setup 0ms, import 7.25s, tests 19.51s, environment 12.54s)
+
+
+> mosscms-admin@0.1.0 build
+> tsc -b && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 1848 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                      0.40 kB │ gzip:   0.28 kB
+dist/assets/index-DOXHVdFt.css      63.56 kB │ gzip:  13.81 kB
+dist/assets/Migration-Dol8tBkE.js   15.44 kB │ gzip:   5.27 kB
+dist/assets/index-CIEM1tWb.js      558.67 kB │ gzip: 177.32 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 7.36s
+found 0 vulnerabilities
+exit_code: 0

@@ -1,0 +1,12 @@
+label: local
+date: 2026-11-12T14:47:52Z
+sha: f7bead783772ed388c09ff0a1d65dddfab54d577
+workdir: ci
+command:
+npm ci
+---- output ----
+
+added 3 packages, and audited 4 packages in 390ms
+
+found 0 vulnerabilities
+exit_code: 0

@@ -1,0 +1,25 @@
+label: local
+sha: 7ef81619fa9d40e0cd1b48e63c3caef6d50b421a
+short_sha: 7ef8161
+started: 2026-11-12T14:46:52Z
+finished: 2026-11-12T15:05:07Z
+git status --porcelain at scripts/verify.sh start: empty
+base: 5ea1d037bb85e47c2efc1d97f72998d130130878
+ticket base named in the prompt: b6c66870b98af990ee91766e5a965e823bf2b03d
+result: local commands from scripts/verify.sh completed, with the Dependabot manifest failure that also happens on main
+
+scripts/verify.sh MOSS-086 started on this clean tree and exited 1 at pytest-sqlite.
+That run's SQLite log was replaced after the host iptables-legacy FORWARD policy was set to ACCEPT.
+The replacement SQLite run is 1 failed, 497 passed, 4 deselected, 0 skipped.
+The failed test is tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests.
+The same assertion fails on 5ea1d03. api/, example-site/, and .github/dependabot.yml match both 5ea1d03 and b6c6687.
+The commit between b6c6687 and 5ea1d03 changes GitHub Actions SHAs in workflow files.
+
+Later commands are the same ones scripts/verify.sh runs after pytest-sqlite.
+PostgreSQL is 1 failed, 501 passed, 0 skipped. The failure is the same Dependabot test.
+tests/verify_required_runs.py exits 1 because that test did not pass.
+pip-audit's recorded run exits 0 after python3.12-venv was installed. An earlier attempt exited 1 because ensurepip was missing.
+gitleaks' recorded run exits 0. An earlier attempt exited 127 before the cached binary was on PATH.
+Web, example-site, npm audit, gitleaks, and the production Playwright run exit 0.
+No skip or xfail is in the recorded test logs.
+No audit ignore, allowlist, or override was added.

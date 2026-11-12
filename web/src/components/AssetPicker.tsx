@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { ApiError, getContext, gql, message, rest, type Asset } from '../lib/api'
 import { Button } from './ui/button'
+import { Dialog } from './ui/dialog'
 
 export const assetPageQuery = 'query($after:String,$search:String!,$imagesOnly:Boolean!,$id:ID){assetPage(first:24,after:$after,search:$search,imagesOnly:$imagesOnly,id:$id)}'
 type Page = {
@@ -22,6 +23,65 @@ type Props = {
 const emptyPage: Page = { nodes: [], endCursor: null, hasNextPage: false }
 const MAX_UPLOAD = 20 * 1024 * 1024
 const ASSET_SEARCH_DEBOUNCE_MS = 200
+const ALT_WARNING_TITLE = 'Add alternative text before you insert this image'
+
+function isLibraryImage(asset: Asset, imagesOnly: boolean) {
+  return imagesOnly || asset.mime.toLowerCase().startsWith('image/')
+}
+
+function visibleLabel(element: HTMLElement) {
+  const copy = element.cloneNode(true) as HTMLElement
+  copy.querySelectorAll('input, textarea, select').forEach(node => node.remove())
+  return (copy.textContent || '').replace(/\s+/g, ' ').replace(/\s*\*$/, '').trim().toLowerCase()
+}
+
+function controlValue(label: HTMLElement) {
+  const control = label.querySelector('input, textarea')
+  if (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement) return control.value
+  return ''
+}
+
+// Markdown insert stays disabled until alternative text is present, so selection there is not a second gate.
+function markdownAlreadyRequiresAlt(root: HTMLElement) {
+  const host = root.parentElement
+  if (!host) return false
+  const labels = [...host.querySelectorAll('label')].filter(label => !root.contains(label))
+  const hasAlt = labels.some(label => visibleLabel(label) === 'image alt text')
+  const hasInsert = [...host.querySelectorAll('button')].some(button => !root.contains(button) && (button.textContent || '').trim() === 'Insert image')
+  return hasAlt && hasInsert
+}
+
+function siblingAltText(root: HTMLElement) {
+  const group = root.closest('fieldset.field-group')
+  if (!(group instanceof HTMLElement)) return null
+  const direct = [...group.querySelectorAll('label')].filter(label => {
+    if (root.contains(label)) return false
+    return label.closest('fieldset.field-group') === group
+  })
+  for (const label of direct) {
+    const name = visibleLabel(label)
+    if (name === 'alt' || name === 'alternative text' || name === 'alt text') return controlValue(label)
+  }
+  const nested = [...group.querySelectorAll('fieldset.field-group')].filter(fieldset => {
+    if (!(fieldset instanceof HTMLElement) || fieldset === group || root.contains(fieldset)) return false
+    if (fieldset.parentElement?.closest('fieldset.field-group') !== group) return false
+    const legend = [...fieldset.children].find(child => child instanceof HTMLElement && child.tagName === 'LEGEND')
+    return legend instanceof HTMLElement && visibleLabel(legend) === 'alt'
+  })
+  if (nested.length === 0) return null
+  const values = nested.flatMap(fieldset => [...fieldset.querySelectorAll('input, textarea')].flatMap(control => (
+    control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement ? [control.value] : []
+  )))
+  return values.find(value => value.trim()) ?? ''
+}
+
+function needsAltWarning(root: HTMLElement | null, asset: Asset, imagesOnly: boolean) {
+  if (!isLibraryImage(asset, imagesOnly)) return false
+  if (root && markdownAlreadyRequiresAlt(root)) return false
+  if (!root) return true
+  const alt = siblingAltText(root)
+  return alt === null || alt.trim() === ''
+}
 
 export function AssetPicker({
   label,
@@ -48,9 +108,11 @@ export function AssetPicker({
   const [busy, setBusy] = useState(false)
   const [retry, setRetry] = useState(0)
   const uploadInput = useRef<HTMLInputElement>(null)
+  const pickerRoot = useRef<HTMLElement>(null)
   const uploadEpoch = useRef(0)
   const latestUpload = useRef(0)
   const mounted = useRef(true)
+  const [pendingImage, setPendingImage] = useState<Asset | null>(null)
 
   useEffect(() => {
     mounted.current = true
@@ -72,6 +134,7 @@ export function AssetPicker({
     setUploadError('')
     setStatus('')
     setBusy(false)
+    setPendingImage(null)
   }, [projectId, imagesOnly])
   useEffect(() => {
     let active = true
@@ -174,7 +237,23 @@ export function AssetPicker({
     }
   }
 
-  return <section className="asset-picker" aria-label={`Asset picker for ${label}`}>
+  function commit(asset: Asset) {
+    onChange(asset.id)
+    setSelected(asset)
+    setPendingImage(null)
+    setOpen(false)
+    requestAnimationFrame(() => document.getElementById(controlId)?.focus())
+  }
+
+  function choose(asset: Asset) {
+    if (needsAltWarning(pickerRoot.current, asset, imagesOnly)) {
+      setPendingImage(asset)
+      return
+    }
+    commit(asset)
+  }
+
+  return <section ref={pickerRoot} className="asset-picker" aria-label={`Asset picker for ${label}`}>
     <strong>{label}</strong>
     <div className="inline-form">
       {selected?.variants?.[0] && <img
@@ -195,6 +274,7 @@ export function AssetPicker({
         onClick={() => {
           if (open) {
             uploadEpoch.current++
+            setPendingImage(null)
           }
           setOpen(previous => !previous)
         }}
@@ -242,12 +322,7 @@ export function AssetPicker({
           key={asset.id}
           disabled={busy}
           aria-pressed={value === asset.id}
-          onClick={() => {
-            onChange(asset.id)
-            setSelected(asset)
-            setOpen(false)
-            requestAnimationFrame(() => document.getElementById(controlId)?.focus())
-          }}
+          onClick={() => choose(asset)}
         >
           {asset.variants?.[0] && <img
             src={asset.variants[0].url}
@@ -285,5 +360,12 @@ export function AssetPicker({
     {uploadError && <p role="alert">{uploadError}</p>}
     {status && <p role="status">{status}</p>}
     {!open && error && <p role="alert">{error}</p>}
+    <Dialog title={ALT_WARNING_TITLE} open={pendingImage !== null} onClose={() => setPendingImage(null)}>
+      <p role="alert">Alternative text is missing for this image. The asset picker flags common accessibility problems before you publish.</p>
+      <div className="row-actions">
+        <Button type="button" variant="outline" onClick={() => setPendingImage(null)}>Go back</Button>
+        <Button type="button" onClick={() => { if (pendingImage) commit(pendingImage) }}>Insert without alternative text</Button>
+      </div>
+    </Dialog>
   </section>
 }

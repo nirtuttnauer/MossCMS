@@ -1,0 +1,46 @@
+label: local
+sha: b6c66870b98af990ee91766e5a965e823bf2b03d
+date: 2026-11-12T14:45:36Z
+command: npm ci && npm test
+---- output ----
+
+added 284 packages, and audited 285 packages in 3s
+
+106 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
+
+> mosscms-admin@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /tmp/moss084-base/web
+
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+
+ Test Files  36 passed (36)
+      Tests  356 passed (356)
+   Start at  14:45:39
+   Duration  15.46s (transform 1.56s, setup 0ms, import 7.57s, tests 20.81s, environment 13.19s)
+
+exit_code: 0

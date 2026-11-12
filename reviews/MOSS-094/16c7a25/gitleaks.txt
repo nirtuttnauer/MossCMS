@@ -1,0 +1,15 @@
+label: local
+date: 2026-11-12T16:02:13Z
+sha: 16c7a250c25d763a2e176c39a09aaa7efd3ce782
+workdir: .
+continued: after scripts/verify.sh MOSS-094 exited 1 at pytest-sqlite
+command:
+snapshot="$(mktemp -d)"
+trap 'rm -rf "$snapshot"' EXIT
+git archive HEAD | tar -x -C "$snapshot"
+gitleaks detect --no-git --source "$snapshot" --redact=100 --no-banner --exit-code 1
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+4:02PM INF scanned ~8649692 bytes (8.65 MB) in 394ms
+4:02PM INF no leaks found
+exit_code: 0

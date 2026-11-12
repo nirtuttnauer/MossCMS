@@ -1,0 +1,17 @@
+label: local
+sha: b6c66870b98af990ee91766e5a965e823bf2b03d
+date: 2026-11-12T15:10:00Z
+note: worktree of main at the base SHA. These commands show the dependabot failure and the API collection count. The full suite was not re-run here.
+
+command:
+pytest --collect-only -q -p no:cacheprovider
+result:
+502 tests collected
+exit_code: 0
+
+command:
+pytest tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests --tb=short -p no:cacheprovider
+result:
+1 failed
+assertion: starters/nextjs/package.json (npm /starters/nextjs) is not covered by .github/dependabot.yml
+exit_code: 1

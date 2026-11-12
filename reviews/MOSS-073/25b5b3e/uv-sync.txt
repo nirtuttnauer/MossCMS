@@ -1,0 +1,11 @@
+label: local
+date: 2026-11-12T14:44:38Z
+sha: 25b5b3e1bd6e7e02fec7fc4983860f0f6f9c34b7
+workdir: api
+command:
+uv sync --locked --group dev
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+Resolved 72 packages in 0.89ms
+Checked 69 packages in 0.46ms
+exit_code: 0

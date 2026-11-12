@@ -1,0 +1,13 @@
+label: local
+date: 2026-11-12T15:00:18Z
+sha: 599803c210e3e4e177bf4b9987bbd2f035fd3fc5
+workdir: ci
+command:
+npm ci
+GITHUB_WORKSPACE=/agent/repos/MossCMS
+---- output ----
+
+added 3 packages, and audited 4 packages in 393ms
+
+found 0 vulnerabilities
+exit_code: 0
