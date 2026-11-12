@@ -1,0 +1,16 @@
+label: local
+sha: 3a572638d84836291d1396da0d6428d4ff89592e
+short_sha: 3a57263
+started: 2026-11-12T14:51:24Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continued: 2026-11-12T14:56:22Z
+reason: scripts/verify.sh exited 1 at pytest-sqlite
+known failure also recorded on main b6c6687 and 5ea1d03: tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+continue: pytest-postgres exit 1 is the Dependabot failure that also happens on main
+continue: verify-required-runs exit 1 is the Dependabot failure that also happens on main
+continue: gitleaks failed with exit 127
+gitleaks retry: 2026-11-12T15:04:01Z
+the exit 127 run could not find gitleaks. The binary from the verify cache is now on PATH.
+finished: 2026-11-12T15:05:31Z
+result: recorded

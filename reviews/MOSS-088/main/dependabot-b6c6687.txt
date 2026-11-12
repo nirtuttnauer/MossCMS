@@ -1,0 +1,25 @@
+label: local
+date: 2026-11-12
+command: /agent/repos/MossCMS/api/.venv/bin/pytest tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests --tb=line -q
+workdir note: detached worktree of the named SHA, using the branch virtualenv
+---- output ----
+F                                                                        [100%]
+=================================== FAILURES ===================================
+E   AssertionError: assert ['starters/ne...pendabot.yml'] == []
+      
+      Left contains one more item: 'starters/nextjs/package.json (npm /starters/nextjs) is not covered by .github/dependabot.yml'
+      Use -v to get more diff
+/tmp/moss-main-b6c6687/api/tests/test_dependabot.py:22: AssertionError: assert ['starters/ne...pendabot.yml'] == []
+=============================== warnings summary ===============================
+../../../agent/repos/MossCMS/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /agent/repos/MossCMS/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+../../../agent/repos/MossCMS/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5
+  /agent/repos/MossCMS/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5: AuthlibDeprecationWarning: The httpx module is deprecated; please use httpx2 instead.
+    from ._compat import httpx2
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+1 failed, 2 warnings in 0.03s
