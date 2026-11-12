@@ -40,6 +40,9 @@ class Project(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     name: Mapped[str] = mapped_column(String(100))
     preview_origin: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    custom_permissions: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    field_rules: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    review_types: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     default_locale: Mapped[str] = mapped_column(String(20), default="en", server_default="en")
     locales: Mapped[list] = mapped_column(JSON, default=lambda: ["en"], server_default='["en"]')
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
@@ -153,6 +156,14 @@ class Entry(Base):
     scheduled_schema_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
     schedule_error: Mapped[dict | None] = mapped_column(JSON(none_as_null=True), nullable=True)
     status: Mapped[str] = mapped_column(String(16), index=True, default="draft")
+    review_state: Mapped[str] = mapped_column(String(16), default="draft", server_default="draft")
+    approved_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    approved_slug: Mapped[str | None] = mapped_column(String(220), nullable=True)
+    approved_schema_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    submitted_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    reviewer_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    review_author_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    schedule_actor_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     version: Mapped[int] = mapped_column(Integer, default=1)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, index=True)
@@ -282,6 +293,43 @@ class PreviewGrant(Base):
     type_key: Mapped[str] = mapped_column(String(60))
     expires_at: Mapped[datetime] = mapped_column(DateTime)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class Release(Base):
+    __tablename__ = "releases"
+    __table_args__ = (
+        Index(
+            "ix_releases_due",
+            "scheduled_at",
+            postgresql_where=text("status = 'scheduled'"),
+            sqlite_where=text("status = 'scheduled'"),
+        ),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
+    name: Mapped[str] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(16), default="draft", index=True)
+    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    error: Mapped[dict | None] = mapped_column(JSON(none_as_null=True), nullable=True)
+    created_by: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    __mapper_args__ = {"version_id_col": version}
+
+
+class ReleaseItem(Base):
+    __tablename__ = "release_items"
+    __table_args__ = (UniqueConstraint("release_id", "entry_id"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    release_id: Mapped[str] = mapped_column(ForeignKey("releases.id"), index=True)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
+    entry_id: Mapped[str] = mapped_column(ForeignKey("entries.id"), index=True)
+    action: Mapped[str] = mapped_column(String(16))
+    revision: Mapped[int] = mapped_column(Integer)
+    slug: Mapped[str] = mapped_column(String(220))
+    title: Mapped[str] = mapped_column(String(200))
+    data: Mapped[dict] = mapped_column(JSON)
+    schema_version: Mapped[int] = mapped_column(Integer)
 
 
 class PublicationEvent(Base):
