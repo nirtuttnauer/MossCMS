@@ -1,0 +1,17 @@
+label: local
+sha: 79dc63b932eab7e805835f1cbf872a344beb0db1
+date: 2026-11-11T22:01:38Z
+command: python3 scripts/check_dependabot.py
+note: run after scripts/verify.sh, against the committed dependabot.yml at this sha
+---- output ----
+dependabot.yml matches the Dependabot schema and covers:
+  github-actions /  .github/workflows/checks.yml
+  github-actions /  .github/workflows/docker.yml
+  docker /  Dockerfile
+  uv /api  api/pyproject.toml
+  npm /ci  ci/package.json
+  docker /example-site  example-site/Dockerfile
+  npm /example-site  example-site/package.json
+  npm /starters/nextjs  starters/nextjs/package.json
+  npm /web  web/package.json
+exit_code: 0
