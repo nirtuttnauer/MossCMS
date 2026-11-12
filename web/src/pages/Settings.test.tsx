@@ -81,6 +81,72 @@ test('a webhook read failure does not hide tokens or audit history and Retry cle
   expect(screen.getByRole('button', { name: 'Disable webhook' })).toBeTruthy()
 })
 
+const createdToken = 'created-delivery-token-value'
+const createdDigest = 'digest-of-created-delivery-token'
+
+test('dismiss, reload, and remount leave the delivery token value out of the list while revoke still deletes that row', async () => {
+  const listed = { id: createdDigest, name: 'Website', scopes: ['article'], expiresAt: '2027-06-01T00:00:00Z', token: createdToken, secret: createdToken, digest: createdDigest }
+  const normal = vi.mocked(rest).getMockImplementation()!
+  vi.mocked(rest).mockImplementation((path, method, body) => {
+    if (path === '/api/tokens' && method === 'POST') return Promise.resolve({ token: createdToken })
+    if (path === '/api/tokens') return Promise.resolve([token, listed])
+    return normal(path, method, body)
+  })
+  const writeText = vi.fn().mockResolvedValue(undefined)
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+  const consoleSpies = (['log', 'info', 'debug', 'warn', 'error'] as const).map(method => vi.spyOn(console, method).mockImplementation(() => {}))
+  localStorage.clear()
+  sessionStorage.clear()
+  const view = mount()
+  await screen.findByText('Production website')
+  for (const row of document.querySelectorAll('.member-row')) {
+    expect(row.innerHTML).not.toContain(createdToken)
+    expect(row.innerHTML).not.toContain(createdDigest)
+  }
+  fireEvent.change(screen.getByLabelText('Token name'), { target: { value: 'Website' } })
+  fireEvent.submit(screen.getByRole('button', { name: 'Create delivery token' }).closest('form')!)
+  expect((await screen.findByLabelText('New delivery token') as HTMLInputElement).value).toBe(createdToken)
+  fireEvent.click(screen.getByRole('button', { name: 'Copy' }))
+  expect(await screen.findByText('Token copied.')).toBeTruthy()
+  expect(writeText).toHaveBeenCalledWith(createdToken)
+  for (const row of document.querySelectorAll('.member-row')) {
+    expect(row.innerHTML).not.toContain(createdToken)
+    expect(row.innerHTML).not.toContain(createdDigest)
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+  expect(screen.queryByLabelText('New delivery token')).toBeNull()
+  expect(document.body.innerHTML).not.toContain(createdToken)
+  expect(document.body.innerHTML).not.toContain(createdDigest)
+  fireEvent.click(screen.getByRole('button', { name: 'Refresh delivery history' }))
+  await screen.findByText('Website')
+  expect(screen.queryByLabelText('New delivery token')).toBeNull()
+  expect(document.body.innerHTML).not.toContain(createdToken)
+  expect(document.body.innerHTML).not.toContain(createdDigest)
+  expect(location.href).not.toContain(createdToken)
+  expect(location.href).not.toContain(createdDigest)
+  const stored = [localStorage, sessionStorage].flatMap(store => Array.from({ length: store.length }, (_, index) => {
+    const key = store.key(index) ?? ''
+    return `${key}=${store.getItem(key) ?? ''}`
+  })).join('\n')
+  expect(stored).not.toContain(createdToken)
+  expect(stored).not.toContain(createdDigest)
+  expect(consoleSpies.some(spy => spy.mock.calls.some(call => call.some(part => String(part).includes(createdToken))))).toBe(false)
+  view.unmount()
+  mount()
+  const row = (await screen.findByText('Website')).closest('.member-row') as HTMLElement
+  expect(screen.queryByLabelText('New delivery token')).toBeNull()
+  expect(document.body.innerHTML).not.toContain(createdToken)
+  expect(row.innerHTML).not.toContain(createdDigest)
+  fireEvent.click(within(row).getByRole('button', { name: 'Revoke' }))
+  const dialog = screen.getByRole('dialog')
+  expect(dialog.textContent).toContain('Website')
+  expect(dialog.textContent).not.toContain(createdToken)
+  expect(dialog.innerHTML).not.toContain(createdDigest)
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Revoke token' }))
+  await waitFor(() => expect(vi.mocked(rest).mock.calls.some(([path, method]) => path === `/api/tokens/${createdDigest}` && method === 'DELETE')).toBe(true))
+  expect(document.body.innerHTML).not.toContain(createdToken)
+})
+
 test('token creation disables repeat submission and retains the one-time secret', async () => {
   const pending = deferred<{ token: string }>()
   const normal = vi.mocked(rest).getMockImplementation()!

@@ -1,0 +1,10 @@
+label: local
+date: 2026-11-12T15:10:49Z
+sha: 8bb8f896c34d0baae901309f62f4f2d560442b03
+workdir: web
+command:
+npm audit
+note: verify.sh stopped at pytest-sqlite; this command was run next with the same arguments
+---- output ----
+found 0 vulnerabilities
+exit_code: 0

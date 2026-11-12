@@ -67,6 +67,60 @@ test('visual formatting updates the markdown string and source mode can wrap a s
   expect(document.activeElement).toBe(input)
 })
 
+test.each([
+  ['he', 'rtl'],
+  ['ar', 'rtl'],
+  ['he-IL', 'rtl'],
+  ['ar-EG', 'rtl'],
+  ['fa', 'rtl'],
+  ['ur', 'rtl'],
+  ['en', 'ltr'],
+  ['pt-BR', 'ltr'],
+  ['fr-CA', 'ltr'],
+] as const)('locale %s locks the visual editor, source, and alt text to %s with that lang', (locale, dir) => {
+  const initialValue = dir === 'rtl' ? 'שלום\n\n- פריט\n' : 'Hello\n\n- Item\n'
+  const view = render(<Editor initialValue={initialValue} assets={[]} locale={locale} />)
+  const group = screen.getByRole('group', { name: 'Body visual editor' })
+  expect(group.getAttribute('dir')).toBe(dir)
+  expect(group.getAttribute('lang')).toBe(locale)
+  const blocks = Array.from(group.querySelectorAll('[role="textbox"]'))
+  expect(blocks).toHaveLength(2)
+  expect(blocks.map(block => block.getAttribute('dir'))).toEqual([dir, dir])
+  const alt = screen.getByLabelText('Image alt text')
+  expect(alt.getAttribute('dir')).toBe(dir)
+  expect(alt.getAttribute('lang')).toBe(locale)
+
+  fireEvent.click(screen.getByRole('button', { name: 'Source' }))
+  const input = screen.getByLabelText<HTMLTextAreaElement>('Body')
+  expect(input.dir).toBe(dir)
+  expect(input.lang).toBe(locale)
+
+  const next = locale === 'he' ? 'en' : 'he'
+  const nextDir = next === 'he' ? 'rtl' : 'ltr'
+  view.rerender(<Editor initialValue={initialValue} assets={[]} locale={next} />)
+  expect(input.dir).toBe(nextDir)
+  expect(input.lang).toBe(next)
+  fireEvent.click(screen.getByRole('button', { name: 'Visual' }))
+  const nextGroup = screen.getByRole('group', { name: 'Body visual editor' })
+  expect(nextGroup.getAttribute('dir')).toBe(nextDir)
+  expect(nextGroup.getAttribute('lang')).toBe(next)
+})
+
+test('a locale locks unsupported source preview to its direction and lang', () => {
+  render(<Editor initialValue={'<div>שלום</div>'} assets={[]} locale="he" />)
+  const preview = document.querySelector('.markdown-preview')
+  expect(preview?.getAttribute('dir')).toBe('rtl')
+  expect(preview?.getAttribute('lang')).toBe('he')
+})
+
+test('without a locale the editor keeps automatic direction', () => {
+  render(<Editor initialValue="שלום" assets={[]} />)
+  const group = screen.getByRole('group', { name: 'Body visual editor' })
+  expect(group.getAttribute('dir')).toBe('auto')
+  expect(group.getAttribute('lang')).toBeNull()
+  expect(screen.getByLabelText('Image alt text').getAttribute('dir')).toBe('auto')
+})
+
 test('pasted plain text becomes markdown without another keystroke', () => {
   render(<Editor initialValue="" assets={[]} />)
   const visual = screen.getByRole('group', { name: 'Body visual editor' }).querySelector<HTMLElement>('[role="textbox"]')!

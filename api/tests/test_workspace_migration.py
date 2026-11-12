@@ -1,6 +1,10 @@
 import json
+import os
+import tempfile
+import uuid
 import zipfile
 from io import BytesIO
+from pathlib import Path
 
 import pytest
 from sqlalchemy import func, select
@@ -33,13 +37,47 @@ def destination(app, admin):
         return {**admin, "x-moss-project": project.id}
 
 
-def preview(client, headers, archive, **fields):
+def preview(client, headers, archive, filename="workspace.zip", **fields):
     return client.post(
         "/api/migration/import",
         headers=headers,
-        files={"file": ("workspace.zip", archive, "application/zip")},
+        files={"file": (filename, archive, "application/zip")},
         data=fields,
     )
+
+
+def _plant(label):
+    path = Path(tempfile.gettempdir()) / f"moss080-{uuid.uuid4().hex}-{label}"
+    path.write_bytes(b"OUTSIDE-SECRET")
+    return path
+
+
+def _member_name(kind, outside):
+    name = outside.name
+    if kind == "dotdot":
+        return f"../{name}"
+    if kind == "absolute":
+        return outside.as_posix()
+    if kind == "encoded-dotdot":
+        return f"%2e%2e/%2e%2e/{name}"
+    if kind == "encoded-slash":
+        return f"..%2f..%2f{name}"
+    if kind == "double-encoded":
+        return f"%252e%252e/%252e%252e/{name}"
+    if kind == "backslash":
+        return "..\\" + name
+    raise AssertionError(kind)
+
+
+def _hostile(member):
+    buffer = BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("manifest.json", b"{}")
+        archive.writestr(member, b"from-archive")
+    return buffer.getvalue()
+
+
+TRAVERSAL = ["dotdot", "absolute", "encoded-dotdot", "encoded-slash", "double-encoded", "backslash"]
 
 
 def test_browser_export_validate_import_and_retry(client, admin, app):
@@ -132,3 +170,158 @@ def test_local_development_admin_can_export_without_persistent_membership(client
     app.state.settings.skip_auth = True
     headers = {"x-moss-project": admin["x-moss-project"], "x-moss-csrf": app.state.development_csrf}
     assert client.post("/api/migration/export", headers=headers).status_code == 200
+
+
+def _reject_archive_routes(http, headers, archive):
+    limits = http.get("/api/migration/limits", headers=headers)
+    assert limits.status_code == 401
+    assert limits.json()["detail"] == "Sign in required."
+    exported = http.post("/api/migration/export", headers=headers)
+    assert exported.status_code == 401
+    assert exported.json()["detail"] == "Sign in required."
+    uploaded = preview(http, headers, archive)
+    assert uploaded.status_code == 401
+    assert uploaded.json()["detail"] == "Sign in required."
+    assert b"OUTSIDE-SECRET" not in limits.content + exported.content + uploaded.content
+
+
+def test_missing_session_and_delivery_token_cannot_download_or_upload(client, admin, app):
+    issued = client.post("/api/tokens", headers=admin, json={"name": "site", "scopes": [], "days": 1})
+    assert issued.status_code == 200, issued.text
+    token = issued.json()["token"]
+    project = {"x-moss-project": admin["x-moss-project"]}
+    session_cookie = client.cookies.get("moss_session")
+    assert session_cookie
+    client.cookies.clear()
+    try:
+        _reject_archive_routes(client, {}, b"not a zip")
+        _reject_archive_routes(client, project, b"not a zip")
+        _reject_archive_routes(client, {**project, "Authorization": "Bearer " + token}, b"not a zip")
+        client.cookies.set("moss_session", token)
+        _reject_archive_routes(client, project, b"not a zip")
+    finally:
+        client.cookies.clear()
+        client.cookies.set("moss_session", session_cookie)
+    assert client.get("/api/migration/limits", headers=admin).status_code == 200
+
+
+@pytest.mark.parametrize("kind", TRAVERSAL)
+def test_archive_member_traversal_stays_inside_the_archive_directory(client, admin, kind):
+    outside = _plant(kind)
+    deeper = Path("/") / outside.name
+    member = _member_name(kind, outside)
+    try:
+        response = preview(client, admin, _hostile(member))
+        assert response.status_code == 422, response.text
+        assert b"from-archive" not in response.content
+        assert b"OUTSIDE-SECRET" not in response.content
+        assert outside.read_bytes() == b"OUTSIDE-SECRET"
+        assert not deeper.exists()
+    finally:
+        outside.unlink(missing_ok=True)
+        if deeper.is_file():
+            deeper.unlink()
+
+
+@pytest.mark.parametrize("kind", TRAVERSAL)
+def test_upload_filename_traversal_does_not_write_outside(client, admin, app, kind):
+    outside = _plant(kind)
+    deeper = Path("/") / outside.name
+    archive = bundle(client, admin)
+    target = destination(app, admin)
+    try:
+        response = preview(client, target, archive, filename=_member_name(kind, outside))
+        assert response.status_code == 200, response.text
+        assert response.json()["applied"] is False
+        assert outside.read_bytes() == b"OUTSIDE-SECRET"
+        assert not deeper.exists()
+        assert b"OUTSIDE-SECRET" not in response.content
+    finally:
+        outside.unlink(missing_ok=True)
+        if deeper.is_file():
+            deeper.unlink()
+
+
+@pytest.mark.parametrize("kind", ["dotdot", "absolute"])
+def test_export_does_not_read_outside_the_media_directory(client, admin, app, tmp_path, kind):
+    define(client, admin)
+    created = entry(client, admin, status="published")
+    assert "errors" not in created, created
+    uploaded = client.post("/api/assets", headers=admin, files={"file": ("note.txt", b"media bytes", "text/plain")})
+    assert uploaded.status_code == 200, uploaded.text
+    secret = tmp_path / "secret.bin"
+    secret.write_bytes(b"OUTSIDE-SECRET")
+    storage = app.state.settings.storage_dir.resolve()
+    relative = Path(os.path.relpath(secret, storage)).as_posix()
+    assert relative.startswith("../")
+    key = relative if kind == "dotdot" else secret.as_posix()
+    with app.state.db.begin() as session:
+        asset = session.scalar(select(Asset).where(Asset.project_id == admin["x-moss-project"]))
+        asset.key = key
+    response = client.post("/api/migration/export", headers=admin)
+    assert response.status_code == 422, response.text
+    assert b"OUTSIDE-SECRET" not in response.content
+    assert secret.read_bytes() == b"OUTSIDE-SECRET"
+
+
+def test_hebrew_names_and_content_round_trip(client, admin, app):
+    define(client, admin)
+    saved = entry(
+        client,
+        admin,
+        slug="מדריך-התקנה",
+        data={"title": "שלום עולם", "body": "תוכן בעברית", "secret": "סודי"},
+        status="published",
+    )
+    assert "errors" not in saved, saved
+    uploaded = client.post(
+        "/api/assets",
+        headers=admin,
+        files={"file": ("שלום.txt", "תוכן הקובץ".encode(), "text/plain")},
+    )
+    assert uploaded.status_code == 200, uploaded.text
+    assert uploaded.json()["name"] == "שלום.txt"
+    with app.state.db.begin() as session:
+        session.get(Project, admin["x-moss-project"]).name = "סטודיו"
+    exported = client.post("/api/migration/export", headers=admin, data={"history": "true"})
+    assert exported.status_code == 200, exported.text
+    assert exported.headers["content-type"] == "application/zip"
+    with zipfile.ZipFile(BytesIO(exported.content)) as archive:
+        entries = archive.read("entries.ndjson")
+        assets = archive.read("assets.ndjson")
+        manifest = archive.read("manifest.json")
+        blobs = b"".join(archive.read(name) for name in archive.namelist() if name.startswith("assets/"))
+    assert "שלום עולם".encode() in entries
+    assert "תוכן בעברית".encode() in entries
+    assert "מדריך-התקנה".encode() in entries
+    assert "סודי".encode() not in entries
+    assert "שלום.txt".encode() in assets
+    assert "תוכן הקובץ".encode() in blobs
+    assert "סטודיו".encode() in manifest
+    rejected = BytesIO()
+    with zipfile.ZipFile(rejected, "w") as archive:
+        archive.writestr("manifest.json", b"{}")
+        archive.writestr("שלום.txt", "תוכן".encode())
+    hebrew_member = preview(client, admin, rejected.getvalue(), filename="ארכיון-שלום.zip")
+    assert hebrew_member.status_code == 422, hebrew_member.text
+    target = destination(app, admin)
+    checked = preview(client, target, exported.content, filename="ארכיון-שלום.zip")
+    assert checked.status_code == 200, checked.text
+    applied = preview(
+        client,
+        target,
+        exported.content,
+        filename="ארכיון-שלום.zip",
+        apply="true",
+        validation=checked.json()["validation"],
+    )
+    assert applied.status_code == 200, applied.text
+    assert applied.json()["applied"] is True
+    with app.state.db() as session:
+        record = session.scalar(select(Entry).where(Entry.project_id == target["x-moss-project"]))
+        assert record.slug == "מדריך-התקנה"
+        assert record.data["title"] == "שלום עולם"
+        assert record.data["body"] == "תוכן בעברית"
+        stored = session.scalar(select(Asset).where(Asset.project_id == target["x-moss-project"]))
+        assert stored.name == "שלום.txt"
+        assert (app.state.settings.storage_dir / stored.key).read_bytes() == "תוכן הקובץ".encode()

@@ -4,6 +4,7 @@ import { AssetPicker } from './AssetPicker'
 import { Markdown } from './Markdown'
 import { VisualMarkdown } from './VisualMarkdown'
 import { formatRichText, parseRichText } from '../../../shared/richtext.mjs'
+import { localeValueProps } from '../lib/locales'
 import type { Asset } from '../lib/api'
 
 type Props = {
@@ -16,6 +17,7 @@ type Props = {
   projectId?: string
   id?: string
   error?: string
+  locale?: string
 }
 
 const ACTIONS = [
@@ -38,7 +40,9 @@ export function MarkdownInput({
   projectId,
   id,
   error,
+  locale,
 }: Props) {
+  const writing = localeValueProps(locale)
   const generatedId = useId()
   const controlId = id || generatedId
   const input = useRef<HTMLTextAreaElement>(null)
@@ -109,19 +113,20 @@ export function MarkdownInput({
         </Button>
       </div>
       {showLocked && (
-        <div className="markdown-preview" dir="auto">
+        <div className="markdown-preview" dir={writing.dir} lang={writing.lang}>
           <p className="notice" role="status">This content uses formatting the visual editor cannot represent. It was left unchanged. Edit the source to change it.</p>
           <Markdown text={value} assets={[...assets, ...uploaded]} />
         </div>
       )}
-      {showVisual && <VisualMarkdown id={controlId} label={label} value={value} onChange={onChange} />}
+      {showVisual && <VisualMarkdown id={controlId} label={label} value={value} onChange={onChange} dir={writing.dir} lang={writing.lang} />}
       <textarea
         id={showVisual ? undefined : controlId}
         ref={input}
         rows={8}
         value={value}
         required={required}
-        dir="auto"
+        dir={writing.dir}
+        lang={writing.lang}
         aria-label={showVisual ? undefined : label}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `error-${controlId}` : undefined}
@@ -140,7 +145,7 @@ export function MarkdownInput({
         />
         <label>
           Image alt text
-          <input value={alt} dir="auto" onChange={event => setAlt(event.target.value)} />
+          <input value={alt} dir={writing.dir} lang={writing.lang} onChange={event => setAlt(event.target.value)} />
         </label>
         <Button type="button" variant="outline" disabled={!image || !alt.trim()} onClick={() => format('image')}>
           Insert image

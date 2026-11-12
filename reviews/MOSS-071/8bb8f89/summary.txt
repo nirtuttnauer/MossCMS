@@ -1,0 +1,13 @@
+label: local
+sha: 8bb8f896c34d0baae901309f62f4f2d560442b03
+short_sha: 8bb8f89
+started: 2026-11-12T14:56:30Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continued: 2026-11-12T15:20:00Z
+continued_result: pytest-postgres 1 (same dependabot failure as sqlite), verify-required-runs 1, pip-audit rerun 0, web 0, example-site 0, production 0, gitleaks 0
+sqlite: 504 passed, 1 failed, 4 deselected, 0 skipped
+postgres: 508 passed, 1 failed, 0 deselected, 0 skipped
+web: 356 passed, 0 skipped, 36 files
+example-site: 50 passed, 0 failed, 0 skipped
+production: 2 passed, 0 skipped

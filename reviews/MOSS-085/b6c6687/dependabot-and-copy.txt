@@ -1,0 +1,34 @@
+Using CPython 3.12.3 interpreter at: /usr/bin/python3
+Creating virtual environment at: .venv
+Installed 69 packages in 51ms
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /tmp/moss-base/api
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 2 items
+
+tests/test_dependabot.py F                                               [ 50%]
+tests/test_a11y_copy.py .                                                [100%]
+
+=================================== FAILURES ===================================
+__________ test_dependabot_config_matches_schema_and_covers_manifests __________
+tests/test_dependabot.py:22: in test_dependabot_config_matches_schema_and_covers_manifests
+    assert MODULE.check() == []
+E   AssertionError: assert ['starters/ne...pendabot.yml'] == []
+E     
+E     Left contains one more item: 'starters/nextjs/package.json (npm /starters/nextjs) is not covered by .github/dependabot.yml'
+E     Use -v to get more diff
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /tmp/moss-base/api/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5
+  /tmp/moss-base/api/.venv/lib/python3.12/site-packages/authlib/integrations/httpx_client/assertion_client.py:5: AuthlibDeprecationWarning: The httpx module is deprecated; please use httpx2 instead.
+    from ._compat import httpx2
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_dependabot.py::test_dependabot_config_matches_schema_and_covers_manifests
+=================== 1 failed, 1 passed, 2 warnings in 0.06s ====================
