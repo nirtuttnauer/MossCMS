@@ -1,0 +1,8 @@
+label: local
+sha: b6c66870b98af990ee91766e5a965e823bf2b03d
+date: 2026-11-11T21:42:25Z
+git status --porcelain:
+(end status)
+command: python3 scripts/check_dependabot.py
+---- output ----
+exit_code: 1

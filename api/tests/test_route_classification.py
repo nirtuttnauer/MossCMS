@@ -1,5 +1,6 @@
 """Router exposure: every route is public or private, and the doc table matches."""
 
+import os
 import re
 
 from scripts.classify_routes import (
@@ -32,6 +33,12 @@ def test_documented_table_matches_the_router():
     assert classified[RouteKey("GET", "/docs")] == "private"
     assert classified[RouteKey("POST", "/graphql")] == "private"
     assert all(kind == "public" for key, kind in classified.items() if key.path.startswith("/delivery/"))
+
+
+def test_load_app_leaves_the_process_environment_unchanged():
+    before = dict(os.environ)
+    load_app()
+    assert dict(os.environ) == before
 
 
 def test_unclassified_route_fails():
