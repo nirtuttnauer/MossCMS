@@ -6,6 +6,7 @@ import { Dialog } from '../components/ui/dialog'
 import { confirmNavigation, useUnsavedChanges } from '../lib/unsaved'
 import { contentHash, fieldOrder, sortableFields, readContentRoute, setContentRoute } from '../lib/navigation'
 import { getContext, entryByIdQuery, entryFields, gql, message, type ContentType, type Entry } from '../lib/api'
+import { can } from '../lib/access'
 import { creationLabels, timestamp, typeOrder, type DuplicationSource, type EntryPage as Page } from '../lib/entries'
 import { trashEntry, type TrashResult } from '../lib/bulkTrash'
 import { EntryEditor } from './EntryEditor'
@@ -61,7 +62,7 @@ export function Content({ types, role, onChanged, projectId, defaultLocale = 'en
     })
     return () => cancelAnimationFrame(frame)
   }, [trashBusy, deleting, context, trashActionId])
-  const editable = role !== 'reader'
+  const editable = can(role, 'edit')
   const selectedType = types.find(item => item.key === type)
   const orderBy = fieldOrder(sort, selectedType)
   const effectiveSort = sort.startsWith('field:') && !orderBy ? 'updated_desc' : sort
