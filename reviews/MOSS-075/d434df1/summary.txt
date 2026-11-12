@@ -1,0 +1,15 @@
+label: local
+sha: d434df157c5e5503862b6b63cf78b75618b1cc81
+short_sha: d434df1
+started: 2026-11-12T14:47:49Z
+git status --porcelain: empty
+verify.sh: pytest-sqlite failed with exit 1
+continued: 2026-11-12T14:54:04Z
+reason: scripts/verify.sh stopped at pytest-sqlite exit 1
+same failure on b6c6687: starters/nextjs/package.json is not covered by .github/dependabot.yml
+verify.sh: pytest-postgres failed with exit 1
+continued: pytest-postgres matches the Dependabot failure already present on b6c6687
+verify.sh: verify-required-runs failed with exit 1
+continued: verify-required-runs matches the Dependabot failure already present on b6c6687
+finished: 2026-11-12T15:01:11Z
+result: continued after the Dependabot failure recorded on b6c6687
