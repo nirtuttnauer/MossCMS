@@ -1,0 +1,10 @@
+label: local
+date: 2026-11-11T21:54:52Z
+sha: b6c66870b98af990ee91766e5a965e823bf2b03d
+workdir: api
+command:
+uv run mypy app
+GITHUB_WORKSPACE=/tmp/moss-main
+---- output ----
+Success: no issues found in 30 source files
+exit_code: 0
