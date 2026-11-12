@@ -452,6 +452,18 @@ pre, .code-input { font-size: 13px !important; }
 .markdown-input > .inline-form { align-items: flex-end; }
 .markdown-input > .inline-form > label { flex: 1 1 160px; min-width: 0; }
 .markdown-input > small { font-size: 12px; line-height: 1.6; }
+.visual-markdown { display: grid; gap: 10px; min-width: 0; }
+.visual-block { min-height: 2.5rem; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); line-height: 1.6; overflow-wrap: anywhere; }
+.visual-heading .visual-block { font-size: 1.35rem; font-weight: 650; }
+.visual-code { width: 100%; min-height: 6rem; font-family: ui-monospace, monospace; }
+.visual-image { margin: 0; }
+.editor-preview-pane { display: grid; gap: 8px; min-width: 0; align-content: start; }
+.editor-preview-pane iframe { width: 100%; min-height: 28rem; border: 1px solid var(--border); border-radius: 12px; background: white; }
+.entry-workspace.has-preview { grid-template-columns: minmax(0, 1fr) minmax(240px, 42%) minmax(260px, 300px); }
+@media (max-width: 960px) {
+  .entry-workspace.has-preview { grid-template-columns: 1fr; }
+  .editor-preview-pane iframe { min-height: 70vh; }
+}
 .markdown-preview { padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
 .reference-picker-panel { border-color: var(--border); background: #f7faf5; }
 .reference-item { border-color: #bcc9be; min-height: 44px; gap: 8px; }
