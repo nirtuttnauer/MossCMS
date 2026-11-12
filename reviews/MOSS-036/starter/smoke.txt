@@ -1,0 +1,102 @@
+label: local
+date: 2026-11-11T21:50:22Z
+MOSS_API_URL=http://127.0.0.1:18001
+MOSS_USE_SQLITE=true
+note: delivery token redacted
+
+
+## published list
+command: curl -sS -D - http://127.0.0.1:3010/
+status: 200
+visible:
+<main><h1>Published entries</h1><ul class="entries"><li><article data-entry-id="8b231bc4-cedd-451c-8149-6d9dc754e991"><h2><a href="/starter-note">Moss starter published note</a></h2><p><span>article</span><span>starter-note</span><time dateTime="2026-11-11T21:47:14.946666Z">Nov 11, 2026, 9:47 PM</time></p></article></li></ul></main>
+contains Page not found: True
+contains SECRET_DRAFT_BODY: False
+contains Moss starter hidden draft: False
+contains Secret post: False
+
+## published markdown page
+command: curl -sS -D - http://127.0.0.1:3010/starter-note
+status: 200
+visible:
+<main><article data-entry-id="8b231bc4-cedd-451c-8149-6d9dc754e991"><h1>Moss starter published note</h1><p><span>article</span><span>starter-note</span><time dateTime="2026-11-11T21:47:14.946666Z">Nov 11, 2026, 9:47 PM</time></p><div class="markdown-content"><h2>Live section</h2>
+<p>This <strong>published</strong> sentence is visible.</p>
+<p><a href="https://example.com/moss">Moss site</a></p></div></article></main>
+contains Page not found: True
+contains SECRET_DRAFT_BODY: False
+contains Moss starter hidden draft: False
+contains Secret post: False
+
+## unpublished slug
+command: curl -sS -D - http://127.0.0.1:3010/starter-draft
+status: 404
+contains Page not found: True
+contains SECRET_DRAFT_BODY: False
+contains Moss starter hidden draft: False
+contains Secret post: False
+
+## home page
+command: curl -sS -D - http://127.0.0.1:3012/
+status: 200
+visible:
+<main><nav aria-label="Published entries"><ul class="entries"><li><a href="/journal">Journal</a></li><li><a href="/blog/c">Current</a></li><li><a href="/starter-note">Moss starter published note</a></li></ul></nav><article data-entry-id="318fdf01-b4f4-4592-ad6d-03f61b72aa23"><h1>Home</h1><p><span>sitePage</span><span>home</span><time dateTime="2026-11-11T21:49:14.780337Z">Nov 11, 2026, 9:49 PM</time></p><div class="markdown-content"><p>Welcome <strong>home</strong>.</p></div></article></main>
+contains Page not found: True
+contains SECRET_DRAFT_BODY: False
+contains Moss starter hidden draft: False
+contains Secret post: False
+
+## home alias
+command: curl -sS -D - http://127.0.0.1:3012/home
+status: 308
+location: /
+contains Page not found: True
+contains SECRET_DRAFT_BODY: False
+contains Moss starter hidden draft: False
+contains Secret post: False
+
+## published post
+command: curl -sS -D - http://127.0.0.1:3012/blog/c
+status: 200
+visible:
+<main><nav aria-label="Published entries"><ul class="entries"><li><a href="/journal">Journal</a></li><li><a href="/">Home</a></li><li><a href="/starter-note">Moss starter published note</a></li></ul></nav><article data-entry-id="b561c9bc-813d-4b3f-ab3f-d4e3763644ac"><h1>Current</h1><p><span>sitePost</span><span>blog/c</span><time dateTime="2026-11-11T21:49:14.798067Z">Nov 11, 2026, 9:49 PM</time></p><div class="markdown-content"><p>Live post</p></div></article></main>
+contains Page not found: True
+contains SECRET_DRAFT_BODY: False
+contains Moss starter hidden draft: False
+contains Secret post: False
+
+## legacy post alias
+command: curl -sS -D - http://127.0.0.1:3012/c
+status: 308
+location: /blog/c
+contains Page not found: True
+contains SECRET_DRAFT_BODY: False
+contains Moss starter hidden draft: False
+contains Secret post: False
+
+## unpublished post
+command: curl -sS -D - http://127.0.0.1:3012/blog/secret
+status: 404
+contains Page not found: True
+contains SECRET_DRAFT_BODY: False
+contains Moss starter hidden draft: False
+contains Secret post: False
+
+## published article beside site pages
+command: curl -sS -D - http://127.0.0.1:3012/starter-note
+status: 200
+visible:
+<main><nav aria-label="Published entries"><ul class="entries"><li><a href="/journal">Journal</a></li><li><a href="/">Home</a></li><li><a href="/blog/c">Current</a></li></ul></nav><article data-entry-id="8b231bc4-cedd-451c-8149-6d9dc754e991"><h1>Moss starter published note</h1><p><span>article</span><span>starter-note</span><time dateTime="2026-11-11T21:47:14.946666Z">Nov 11, 2026, 9:47 PM</time></p><div class="markdown-content"><h2>Live section</h2>
+<p>This <strong>published</strong> sentence is visible.</p>
+<p><a href="https://example.com/moss">Moss site</a></p></div></article></main>
+contains Page not found: True
+contains SECRET_DRAFT_BODY: False
+contains Moss starter hidden draft: False
+contains Secret post: False
+
+## unpublished article
+command: curl -sS -D - http://127.0.0.1:3012/starter-draft
+status: 404
+contains Page not found: True
+contains SECRET_DRAFT_BODY: False
+contains Moss starter hidden draft: False
+contains Secret post: False
